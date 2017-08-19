@@ -1,0 +1,47 @@
+[package]
+name = "sausagewiki"
+version = "0.1.0"
+authors = ["Magnus Hoff <maghoff@gmail.com>"]
+
+[dependencies]
+futures = "0.1"
+hyper = "0.11"
+tokio-io = "0.1"
+tokio-proto = "0.1"
+tokio-service = "0.1"
+serde_derive = "1.0.0"
+serde = "1.0.0"
+serde_urlencoded = "0.5.0"
+regex = "0.2"
+lazy_static = "0.2"
+chrono = "0.4"
+clap = "2.26"
+bart = "0.1.4"
+bart_derive = "0.1.4"
+
+[dependencies.diesel]
+default-features = false
+features = ["sqlite", "chrono"]
+version = "0.15"
+
+[dependencies.diesel_codegen]
+default-features = false
+features = ["sqlite"]
+version = "0.15"
+
+[dependencies.num]
+default-features = false
+version = "0.1"
+
+[dependencies.pulldown-cmark]
+version = "0.0.11"
+default-features = false
+
+[build-dependencies]
+quote = "0.3.10"
+walkdir = "1"
+
+[build-dependencies.diesel]
+default-features = false
+features = ["sqlite", "chrono"]
+version = "0.15.0"
