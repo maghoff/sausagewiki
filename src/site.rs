@@ -13,10 +13,18 @@ lazy_static! {
 
 #[derive(BartDisplay)]
 #[template = "templates/layout.html"]
-pub struct Layout<'a, T: 'a + fmt::Display> {
+struct Layout<'a, T: 'a + fmt::Display> {
     pub title: &'a str,
     pub body: &'a T,
 }
+
+#[derive(BartDisplay)]
+#[template = "templates/404.html"]
+struct NotFound;
+
+#[derive(BartDisplay)]
+#[template = "templates/500.html"]
+struct InternalServerError;
 
 pub struct Site {
     state: State
@@ -43,7 +51,10 @@ impl Service for Site {
             futures::finished(
                 Response::new()
                     .with_header(ContentType(TEXT_HTML.clone()))
-                    .with_body(format!("Page not found"))
+                    .with_body(Layout {
+                        title: "Not found",
+                        body: &NotFound,
+                    }.to_string())
                     .with_status(hyper::StatusCode::NotFound)
             ).boxed()
         } else {
@@ -64,7 +75,10 @@ impl Service for Site {
                     futures::finished(
                         Response::new()
                             .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(format!("Article not found."))
+                            .with_body(Layout {
+                                title: "Not found",
+                                body: &NotFound,
+                            }.to_string())
                             .with_status(hyper::StatusCode::NotFound)
                     ).boxed()
                 },
@@ -73,7 +87,10 @@ impl Service for Site {
                     futures::finished(
                         Response::new()
                             .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(format!("Internal server error"))
+                            .with_body(Layout {
+                                title: "Internal server error",
+                                body: &InternalServerError,
+                            }.to_string())
                             .with_status(hyper::StatusCode::InternalServerError)
                     ).boxed()
                 }
