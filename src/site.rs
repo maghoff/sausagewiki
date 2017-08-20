@@ -1,3 +1,5 @@
+use std::fmt;
+
 use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
@@ -7,6 +9,13 @@ use state::State;
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
+}
+
+#[derive(BartDisplay)]
+#[template = "templates/layout.html"]
+pub struct Layout<'a, T: 'a + fmt::Display> {
+    pub title: &'a str,
+    pub body: &'a T,
 }
 
 pub struct Site {
@@ -44,7 +53,10 @@ impl Service for Site {
                     futures::finished(
                         Response::new()
                             .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(format!("{}", article))
+                            .with_body(Layout {
+                                title: &article.title,
+                                body: &article
+                            }.to_string())
                             .with_status(hyper::StatusCode::Ok)
                     ).boxed()
                 },
