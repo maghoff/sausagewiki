@@ -4,7 +4,7 @@
 extern crate clap;
 extern crate hyper;
 
-use std::net::{SocketAddr, IpAddr};
+use std::net::SocketAddr;
 
 mod db;
 mod schema;
@@ -22,11 +22,25 @@ fn args<'a>() -> clap::ArgMatches<'a> {
             .help("Sets the listening port")
             .short("p")
             .long("port")
+            .validator(|x| match x.parse::<u16>() {
+                Ok(_) => Ok(()),
+                Err(_) => Err("Must be an integer in the range [0, 65535]".to_owned())
+            })
             .takes_value(true))
         .get_matches()
 }
 
-fn start_server(bind_host: IpAddr, bind_port: u16) -> Result<(), Box<std::error::Error>> {
+fn core_main() -> Result<(), Box<std::error::Error>> {
+    let args = args();
+
+    let db_file = args.value_of("DATABASE").expect("Guaranteed by clap");
+    let bind_host = "127.0.0.1".parse().unwrap();
+    let bind_port = args.value_of("port")
+        .map(|p| p.parse().expect("Guaranteed by validator"))
+        .unwrap_or(8080);
+
+    let _db_connection = db::connect_database(db_file, true);
+
     let server =
         hyper::server::Http::new()
             .bind(
@@ -40,13 +54,11 @@ fn start_server(bind_host: IpAddr, bind_port: u16) -> Result<(), Box<std::error:
 }
 
 fn main() {
-    let args = args();
-
-    let db_file = args.value_of("DATABASE").expect("Guaranteed by clap");
-    let bind_host = "127.0.0.1".parse().unwrap();
-    let bind_port = args.value_of("port").map(|p| p.parse().expect("Port must be an unsigned integer")).unwrap_or(8080);
-
-    let _db_connection = db::connect_database(db_file, true);
-
-    start_server(bind_host, bind_port).unwrap();
+    match core_main() {
+        Ok(()) => (),
+        Err(err) => {
+            eprintln!("{:#?}", err);
+            std::process::exit(1)
+        }
+    }
 }
