@@ -59,41 +59,55 @@ impl Service for Site {
             ).boxed()
         } else {
             assert!(path.starts_with("/"));
-            match self.state.find_article_by_slug(&path[1..]) {
-                Ok(Some(article)) => {
-                    futures::finished(
-                        Response::new()
-                            .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(Layout {
-                                title: &article.title,
-                                body: &article
-                            }.to_string())
-                            .with_status(hyper::StatusCode::Ok)
-                    ).boxed()
-                },
-                Ok(None) => {
-                    futures::finished(
-                        Response::new()
-                            .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(Layout {
-                                title: "Not found",
-                                body: &NotFound,
-                            }.to_string())
-                            .with_status(hyper::StatusCode::NotFound)
-                    ).boxed()
-                },
-                Err(err) => {
-                    eprintln!("Error while servicing request {} {}:\n{:#?}", req.method(), req.path(), err);
-                    futures::finished(
-                        Response::new()
-                            .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(Layout {
-                                title: "Internal server error",
-                                body: &InternalServerError,
-                            }.to_string())
-                            .with_status(hyper::StatusCode::InternalServerError)
-                    ).boxed()
+            let slug = &path[1..];
+            if let Ok(article_id) = slug.parse() {
+                match self.state.get_article_revision_by_id(article_id) {
+                    Ok(Some(article)) => {
+                        futures::finished(
+                            Response::new()
+                                .with_header(ContentType(TEXT_HTML.clone()))
+                                .with_body(Layout {
+                                    title: &article.title,
+                                    body: &article
+                                }.to_string())
+                                .with_status(hyper::StatusCode::Ok)
+                        ).boxed()
+                    },
+                    Ok(None) => {
+                        futures::finished(
+                            Response::new()
+                                .with_header(ContentType(TEXT_HTML.clone()))
+                                .with_body(Layout {
+                                    title: "Not found",
+                                    body: &NotFound,
+                                }.to_string())
+                                .with_status(hyper::StatusCode::NotFound)
+                        ).boxed()
+                    },
+                    Err(err) => {
+                        eprintln!("Error while servicing request {} {}:\n{:#?}", req.method(), req.path(), err);
+                        futures::finished(
+                            Response::new()
+                                .with_header(ContentType(TEXT_HTML.clone()))
+                                .with_body(Layout {
+                                    title: "Internal server error",
+                                    body: &InternalServerError,
+                                }.to_string())
+                                .with_status(hyper::StatusCode::InternalServerError)
+                        ).boxed()
+                    }
                 }
+            } else {
+                // slugs must be article IDs... for now
+                futures::finished(
+                    Response::new()
+                        .with_header(ContentType(TEXT_HTML.clone()))
+                        .with_body(Layout {
+                            title: "Not found",
+                            body: &NotFound,
+                        }.to_string())
+                        .with_status(hyper::StatusCode::NotFound)
+                ).boxed()
             }
         }
     }

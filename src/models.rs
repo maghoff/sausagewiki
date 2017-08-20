@@ -1,9 +1,9 @@
 use chrono;
 
 #[derive(BartDisplay, Debug, Queryable)]
-#[template="templates/article.html"]
-pub struct Article {
-    pub id: i32,
+#[template="templates/article_revision.html"]
+pub struct ArticleRevision {
+    pub article_id: i32,
     pub revision: i32,
     pub created: chrono::NaiveDateTime,
 

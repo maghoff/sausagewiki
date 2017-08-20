@@ -2,6 +2,7 @@ use std;
 
 use chrono;
 use diesel::sqlite::SqliteConnection;
+use diesel::prelude::*;
 
 use models;
 
@@ -14,13 +15,24 @@ impl State {
         State { db_connection }
     }
 
-    pub fn find_article_by_slug(&self, slug: &str) -> Result<Option<models::Article>, Box<std::error::Error>> {
-        Ok(Some(models::Article {
-            id: 0,
+    pub fn get_article_revision_by_slug(&self, slug: &str) -> Result<Option<models::ArticleRevision>, Box<std::error::Error>> {
+        Ok(Some(models::ArticleRevision {
+            article_id: 0,
             revision: 0,
             created: chrono::Local::now().naive_local(),
             title: slug.to_owned(),
             body: "Look at me!".to_owned(),
         }))
+    }
+
+    pub fn get_article_revision_by_id(&self, article_id: i32) -> Result<Option<models::ArticleRevision>, Box<std::error::Error>> {
+        use schema::article_revisions;
+
+        Ok(article_revisions::table
+            .filter(article_revisions::article_id.eq(article_id))
+            .order(article_revisions::revision.desc())
+            .limit(1)
+            .load::<models::ArticleRevision>(&self.db_connection)?
+            .pop())
     }
 }
