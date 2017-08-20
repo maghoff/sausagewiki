@@ -11,6 +11,7 @@ use std::net::SocketAddr;
 mod db;
 mod schema;
 mod site;
+mod state;
 
 fn args<'a>() -> clap::ArgMatches<'a> {
     use clap::{App, Arg};
@@ -35,19 +36,17 @@ fn args<'a>() -> clap::ArgMatches<'a> {
 fn core_main() -> Result<(), Box<std::error::Error>> {
     let args = args();
 
-    let db_file = args.value_of("DATABASE").expect("Guaranteed by clap");
+    let db_file = args.value_of("DATABASE").expect("Guaranteed by clap").to_owned();
     let bind_host = "127.0.0.1".parse().unwrap();
     let bind_port = args.value_of("port")
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
 
-    let _db_connection = db::connect_database(db_file, true);
-
     let server =
         hyper::server::Http::new()
             .bind(
                 &SocketAddr::new(bind_host, bind_port),
-                || Ok(site::Site {})
+                move || Ok(site::Site::new(state::State::new(db::connect_database(&db_file, true))))
             )?;
 
     server.run()?;
