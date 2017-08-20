@@ -1,7 +1,10 @@
+#[macro_use] extern crate bart_derive;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
 #[macro_use] extern crate lazy_static;
 
+extern crate bart;
+extern crate chrono;
 extern crate clap;
 extern crate futures;
 extern crate hyper;
@@ -9,6 +12,7 @@ extern crate hyper;
 use std::net::SocketAddr;
 
 mod db;
+mod models;
 mod schema;
 mod site;
 mod state;

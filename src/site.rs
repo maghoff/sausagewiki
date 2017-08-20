@@ -44,7 +44,7 @@ impl Service for Site {
                     futures::finished(
                         Response::new()
                             .with_header(ContentType(TEXT_HTML.clone()))
-                            .with_body(format!("Article found."))
+                            .with_body(format!("{}", article))
                             .with_status(hyper::StatusCode::Ok)
                     ).boxed()
                 },
