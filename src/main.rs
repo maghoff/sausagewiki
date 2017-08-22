@@ -46,11 +46,14 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
 
+    // Connect to the database and run migrations up front:
+    db::connect_database(&db_file, true);
+
     let server =
         hyper::server::Http::new()
             .bind(
                 &SocketAddr::new(bind_host, bind_port),
-                move || Ok(site::Site::new(state::State::new(db::connect_database(&db_file, true))))
+                move || Ok(site::Site::new(state::State::new(db::connect_database(&db_file, false))))
             )?;
 
     server.run()?;
