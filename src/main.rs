@@ -56,6 +56,8 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
                 move || Ok(site::Site::new(state::State::new(db::connect_database(&db_file, false))))
             )?;
 
+    println!("Listening on http://{}", server.local_addr().unwrap());
+
     server.run()?;
 
     Ok(())
