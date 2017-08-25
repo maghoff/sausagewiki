@@ -15,7 +15,7 @@ impl State {
         State { db_connection }
     }
 
-    pub fn get_article_revision_by_slug(&self, slug: &str) -> Result<Option<models::ArticleRevision>, Box<std::error::Error>> {
+    pub fn get_article_revision_by_slug(&self, slug: &str) -> Result<Option<models::ArticleRevision>, Box<std::error::Error + Send + Sync>> {
         Ok(Some(models::ArticleRevision {
             article_id: 0,
             revision: 0,
@@ -25,7 +25,7 @@ impl State {
         }))
     }
 
-    pub fn get_article_revision_by_id(&self, article_id: i32) -> Result<Option<models::ArticleRevision>, Box<std::error::Error>> {
+    pub fn get_article_revision_by_id(&self, article_id: i32) -> Result<Option<models::ArticleRevision>, Box<std::error::Error + Send + Sync>> {
         use schema::article_revisions;
 
         Ok(article_revisions::table

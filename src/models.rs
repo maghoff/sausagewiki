@@ -1,6 +1,6 @@
 use chrono;
 
-#[derive(BartDisplay, Debug, Queryable)]
+#[derive(BartDisplay, Clone, Debug, Queryable)]
 #[template="templates/article_revision.html"]
 pub struct ArticleRevision {
     pub article_id: i32,

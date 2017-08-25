@@ -16,6 +16,7 @@ mod models;
 mod schema;
 mod site;
 mod state;
+mod web;
 
 fn args<'a>() -> clap::ArgMatches<'a> {
     use clap::{App, Arg};
