@@ -2,6 +2,124 @@
 <html>
 <head>
 <title>{{title}}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
+<style>
+html {
+    font-family: "Apple Garamond", "Baskerville",
+        "Times New Roman", "Droid Serif", "Times",
+        "Source Serif Pro", serif;
+}
+
+h1 {
+    font-family: 'Amatic SC', cursive;
+
+    font-weight: normal;
+    font-style: normal;
+
+    font-size: 40px;
+    line-height: 54px;
+}
+
+h2 {
+    font-family: inherit;
+    font-weight: bold;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 32px;
+    margin-top: 32px;
+    margin-bottom: 0;
+}
+
+header {
+    max-width: 600px;
+    width: 100%;
+    margin: 40px auto 0 auto;
+}
+
+article {
+    font-size: 18px;
+    line-height: 32px;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto 120px auto;
+}
+
+p {
+    margin: 0 0 28px 0;
+}
+
+code, pre {
+    background: #f8f8f8;
+    font-family: "SF Mono", "Monaco",
+        "Inconsolata", "Fira Mono",
+        "Droid Sans Mono", "Source Code Pro",
+        monospace;
+}
+
+pre {
+    overflow: auto;
+}
+
+a {
+    color: #5e90af;
+}
+
+a:visited {
+    color: inherit;
+}
+
+a:hover {
+    color: #79b9e1;
+}
+
+
+/* Sticky footer */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+article {
+  flex: 1;
+}
+
+
+footer {
+    background: #f8f8f8;
+    color: #444;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans",
+        "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+footer dt, footer dd {
+    display: inline;
+    margin: 0;
+}
+
+footer dt::after {
+    content: ": ";
+    display: inline;
+}
+
+footer dd::after {
+    content: "|";
+    margin: 0 12px;
+}
+
+footer dd:last-child::after {
+    content: "";
+    margin: 0;
+}
+
+</style>
 </head>
 <body>
 {{{body}}}

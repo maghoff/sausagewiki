@@ -8,6 +8,7 @@ extern crate chrono;
 extern crate clap;
 extern crate futures;
 extern crate hyper;
+extern crate pulldown_cmark;
 
 use std::net::SocketAddr;
 

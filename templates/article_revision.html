@@ -1,5 +1,20 @@
-<p>{{article_id}}-{{revision}}</p>
-<p>{{created}}</p>
-
+<header>
 <h1>{{title}}</h1>
-<p>{{body}}</p>
+</header>
+
+<article>
+{{{body}}}
+</article>
+
+<footer>
+<dl>
+    <dt>Article ID</dt>
+    <dd>{{article_id}}</dd>
+
+    <dt>Revision</dt>
+    <dd>{{revision}}</dd>
+
+    <dt>Last updated</dt>
+    <dd>{{created}}</dd>
+</dl>
+</footer>

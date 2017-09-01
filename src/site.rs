@@ -10,6 +10,15 @@ use models;
 use state::State;
 use web::{Lookup, Resource};
 
+fn render_markdown(src: &str) -> String {
+    use pulldown_cmark::{Parser, html};
+
+    let p = Parser::new(src);
+    let mut buf = String::new();
+    html::push_html(&mut buf, p);
+    buf
+}
+
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
 }
@@ -87,11 +96,30 @@ impl Resource for ArticleResource {
     }
 
     fn get(self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
+        use chrono::{self, TimeZone, Local};
+
+        #[derive(BartDisplay)]
+        #[template="templates/article_revision.html"]
+        struct Template<'a> {
+            article_id: i32,
+            revision: i32,
+            created: &'a chrono::DateTime<Local>,
+
+            title: &'a str,
+            body: String,
+        }
+
         self.head().map(move |head|
             head
                 .with_body(Layout {
                     title: &self.data.title,
-                    body: &self.data
+                    body: &Template {
+                        article_id: self.data.article_id,
+                        revision: self.data.revision,
+                        created: &Local.from_utc_datetime(&self.data.created),
+                        title: &self.data.title,
+                        body: render_markdown(&self.data.body),
+                    }
                 }.to_string())
         ).boxed()
     }
