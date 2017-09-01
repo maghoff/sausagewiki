@@ -86,15 +86,12 @@ impl Resource for ArticleResource {
         ).boxed()
     }
 
-    fn get(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
-        // Accidental clone here:
-        let data = self.data.clone();
-
+    fn get(self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
         self.head().map(move |head|
             head
                 .with_body(Layout {
-                    title: &data.title,
-                    body: &data
+                    title: &self.data.title,
+                    body: &self.data
                 }.to_string())
         ).boxed()
     }

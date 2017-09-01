@@ -12,7 +12,7 @@ type Error = Box<std::error::Error + Send>;
 pub trait Resource {
     fn allow(&self) -> Vec<hyper::Method>;
     fn head(&self) -> futures::BoxFuture<server::Response, Error>;
-    fn get(&self) -> futures::BoxFuture<server::Response, Error>;
+    fn get(self) -> futures::BoxFuture<server::Response, Error>;
 
     fn options(&self) -> Response {
         Response::new()
