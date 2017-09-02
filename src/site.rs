@@ -106,7 +106,8 @@ impl Resource for ArticleResource {
             created: &'a chrono::DateTime<Local>,
 
             title: &'a str,
-            body: String,
+            raw: &'a str,
+            rendered: String,
         }
 
         self.head().map(move |head|
@@ -118,7 +119,8 @@ impl Resource for ArticleResource {
                         revision: self.data.revision,
                         created: &Local.from_utc_datetime(&self.data.created),
                         title: &self.data.title,
-                        body: render_markdown(&self.data.body),
+                        raw: &self.data.body,
+                        rendered: render_markdown(&self.data.body),
                     }
                 }.to_string())
         ).boxed()

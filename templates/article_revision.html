@@ -3,10 +3,20 @@
 </header>
 
 <article>
-{{{body}}}
+<div class="rendered">
+{{{rendered}}}
+</div>
+<div class="editor">
+    <form action="" method="POST">
+        <input type=hidden name=revision value="{{revision}}">
+        <textarea name=body>{{raw}}</textarea>
+        <button type=submit>Save</button>
+    </form>
+</div>
 </article>
 
 <footer>
+<p><a id="openEditor" href="?editor=true">Edit</a></p>
 <dl>
     <dt>Article ID</dt>
     <dd>{{article_id}}</dd>
@@ -18,3 +28,39 @@
     <dd>{{created}}</dd>
 </dl>
 </footer>
+
+<script>
+function openEditor() {
+    const rendered = document.querySelector(".rendered");
+    const editor = document.querySelector(".editor");
+
+    rendered.style.display = "none";
+    editor.style.display = "block";
+
+    const textarea = editor.querySelector("textarea");
+    textarea.style.height = (textarea.scrollHeight + 60) + "px";
+
+    const form = editor.querySelector("form");
+    form.addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        const response = await fetch(
+            form.getAttribute("action"),
+            {
+                method: 'PUT',
+                body: new FormData(form),
+            }
+        );
+    });
+}
+
+document
+    .getElementById("openEditor")
+    .addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        openEditor();
+    })
+</script>
