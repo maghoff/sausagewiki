@@ -10,10 +10,36 @@ use models;
 use state::State;
 use web::{Lookup, Resource};
 
+use pulldown_cmark::Event;
+
+struct EscapeHtml<'a, I: Iterator<Item=Event<'a>>> {
+    inner: I,
+}
+
+impl<'a, I: Iterator<Item=Event<'a>>> EscapeHtml<'a, I> {
+    fn new(inner: I) -> EscapeHtml<'a, I> {
+        EscapeHtml { inner }
+    }
+}
+
+impl<'a, I: Iterator<Item=Event<'a>>> Iterator for EscapeHtml<'a, I> {
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        use pulldown_cmark::Event::{Text, Html, InlineHtml};
+
+        match self.inner.next() {
+            Some(Html(x)) => Some(Text(x)),
+            Some(InlineHtml(x)) => Some(Text(x)),
+            x => x
+        }
+    }
+}
+
 fn render_markdown(src: &str) -> String {
     use pulldown_cmark::{Parser, html};
 
-    let p = Parser::new(src);
+    let p = EscapeHtml::new(Parser::new(src));
     let mut buf = String::new();
     html::push_html(&mut buf, p);
     buf
