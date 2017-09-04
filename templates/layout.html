@@ -135,17 +135,38 @@ textarea {
         monospace;
 
     width: 100%;
-    height: 1000px;
+    resize: none;
+    overflow: hidden;
+}
+
+.shadow-control {
+    visibility: hidden;
+    position: fixed;
 }
 
 .editor {
     display: none;
 }
 
-button[type="submit"] {
+.editor-controls {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    background: #91A238;
+    padding: 10px 20px;
+}
+
+@media (min-width: 600px) {
+    .editor-controls {
+        position: fixed;
+        left: auto;
+        right: 20px;
+        bottom: 20px;
+
+        box-shadow: 5px 5px 8px rgba(0,0,0, 0.3);
+    }
 }
 </style>
 </head>

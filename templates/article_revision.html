@@ -9,8 +9,11 @@
 <div class="editor">
     <form action="" method="POST">
         <input type=hidden name=revision value="{{revision}}">
-        <textarea name=body>{{raw}}</textarea>
+        <textarea autocomplete=off name=body>{{raw}}</textarea>
+        <textarea autocomplete=off class="shadow-control"></textarea>
+        <div class="editor-controls">
         <button type=submit>Save</button>
+        </div>
     </form>
 </div>
 </article>
@@ -30,15 +33,26 @@
 </footer>
 
 <script>
+function autosizeTextarea(textarea, shadow) {
+    shadow.value = textarea.value;
+    shadow.style.width = textarea.clientWidth + "px";
+    shadow.style.height = "auto";
+    textarea.style.height = shadow.scrollHeight + "px";
+}
+
 function openEditor() {
     const rendered = document.querySelector(".rendered");
     const editor = document.querySelector(".editor");
+    const textarea = editor.querySelector('textarea[name="body"]');
+    const shadow = editor.querySelector('textarea.shadow-control');
 
-    rendered.style.display = "none";
     editor.style.display = "block";
 
-    const textarea = editor.querySelector("textarea");
-    textarea.style.height = (textarea.scrollHeight + 60) + "px";
+    autosizeTextarea(textarea, shadow);
+    textarea.addEventListener('input', () => autosizeTextarea(textarea, shadow));
+    window.addEventListener('resize', () => autosizeTextarea(textarea, shadow));
+
+    rendered.style.display = "none";
 
     const form = editor.querySelector("form");
     form.addEventListener("submit", async function (ev) {
@@ -53,6 +67,8 @@ function openEditor() {
             }
         );
     });
+
+    textarea.focus();
 }
 
 document
