@@ -5,6 +5,8 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::mime;
 use hyper::server::*;
+use serde_json;
+use serde_urlencoded;
 
 use models;
 use state::State;
@@ -47,6 +49,7 @@ fn render_markdown(src: &str) -> String {
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
+    static ref APPLICATION_JSON: mime::Mime = "application/json".parse().unwrap();
 }
 
 #[derive(BartDisplay)]
@@ -70,7 +73,7 @@ struct WikiLookup {
 
 impl Lookup for WikiLookup {
     type Resource = ArticleResource;
-    type Error = Box<::std::error::Error + Send>;
+    type Error = Box<::std::error::Error + Send + Sync>;
     type Future = futures::future::FutureResult<Option<Self::Resource>, Self::Error>;
 
     fn lookup(&self, path: &str, _query: Option<&str>, _fragment: Option<&str>) -> Self::Future {
@@ -85,7 +88,7 @@ impl Lookup for WikiLookup {
         if let Ok(article_id) = slug.parse() {
             match self.state.get_article_revision_by_id(article_id) {
                 Ok(Some(article)) => {
-                    futures::finished(Some(ArticleResource::new(article)))
+                    futures::finished(Some(ArticleResource::new(self.state.clone(), article)))
                 },
                 Ok(None) => futures::finished(None),
                 Err(err) => futures::failed(err),
@@ -97,14 +100,13 @@ impl Lookup for WikiLookup {
 }
 
 struct ArticleResource {
+    state: State,
     data: models::ArticleRevision,
 }
 
 impl ArticleResource {
-    fn new(data: models::ArticleRevision) -> Self {
-        Self {
-            data
-        }
+    fn new(state: State, data: models::ArticleRevision) -> Self {
+        Self { state, data }
     }
 }
 
@@ -114,14 +116,14 @@ impl Resource for ArticleResource {
         vec![Options, Head, Get, Put]
     }
 
-    fn head(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
+    fn head(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
         futures::finished(Response::new()
             .with_status(hyper::StatusCode::Ok)
             .with_header(ContentType(TEXT_HTML.clone()))
         ).boxed()
     }
 
-    fn get(self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
+    fn get(self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
         use chrono::{self, TimeZone, Local};
 
         #[derive(BartDisplay)]
@@ -152,8 +154,52 @@ impl Resource for ArticleResource {
         ).boxed()
     }
 
-    fn put(self, body: &[u8]) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
-        unimplemented!()
+    fn put<S: 'static + futures::Stream<Item=hyper::Chunk, Error=hyper::Error> + Send + Sync>(self, body: S) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+        // TODO Check incoming Content-Type
+
+        use chrono::{TimeZone, Local};
+
+        #[derive(Deserialize)]
+        struct UpdateArticle {
+            base_revision: i32,
+            body: String,
+        }
+
+        #[derive(Serialize)]
+        struct PutResponse<'a> {
+            revision: i32,
+            rendered: &'a str,
+            created: &'a str,
+        }
+
+        body
+            .concat2()
+            .map_err(|x| Box::new(x) as Box<::std::error::Error + Send + Sync>)
+            .and_then(move |body| {
+                let update: UpdateArticle = match serde_urlencoded::from_bytes(&body) {
+                    Ok(x) => x,
+                    Err(err) => return futures::finished(Response::new()
+                        .with_status(hyper::StatusCode::BadRequest)
+                        .with_body(format!("{:#?}", err))
+                    ).boxed()
+                };
+
+                let updated = match self.state.update_article(self.data.article_id, update.base_revision, &update.body) {
+                    Ok(x) => x,
+                    Err(x) => return futures::failed(x).boxed(),
+                };
+
+                futures::finished(Response::new()
+                    .with_status(hyper::StatusCode::Ok)
+                    .with_header(ContentType(APPLICATION_JSON.clone()))
+                    .with_body(serde_json::to_string(&PutResponse {
+                        revision: updated.revision,
+                        rendered: &render_markdown(&updated.body),
+                        created: &Local.from_utc_datetime(&updated.created).to_string(),
+                    }).expect("Should never fail"))
+                ).boxed()
+            })
+            .boxed()
     }
 }
 
@@ -179,7 +225,7 @@ impl Site {
             .with_status(hyper::StatusCode::NotFound)
     }
 
-    fn internal_server_error(err: Box<::std::error::Error + Send>) -> Response {
+    fn internal_server_error(err: Box<::std::error::Error + Send + Sync>) -> Response {
         eprintln!("Internal Server Error:\n{:#?}", err);
 
         Response::new()
@@ -210,14 +256,7 @@ impl Service for Site {
                         Options => futures::finished(resource.options()).boxed(),
                         Head => resource.head(),
                         Get => resource.get(),
-                        Put => {
-                            use futures::Stream;
-                            body
-                                .concat2()
-                                .map_err(|x| Box::new(x) as Box<::std::error::Error + Send>)
-                                .and_then(move |body| resource.put(&body))
-                                .boxed()
-                        },
+                        Put => resource.put(body),
                         _ => futures::finished(resource.method_not_allowed()).boxed()
                     }
                 },

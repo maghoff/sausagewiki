@@ -8,7 +8,7 @@
 </div>
 <div class="editor">
     <form action="" method="POST">
-        <input type=hidden name=baseRevision value="{{revision}}">
+        <input type=hidden name=base_revision value="{{revision}}">
         <textarea autocomplete=off name=body>{{raw}}</textarea>
         <textarea autocomplete=off class="shadow-control"></textarea>
         <div class="editor-controls">
@@ -26,10 +26,10 @@
     <dd>{{article_id}}</dd>
 
     <dt>Revision</dt>
-    <dd>{{revision}}</dd>
+    <dd class="revision">{{revision}}</dd>
 
     <dt>Last updated</dt>
-    <dd>{{created}}</dd>
+    <dd class="last-updated">{{created}}</dd>
 </dl>
 </footer>
 
@@ -49,22 +49,29 @@ function queryArgsFromForm(form) {
     return items.join('&');
 }
 
+let hasBeenOpen = false;
 function openEditor() {
     const article = document.querySelector("article");
     const rendered = document.querySelector(".rendered");
     const editor = document.querySelector(".editor");
     const textarea = editor.querySelector('textarea[name="body"]');
     const shadow = editor.querySelector('textarea.shadow-control');
+    const form = editor.querySelector("form");
 
     textarea.style.height = rendered.clientHeight + "px";
 
     article.classList.add('edit');
 
     autosizeTextarea(textarea, shadow);
+
+    textarea.focus();
+
+    if (hasBeenOpen) return;
+    hasBeenOpen = true;
+
     textarea.addEventListener('input', () => autosizeTextarea(textarea, shadow));
     window.addEventListener('resize', () => autosizeTextarea(textarea, shadow));
 
-    const form = editor.querySelector("form");
     form.addEventListener("submit", function (ev) {
         (async function () {
             ev.preventDefault();
@@ -86,6 +93,13 @@ function openEditor() {
 
             if (!response.ok) throw new Error("Unexpected status code (" + response.status + ")");
 
+            const result = await response.json();
+            form.elements.base_revision.value = result.revision;
+            document.querySelector("footer .revision").textContent = result.revision;
+            document.querySelector("footer .last-updated").textContent = result.created;
+            rendered.innerHTML = result.rendered;
+            article.classList.remove('edit');
+
             textarea.disabled = false;
         }()
         .catch(err => {
@@ -94,8 +108,6 @@ function openEditor() {
             alert(err);
         }));
     });
-
-    textarea.focus();
 }
 
 document
