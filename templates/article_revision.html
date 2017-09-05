@@ -8,18 +8,19 @@
 </div>
 <div class="editor">
     <form action="" method="POST">
-        <input type=hidden name=revision value="{{revision}}">
+        <input type=hidden name=baseRevision value="{{revision}}">
         <textarea autocomplete=off name=body>{{raw}}</textarea>
         <textarea autocomplete=off class="shadow-control"></textarea>
         <div class="editor-controls">
-        <button type=submit>Save</button>
+            <a href="{{article_id}}">Cancel</a>
+            <button type=submit>Save</button>
         </div>
     </form>
 </div>
 </article>
 
 <footer>
-<p><a id="openEditor" href="?editor=true">Edit</a></p>
+<p><a id="openEditor" href="?editor">Edit</a></p>
 <dl>
     <dt>Article ID</dt>
     <dd>{{article_id}}</dd>
@@ -34,38 +35,64 @@
 
 <script>
 function autosizeTextarea(textarea, shadow) {
-    shadow.value = textarea.value;
     shadow.style.width = textarea.clientWidth + "px";
-    shadow.style.height = "auto";
+    shadow.value = textarea.value;
     textarea.style.height = shadow.scrollHeight + "px";
 }
 
+function queryArgsFromForm(form) {
+    const items = [];
+    for (const {name, value} of form.elements) {
+        if (!name) continue;
+        items.push(encodeURIComponent(name) + '=' + encodeURIComponent(value));
+    }
+    return items.join('&');
+}
+
 function openEditor() {
+    const article = document.querySelector("article");
     const rendered = document.querySelector(".rendered");
     const editor = document.querySelector(".editor");
     const textarea = editor.querySelector('textarea[name="body"]');
     const shadow = editor.querySelector('textarea.shadow-control');
 
-    editor.style.display = "block";
+    textarea.style.height = rendered.clientHeight + "px";
+
+    article.classList.add('edit');
 
     autosizeTextarea(textarea, shadow);
     textarea.addEventListener('input', () => autosizeTextarea(textarea, shadow));
     window.addEventListener('resize', () => autosizeTextarea(textarea, shadow));
 
-    rendered.style.display = "none";
-
     const form = editor.querySelector("form");
-    form.addEventListener("submit", async function (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
+    form.addEventListener("submit", function (ev) {
+        (async function () {
+            ev.preventDefault();
+            ev.stopPropagation();
 
-        const response = await fetch(
-            form.getAttribute("action"),
-            {
-                method: 'PUT',
-                body: new FormData(form),
-            }
-        );
+            const body = queryArgsFromForm(form);
+            textarea.disabled = true;
+
+            const response = await fetch(
+                form.getAttribute("action"),
+                {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: body,
+                }
+            );
+
+            if (!response.ok) throw new Error("Unexpected status code (" + response.status + ")");
+
+            textarea.disabled = false;
+        }()
+        .catch(err => {
+            textarea.disabled = false;
+            console.error(err);
+            alert(err);
+        }));
     });
 
     textarea.focus();

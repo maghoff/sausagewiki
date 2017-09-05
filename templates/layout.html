@@ -142,9 +142,23 @@ textarea {
 .shadow-control {
     visibility: hidden;
     position: fixed;
+    height: auto;
+    min-height: 100px;
 }
 
 .editor {
+    display: none;
+}
+
+.editor textarea {
+    height: 600px;
+}
+
+.edit .editor {
+    display: block;
+}
+
+.edit .rendered {
     display: none;
 }
 
@@ -165,7 +179,7 @@ textarea {
         right: 20px;
         bottom: 20px;
 
-        box-shadow: 5px 5px 8px rgba(0,0,0, 0.3);
+        box-shadow: 2px 2px 8px rgba(0,0,0, 0.25);
     }
 }
 </style>
