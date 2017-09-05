@@ -13,6 +13,7 @@ pub trait Resource {
     fn allow(&self) -> Vec<hyper::Method>;
     fn head(&self) -> futures::BoxFuture<server::Response, Error>;
     fn get(self) -> futures::BoxFuture<server::Response, Error>;
+    fn put(self, body: &[u8]) -> futures::BoxFuture<server::Response, Error>;
 
     fn options(&self) -> Response {
         Response::new()

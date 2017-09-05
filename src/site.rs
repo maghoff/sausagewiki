@@ -111,7 +111,7 @@ impl ArticleResource {
 impl Resource for ArticleResource {
     fn allow(&self) -> Vec<hyper::Method> {
         use hyper::Method::*;
-        vec![Options, Head, Get]
+        vec![Options, Head, Get, Put]
     }
 
     fn head(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
@@ -150,6 +150,10 @@ impl Resource for ArticleResource {
                     }
                 }.to_string())
         ).boxed()
+    }
+
+    fn put(self, body: &[u8]) -> futures::BoxFuture<Response, Box<::std::error::Error + Send>> {
+        unimplemented!()
     }
 }
 
@@ -195,7 +199,7 @@ impl Service for Site {
     type Future = futures::BoxFuture<Response, Self::Error>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let (method, uri, _http_version, _headers, _body) = req.deconstruct();
+        let (method, uri, _http_version, _headers, body) = req.deconstruct();
         println!("{} {}", method, uri);
 
         self.root.lookup(uri.path(), uri.query(), None /*uri.fragment()*/)
@@ -206,6 +210,14 @@ impl Service for Site {
                         Options => futures::finished(resource.options()).boxed(),
                         Head => resource.head(),
                         Get => resource.get(),
+                        Put => {
+                            use futures::Stream;
+                            body
+                                .concat2()
+                                .map_err(|x| Box::new(x) as Box<::std::error::Error + Send>)
+                                .and_then(move |body| resource.put(&body))
+                                .boxed()
+                        },
                         _ => futures::finished(resource.method_not_allowed()).boxed()
                     }
                 },
