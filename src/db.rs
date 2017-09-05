@@ -1,23 +1,33 @@
-use diesel::Connection;
 use diesel::sqlite::SqliteConnection;
 use diesel::prelude::*;
 use diesel::expression::sql_literal::sql;
 use diesel::types::*;
+use r2d2::{Config, CustomizeConnection, Pool};
+use r2d2_diesel::{self, ConnectionManager};
 
 embed_migrations!();
 
-pub fn connect_database(connection_string: &str, run_migrations: bool) -> SqliteConnection {
-    let connection = SqliteConnection::establish(connection_string)
-        .expect(&format!("Error connecting to database at {}", connection_string));
+#[derive(Debug)]
+struct SqliteInitializer;
 
-    // Integer is a dummy placeholder. Compiling fails when passing ().
-    sql::<(Integer)>("PRAGMA foreign_keys = ON")
-        .execute(&connection)
-        .expect("Should be able to enable foreign_keys");
-
-    if run_migrations {
-        embedded_migrations::run(&connection).unwrap();
+impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitializer {
+    fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), r2d2_diesel::Error> {
+        sql::<(Integer)>("PRAGMA foreign_keys = ON")
+            .execute(conn)
+            .and(Ok(()))
+            .map_err(|x| r2d2_diesel::Error::QueryError(x))
     }
+}
 
-    connection
+pub fn create_pool(connection_string: String) -> Result<Pool<ConnectionManager<SqliteConnection>>, Box<::std::error::Error>> {
+    let config = Config::builder()
+        .connection_customizer(Box::new(SqliteInitializer {}))
+        .build();
+    let manager = ConnectionManager::<SqliteConnection>::new(connection_string);
+
+    let pool = Pool::new(config, manager)?;
+
+    embedded_migrations::run(&*pool.get()?)?;
+
+    Ok(pool)
 }

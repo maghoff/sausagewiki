@@ -2,13 +2,16 @@
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate serde_derive;
 
-extern crate bart;
 extern crate chrono;
 extern crate clap;
 extern crate futures;
 extern crate hyper;
 extern crate pulldown_cmark;
+extern crate r2d2;
+extern crate r2d2_diesel;
+extern crate serde_urlencoded;
 
 use std::net::SocketAddr;
 
@@ -48,14 +51,14 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
 
-    // Connect to the database and run migrations up front:
-    db::connect_database(&db_file, true);
+    let db_pool = db::create_pool(db_file)?;
+    let state = state::State::new(db_pool);
 
     let server =
         hyper::server::Http::new()
             .bind(
                 &SocketAddr::new(bind_host, bind_port),
-                move || Ok(site::Site::new(state::State::new(db::connect_database(&db_file, false))))
+                move || Ok(site::Site::new(state.clone()))
             )?;
 
     println!("Listening on http://{}", server.local_addr().unwrap());
