@@ -12,7 +12,7 @@
         <textarea autocomplete=off name=body>{{raw}}</textarea>
         <textarea autocomplete=off class="shadow-control"></textarea>
         <div class="editor-controls">
-            <a href="{{article_id}}">Cancel</a>
+            <a class="cancel" href="{{article_id}}">Cancel</a>
             <button type=submit>Save</button>
         </div>
     </form>
@@ -52,11 +52,16 @@ function queryArgsFromForm(form) {
 let hasBeenOpen = false;
 function openEditor() {
     const article = document.querySelector("article");
-    const rendered = document.querySelector(".rendered");
-    const editor = document.querySelector(".editor");
+    const rendered = article.querySelector(".rendered");
+    const editor = article.querySelector(".editor");
     const textarea = editor.querySelector('textarea[name="body"]');
     const shadow = editor.querySelector('textarea.shadow-control');
     const form = editor.querySelector("form");
+    const cancel = editor.querySelector('.cancel');
+
+    const footer = document.querySelector("footer");
+    const revision = footer.querySelector(".revision");
+    const lastUpdated = footer.querySelector(".last-updated");
 
     textarea.style.height = rendered.clientHeight + "px";
 
@@ -73,10 +78,10 @@ function openEditor() {
     window.addEventListener('resize', () => autosizeTextarea(textarea, shadow));
 
     form.addEventListener("submit", function (ev) {
-        (async function () {
-            ev.preventDefault();
-            ev.stopPropagation();
+        ev.preventDefault();
+        ev.stopPropagation();
 
+        (async function () {
             const body = queryArgsFromForm(form);
             textarea.disabled = true;
 
@@ -95,8 +100,8 @@ function openEditor() {
 
             const result = await response.json();
             form.elements.base_revision.value = result.revision;
-            document.querySelector("footer .revision").textContent = result.revision;
-            document.querySelector("footer .last-updated").textContent = result.created;
+            revision.textContent = result.revision;
+            lastUpdated.textContent = result.created;
             rendered.innerHTML = result.rendered;
             article.classList.remove('edit');
 
@@ -108,6 +113,14 @@ function openEditor() {
             alert(err);
         }));
     });
+
+    cancel.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        article.classList.remove('edit');
+        form.reset();
+    })
 }
 
 document
