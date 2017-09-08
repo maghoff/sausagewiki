@@ -3,7 +3,7 @@ use std;
 use diesel;
 use diesel::sqlite::SqliteConnection;
 use diesel::prelude::*;
-use futures::{self, Future, IntoFuture};
+use futures::{Future, IntoFuture, BoxFuture};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 
@@ -21,18 +21,20 @@ impl State {
         State { connection_pool }
     }
 
-    pub fn get_article_revision_by_id(&self, article_id: i32) -> Result<Option<models::ArticleRevision>, Error> {
-        use schema::article_revisions;
+    pub fn get_article_revision_by_id(&self, article_id: i32) -> BoxFuture<Option<models::ArticleRevision>, Error> {
+        (|| -> Result<_, _> {
+            use schema::article_revisions;
 
-        Ok(article_revisions::table
-            .filter(article_revisions::article_id.eq(article_id))
-            .order(article_revisions::revision.desc())
-            .limit(1)
-            .load::<models::ArticleRevision>(&*self.connection_pool.get()?)?
-            .pop())
+            Ok(article_revisions::table
+                .filter(article_revisions::article_id.eq(article_id))
+                .order(article_revisions::revision.desc())
+                .limit(1)
+                .load::<models::ArticleRevision>(&*self.connection_pool.get()?)?
+                .pop())
+        }()).into_future().boxed()
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, body: String) -> futures::BoxFuture<models::ArticleRevision, Error> {
+    pub fn update_article(&self, article_id: i32, base_revision: i32, body: String) -> BoxFuture<models::ArticleRevision, Error> {
         self.connection_pool.get().into_future()
             .map_err(Into::into)
             .and_then(move |conn| {

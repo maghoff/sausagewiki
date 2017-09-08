@@ -77,27 +77,24 @@ struct WikiLookup {
 impl Lookup for WikiLookup {
     type Resource = ArticleResource;
     type Error = Box<::std::error::Error + Send + Sync>;
-    type Future = futures::future::FutureResult<Option<Self::Resource>, Self::Error>;
+    type Future = futures::BoxFuture<Option<Self::Resource>, Self::Error>;
 
     fn lookup(&self, path: &str, _query: Option<&str>, _fragment: Option<&str>) -> Self::Future {
         assert!(path.starts_with("/"));
 
         if path.starts_with("/_") {
             // Reserved namespace
-            return futures::finished(None);
+            return futures::finished(None).boxed();
         }
 
         let slug = &path[1..];
         if let Ok(article_id) = slug.parse() {
-            match self.state.get_article_revision_by_id(article_id) {
-                Ok(Some(article)) => {
-                    futures::finished(Some(ArticleResource::new(self.state.clone(), article)))
-                },
-                Ok(None) => futures::finished(None),
-                Err(err) => futures::failed(err),
-            }
+            let state = self.state.clone();
+            self.state.get_article_revision_by_id(article_id)
+                .and_then(|x| Ok(x.map(move |article| ArticleResource::new(state, article))))
+                .boxed()
         } else {
-            futures::finished(None)
+            futures::finished(None).boxed()
         }
     }
 }
