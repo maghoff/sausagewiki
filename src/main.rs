@@ -7,6 +7,7 @@
 extern crate chrono;
 extern crate clap;
 extern crate futures;
+extern crate futures_cpupool;
 extern crate hyper;
 extern crate pulldown_cmark;
 extern crate r2d2;
