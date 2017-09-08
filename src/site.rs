@@ -157,10 +157,11 @@ impl Resource for ArticleResource {
         ).boxed()
     }
 
-    fn put<S: 'static + futures::Stream<Item=hyper::Chunk, Error=hyper::Error> + Send + Sync>(self, body: S) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+    fn put(self, body: hyper::Body) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
         // TODO Check incoming Content-Type
 
         use chrono::{TimeZone, Local};
+        use futures::Stream;
 
         #[derive(Deserialize)]
         struct UpdateArticle {
