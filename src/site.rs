@@ -1,3 +1,6 @@
+// #[derive(BartDisplay)] can cause unused extern crates warning:
+#![allow(unused_extern_crates)]
+
 use std::fmt;
 
 use futures::{self, Future};

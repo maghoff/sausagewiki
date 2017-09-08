@@ -1,6 +1,5 @@
 use std;
 
-use chrono;
 use diesel;
 use diesel::sqlite::SqliteConnection;
 use diesel::prelude::*;
@@ -19,16 +18,6 @@ pub type Error = Box<std::error::Error + Send + Sync>;
 impl State {
     pub fn new(connection_pool: Pool<ConnectionManager<SqliteConnection>>) -> State {
         State { connection_pool }
-    }
-
-    pub fn get_article_revision_by_slug(&self, slug: &str) -> Result<Option<models::ArticleRevision>, Error> {
-        Ok(Some(models::ArticleRevision {
-            article_id: 0,
-            revision: 0,
-            created: chrono::Local::now().naive_local(),
-            title: slug.to_owned(),
-            body: "Look at me!".to_owned(),
-        }))
     }
 
     pub fn get_article_revision_by_id(&self, article_id: i32) -> Result<Option<models::ArticleRevision>, Error> {
