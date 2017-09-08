@@ -178,21 +178,15 @@ impl Resource for ArticleResource {
 
         body
             .concat2()
-            .map_err(|x| Box::new(x) as Box<::std::error::Error + Send + Sync>)
-            .and_then(move |body| {
-                let update: UpdateArticle = match serde_urlencoded::from_bytes(&body) {
-                    Ok(x) => x,
-                    Err(err) => return futures::finished(Response::new()
-                        .with_status(hyper::StatusCode::BadRequest)
-                        .with_body(format!("{:#?}", err))
-                    ).boxed()
-                };
-
-                let updated = match self.state.update_article(self.data.article_id, update.base_revision, &update.body) {
-                    Ok(x) => x,
-                    Err(x) => return futures::failed(x).boxed(),
-                };
-
+            .map_err(Into::into)
+            .and_then(|body| {
+                serde_urlencoded::from_bytes(&body)
+                    .map_err(Into::into)
+            })
+            .and_then(move |update: UpdateArticle| {
+                self.state.update_article(self.data.article_id, update.base_revision, update.body)
+            })
+            .and_then(|updated| {
                 futures::finished(Response::new()
                     .with_status(hyper::StatusCode::Ok)
                     .with_header(ContentType(APPLICATION_JSON.clone()))
@@ -201,7 +195,7 @@ impl Resource for ArticleResource {
                         rendered: &render_markdown(&updated.body),
                         created: &Local.from_utc_datetime(&updated.created).to_string(),
                     }).expect("Should never fail"))
-                ).boxed()
+                )
             })
             .boxed()
     }
