@@ -54,7 +54,9 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         .unwrap_or(8080);
 
     let db_pool = db::create_pool(db_file)?;
-    let state = state::State::new(db_pool);
+    let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
+
+    let state = state::State::new(db_pool, cpu_pool);
 
     let server =
         hyper::server::Http::new()

@@ -18,10 +18,10 @@ pub struct State {
 pub type Error = Box<std::error::Error + Send + Sync>;
 
 impl State {
-    pub fn new(connection_pool: Pool<ConnectionManager<SqliteConnection>>) -> State {
+    pub fn new(connection_pool: Pool<ConnectionManager<SqliteConnection>>, cpu_pool: futures_cpupool::CpuPool) -> State {
         State {
             connection_pool,
-            cpu_pool: futures_cpupool::CpuPool::new_num_cpus(),
+            cpu_pool,
         }
     }
 
