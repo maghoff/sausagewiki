@@ -82,6 +82,8 @@ struct StyleCss;
 #[mime = "application/javascript"]
 struct ScriptJs;
 
+// SIL Open Font License 1.1: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
+// Copyright 2015 The Amatic SC Project Authors (contact@sansoxygen.com)
 #[derive(StaticResource)]
 #[filename = "assets/amatic-sc-v9-latin-regular.woff"]
 #[mime = "application/font-woff"]
