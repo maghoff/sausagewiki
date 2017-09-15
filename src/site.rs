@@ -6,7 +6,7 @@ use std::fmt;
 
 use futures::{self, Future};
 use hyper;
-use hyper::header::{ContentType, ContentLength, CacheControl, CacheDirective};
+use hyper::header::ContentType;
 use hyper::mime;
 use hyper::server::*;
 use serde_json;
