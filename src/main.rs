@@ -18,12 +18,15 @@ extern crate serde_urlencoded;
 
 use std::net::SocketAddr;
 
+mod article_resource;
+mod assets;
 mod db;
 mod models;
 mod schema;
 mod site;
 mod state;
 mod web;
+mod wiki_lookup;
 
 fn args<'a>() -> clap::ArgMatches<'a> {
     use clap::{App, Arg};
@@ -58,12 +61,13 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
     let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
 
     let state = state::State::new(db_pool, cpu_pool);
+    let lookup = wiki_lookup::WikiLookup::new(state);
 
     let server =
         hyper::server::Http::new()
             .bind(
                 &SocketAddr::new(bind_host, bind_port),
-                move || Ok(site::Site::new(state.clone()))
+                move || Ok(site::Site::new(lookup.clone()))
             )?;
 
     println!("Listening on http://{}", server.local_addr().unwrap());

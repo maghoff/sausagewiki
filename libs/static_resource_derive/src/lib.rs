@@ -71,8 +71,10 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                 vec![Options, Head, Get]
             }
 
-            fn head(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
-                futures::finished(Response::new()
+            fn head(&self) ->
+                ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
+            {
+                ::futures::finished(::hyper::server::Response::new()
                     .with_status(::hyper::StatusCode::Ok)
                     .with_header(::hyper::header::ContentType(
                         #mime.parse().expect("Statically supplied mime type must be parseable")))
@@ -85,7 +87,9 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                 ).boxed()
             }
 
-            fn get(self: Box<Self>) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+            fn get(self: Box<Self>) ->
+                ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
+            {
                 let body = include_bytes!(#abs_filename);
 
                 self.head().map(move |head|
@@ -95,17 +99,19 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                 ).boxed()
             }
 
-            fn put(self: Box<Self>, _body: hyper::Body) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
-                futures::finished(self.method_not_allowed()).boxed()
+            fn put(self: Box<Self>, _body: ::hyper::Body) ->
+                ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
+            {
+                ::futures::finished(self.method_not_allowed()).boxed()
             }
         }
 
         impl #impl_generics #name #ty_generics #where_clause {
-            fn checksum() -> &'static str {
+            pub fn checksum() -> &'static str {
                 #checksum
             }
 
-            fn etag() -> ::hyper::header::EntityTag {
+            pub fn etag() -> ::hyper::header::EntityTag {
                 ::hyper::header::EntityTag::new(false, Self::checksum().to_owned())
             }
         }
