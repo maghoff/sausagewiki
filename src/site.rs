@@ -6,7 +6,7 @@ use std::fmt;
 
 use futures::{self, Future};
 use hyper;
-use hyper::header::ContentType;
+use hyper::header::{ContentType, ContentLength, CacheControl, CacheDirective};
 use hyper::mime;
 use hyper::server::*;
 use serde_json;
@@ -82,6 +82,11 @@ struct StyleCss;
 #[mime = "application/javascript"]
 struct ScriptJs;
 
+#[derive(StaticResource)]
+#[filename = "assets/amatic-sc-v9-latin-regular.woff"]
+#[mime = "application/font-woff"]
+struct AmaticFont;
+
 struct WikiLookup {
     state: State,
     lookup_map: HashMap<String, Box<Fn() -> Box<Resource + Sync + Send>>>,
@@ -100,6 +105,12 @@ impl WikiLookup {
         lookup_map.insert(
             format!("/_assets/script-{}.js", ScriptJs::checksum()),
             Box::new(|| Box::new(ScriptJs) as Box<Resource + Sync + Send>)
+                as Box<Fn() -> Box<Resource + Sync + Send>>
+        );
+
+        lookup_map.insert(
+            format!("/_assets/amatic-sc-v9-latin-regular.woff"),
+            Box::new(|| Box::new(AmaticFont) as Box<Resource + Sync + Send>)
                 as Box<Fn() -> Box<Resource + Sync + Send>>
         );
 

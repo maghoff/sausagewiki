@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'Amatic SC';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Amatic SC Regular'), local('AmaticSC-Regular'),
+        url('amatic-sc-v9-latin-regular.woff') format('woff');
+}
+
 html {
     font-family: "Apple Garamond", "Baskerville",
         "Times New Roman", "Droid Serif", "Times",
@@ -5,7 +13,7 @@ html {
 }
 
 h1 {
-    font-family: 'Amatic SC', cursive;
+    font-family: 'Amatic SC', sans-serif;
 
     font-weight: normal;
     font-style: normal;
