@@ -45,6 +45,9 @@ version = "0.1"
 version = "0.0.11"
 default-features = false
 
+[dependencies.static_resource_derive]
+path = "libs/static_resource_derive"
+
 [build-dependencies]
 quote = "0.3.10"
 walkdir = "1"
@@ -53,3 +56,5 @@ walkdir = "1"
 default-features = false
 features = ["sqlite", "chrono"]
 version = "0.15.0"
+
+[workspace]

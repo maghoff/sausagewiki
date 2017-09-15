@@ -12,8 +12,8 @@ type Error = Box<std::error::Error + Send + Sync>;
 pub trait Resource {
     fn allow(&self) -> Vec<hyper::Method>;
     fn head(&self) -> futures::BoxFuture<server::Response, Error>;
-    fn get(self) -> futures::BoxFuture<server::Response, Error>;
-    fn put(self, body: hyper::Body) -> futures::BoxFuture<server::Response, Error>;
+    fn get(self: Box<Self>) -> futures::BoxFuture<server::Response, Error>;
+    fn put(self: Box<Self>, body: hyper::Body) -> futures::BoxFuture<server::Response, Error>;
 
     fn options(&self) -> Response {
         Response::new()

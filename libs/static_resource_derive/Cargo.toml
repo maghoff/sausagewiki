@@ -1,0 +1,13 @@
+[package]
+name = "static_resource_derive"
+version = "0.1.0"
+authors = ["Magnus Hoff <maghoff@gmail.com>"]
+
+[dependencies]
+quote = "0.3.10"
+syn = "0.10.5"
+sha2 = "0.6"
+base64 = "0.6"
+
+[lib]
+proc-macro = true

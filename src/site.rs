@@ -1,6 +1,7 @@
 // #[derive(BartDisplay)] can cause unused extern crates warning:
 #![allow(unused_extern_crates)]
 
+use std::collections::HashMap;
 use std::fmt;
 
 use futures::{self, Future};
@@ -60,6 +61,7 @@ lazy_static! {
 struct Layout<'a, T: 'a + fmt::Display> {
     pub title: &'a str,
     pub body: &'a T,
+    pub style_css_checksum: &'a str,
 }
 
 #[derive(BartDisplay)]
@@ -70,12 +72,43 @@ struct NotFound;
 #[template = "templates/500.html"]
 struct InternalServerError;
 
+#[derive(StaticResource)]
+#[filename = "assets/style.css"]
+#[mime = "text/css"]
+struct StyleCss;
+
+#[derive(StaticResource)]
+#[filename = "assets/script.js"]
+#[mime = "application/javascript"]
+struct ScriptJs;
+
 struct WikiLookup {
     state: State,
+    lookup_map: HashMap<String, Box<Fn() -> Box<Resource + Sync + Send>>>,
+}
+
+impl WikiLookup {
+    fn new(state: State) -> WikiLookup {
+        let mut lookup_map = HashMap::new();
+
+        lookup_map.insert(
+            format!("/_assets/style-{}.css", StyleCss::checksum()),
+            Box::new(|| Box::new(StyleCss) as Box<Resource + Sync + Send>)
+                as Box<Fn() -> Box<Resource + Sync + Send>>
+        );
+
+        lookup_map.insert(
+            format!("/_assets/script-{}.js", ScriptJs::checksum()),
+            Box::new(|| Box::new(ScriptJs) as Box<Resource + Sync + Send>)
+                as Box<Fn() -> Box<Resource + Sync + Send>>
+        );
+
+        WikiLookup { state, lookup_map }
+    }
 }
 
 impl Lookup for WikiLookup {
-    type Resource = ArticleResource;
+    type Resource = Box<Resource + Send + Sync>;
     type Error = Box<::std::error::Error + Send + Sync>;
     type Future = futures::BoxFuture<Option<Self::Resource>, Self::Error>;
 
@@ -84,14 +117,17 @@ impl Lookup for WikiLookup {
 
         if path.starts_with("/_") {
             // Reserved namespace
-            return futures::finished(None).boxed();
+
+            return futures::finished(
+                self.lookup_map.get(path).map(|x| x())
+            ).boxed();
         }
 
         let slug = &path[1..];
         if let Ok(article_id) = slug.parse() {
             let state = self.state.clone();
             self.state.get_article_revision_by_id(article_id)
-                .and_then(|x| Ok(x.map(move |article| ArticleResource::new(state, article))))
+                .and_then(|x| Ok(x.map(move |article| Box::new(ArticleResource::new(state, article)) as Box<Resource + Sync + Send>)))
                 .boxed()
         } else {
             futures::finished(None).boxed()
@@ -123,7 +159,7 @@ impl Resource for ArticleResource {
         ).boxed()
     }
 
-    fn get(self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+    fn get(self: Box<Self>) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
         use chrono::{self, TimeZone, Local};
 
         #[derive(BartDisplay)]
@@ -136,6 +172,8 @@ impl Resource for ArticleResource {
             title: &'a str,
             raw: &'a str,
             rendered: String,
+
+            script_js_checksum: &'a str,
         }
 
         self.head().map(move |head|
@@ -149,12 +187,14 @@ impl Resource for ArticleResource {
                         title: &self.data.title,
                         raw: &self.data.body,
                         rendered: render_markdown(&self.data.body),
-                    }
+                        script_js_checksum: ScriptJs::checksum(),
+                    },
+                    style_css_checksum: StyleCss::checksum(),
                 }.to_string())
         ).boxed()
     }
 
-    fn put(self, body: hyper::Body) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+    fn put(self: Box<Self>, body: hyper::Body) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
         // TODO Check incoming Content-Type
 
         use chrono::{TimeZone, Local};
@@ -206,7 +246,7 @@ pub struct Site {
 impl Site {
     pub fn new(state: State) -> Site {
         Site {
-            root: WikiLookup { state }
+            root: WikiLookup::new(state)
         }
     }
 
@@ -216,6 +256,7 @@ impl Site {
             .with_body(Layout {
                 title: "Not found",
                 body: &NotFound,
+                style_css_checksum: StyleCss::checksum(),
             }.to_string())
             .with_status(hyper::StatusCode::NotFound)
     }
@@ -228,6 +269,7 @@ impl Site {
             .with_body(Layout {
                 title: "Internal server error",
                 body: &InternalServerError,
+                style_css_checksum: StyleCss::checksum(),
             }.to_string())
             .with_status(hyper::StatusCode::InternalServerError)
     }
