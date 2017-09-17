@@ -60,7 +60,15 @@ impl Lookup for WikiLookup {
             ).boxed();
         }
 
-        let slug = &path[1..];
+        let mut split = path[1..].split('/');
+
+        let slug = split.next().expect("Always at least one element");
+
+        if split.next() != None {
+            // Currently disallow any URLs of the form /slug/...
+            return futures::finished(None).boxed();
+        }
+
         if let Ok(article_id) = slug.parse() {
             let state = self.state.clone();
             self.state.get_article_revision_by_id(article_id)
