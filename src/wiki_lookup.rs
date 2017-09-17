@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use futures::{self, Future};
+use futures::{Future, finished};
 
 use assets::*;
 use article_resource::ArticleResource;
@@ -55,7 +55,7 @@ impl Lookup for WikiLookup {
         if path.starts_with("/_") {
             // Reserved namespace
 
-            return Box::new(futures::finished(
+            return Box::new(finished(
                 LOOKUP_MAP.get(path).map(|x| x())
             ));
         }
@@ -66,7 +66,7 @@ impl Lookup for WikiLookup {
 
         if split.next() != None {
             // Currently disallow any URLs of the form /slug/...
-            return Box::new(futures::finished(None));
+            return Box::new(finished(None));
         }
 
         if let Ok(article_id) = slug.parse() {
@@ -77,7 +77,7 @@ impl Lookup for WikiLookup {
                 )))
             )
         } else {
-            Box::new(futures::finished(None))
+            Box::new(finished(None))
         }
     }
 }
