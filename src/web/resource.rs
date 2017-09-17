@@ -7,13 +7,14 @@ lazy_static! {
     static ref TEXT_PLAIN: mime::Mime = "text/plain;charset=utf-8".parse().unwrap();
 }
 
-type Error = Box<std::error::Error + Send + Sync>;
+pub type Error = Box<std::error::Error + Send + Sync>;
+pub type ResponseFuture = Box<futures::Future<Item = server::Response, Error = Error>>;
 
 pub trait Resource {
     fn allow(&self) -> Vec<hyper::Method>;
-    fn head(&self) -> futures::BoxFuture<server::Response, Error>;
-    fn get(self: Box<Self>) -> futures::BoxFuture<server::Response, Error>;
-    fn put(self: Box<Self>, body: hyper::Body) -> futures::BoxFuture<server::Response, Error>;
+    fn head(&self) -> ResponseFuture;
+    fn get(self: Box<Self>) -> ResponseFuture;
+    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture;
 
     fn options(&self) -> Response {
         Response::new()

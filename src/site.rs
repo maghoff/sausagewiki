@@ -71,7 +71,7 @@ impl Service for Site {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
-    type Future = futures::BoxFuture<Response, Self::Error>;
+    type Future = Box<futures::Future<Item = Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
         let (method, uri, _http_version, _headers, body) = req.deconstruct();

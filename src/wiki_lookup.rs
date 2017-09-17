@@ -47,7 +47,7 @@ impl WikiLookup {
 impl Lookup for WikiLookup {
     type Resource = Box<Resource + Send + Sync>;
     type Error = Box<::std::error::Error + Send + Sync>;
-    type Future = futures::BoxFuture<Option<Self::Resource>, Self::Error>;
+    type Future = Box<Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
     fn lookup(&self, path: &str, _query: Option<&str>, _fragment: Option<&str>) -> Self::Future {
         assert!(path.starts_with("/"));

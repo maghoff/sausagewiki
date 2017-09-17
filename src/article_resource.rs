@@ -10,7 +10,7 @@ use assets::{StyleCss, ScriptJs};
 use models;
 use site::Layout;
 use state::State;
-use web::Resource;
+use web::{Resource, ResponseFuture};
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
@@ -69,14 +69,14 @@ impl Resource for ArticleResource {
         vec![Options, Head, Get, Put]
     }
 
-    fn head(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+    fn head(&self) -> ResponseFuture {
         Box::new(futures::finished(Response::new()
             .with_status(hyper::StatusCode::Ok)
             .with_header(ContentType(TEXT_HTML.clone()))
         ))
     }
 
-    fn get(self: Box<Self>) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
+    fn get(self: Box<Self>) -> ResponseFuture {
         use chrono::{self, TimeZone, Local};
 
         #[derive(BartDisplay)]
@@ -111,9 +111,7 @@ impl Resource for ArticleResource {
         ))
     }
 
-    fn put(self: Box<Self>, body: hyper::Body) ->
-        futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>>
-    {
+    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture {
         // TODO Check incoming Content-Type
 
         use chrono::{TimeZone, Local};

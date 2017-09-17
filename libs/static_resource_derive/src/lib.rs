@@ -71,9 +71,7 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                 vec![Options, Head, Get]
             }
 
-            fn head(&self) ->
-                ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
-            {
+            fn head(&self) -> ResponseFuture {
                 Box::new(::futures::finished(::hyper::server::Response::new()
                     .with_status(::hyper::StatusCode::Ok)
                     .with_header(::hyper::header::ContentType(
@@ -87,9 +85,7 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                 ))
             }
 
-            fn get(self: Box<Self>) ->
-                ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
-            {
+            fn get(self: Box<Self>) -> ResponseFuture {
                 let body = include_bytes!(#abs_filename);
 
                 Box::new(self.head().map(move |head|
@@ -99,9 +95,7 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                 ))
             }
 
-            fn put(self: Box<Self>, _body: ::hyper::Body) ->
-                ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
-            {
+            fn put(self: Box<Self>, _body: ::hyper::Body) -> ResponseFuture {
                 Box::new(::futures::finished(self.method_not_allowed()))
             }
         }

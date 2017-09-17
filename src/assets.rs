@@ -1,5 +1,5 @@
 use futures::Future;
-use web::Resource;
+use web::{Resource, ResponseFuture};
 
 #[derive(StaticResource)]
 #[filename = "assets/style.css"]
