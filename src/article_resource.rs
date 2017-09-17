@@ -70,10 +70,10 @@ impl Resource for ArticleResource {
     }
 
     fn head(&self) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
-        futures::finished(Response::new()
+        Box::new(futures::finished(Response::new()
             .with_status(hyper::StatusCode::Ok)
             .with_header(ContentType(TEXT_HTML.clone()))
-        ).boxed()
+        ))
     }
 
     fn get(self: Box<Self>) -> futures::BoxFuture<Response, Box<::std::error::Error + Send + Sync>> {
@@ -93,7 +93,7 @@ impl Resource for ArticleResource {
             script_js_checksum: &'a str,
         }
 
-        self.head().map(move |head|
+        Box::new(self.head().map(move |head|
             head
                 .with_body(Layout {
                     title: &self.data.title,
@@ -108,7 +108,7 @@ impl Resource for ArticleResource {
                     },
                     style_css_checksum: StyleCss::checksum(),
                 }.to_string())
-        ).boxed()
+        ))
     }
 
     fn put(self: Box<Self>, body: hyper::Body) ->
@@ -132,7 +132,7 @@ impl Resource for ArticleResource {
             created: &'a str,
         }
 
-        body
+        Box::new(body
             .concat2()
             .map_err(Into::into)
             .and_then(|body| {
@@ -153,6 +153,6 @@ impl Resource for ArticleResource {
                     }).expect("Should never fail"))
                 )
             })
-            .boxed()
+        )
     }
 }

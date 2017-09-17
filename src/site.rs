@@ -77,21 +77,21 @@ impl Service for Site {
         let (method, uri, _http_version, _headers, body) = req.deconstruct();
         println!("{} {}", method, uri);
 
-        self.root.lookup(uri.path(), uri.query(), None /*uri.fragment()*/)
+        Box::new(self.root.lookup(uri.path(), uri.query(), None /*uri.fragment()*/)
             .and_then(move |resource| match resource {
                 Some(resource) => {
                     use hyper::Method::*;
                     match method {
-                        Options => futures::finished(resource.options()).boxed(),
+                        Options => Box::new(futures::finished(resource.options())),
                         Head => resource.head(),
                         Get => resource.get(),
                         Put => resource.put(body),
-                        _ => futures::finished(resource.method_not_allowed()).boxed()
+                        _ => Box::new(futures::finished(resource.method_not_allowed()))
                     }
                 },
-                None => futures::finished(Self::not_found()).boxed()
+                None => Box::new(futures::finished(Self::not_found()))
             })
             .or_else(|err| Ok(Self::internal_server_error(err)))
-            .boxed()
+        )
     }
 }

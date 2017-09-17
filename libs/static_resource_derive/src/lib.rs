@@ -74,7 +74,7 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
             fn head(&self) ->
                 ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
             {
-                ::futures::finished(::hyper::server::Response::new()
+                Box::new(::futures::finished(::hyper::server::Response::new()
                     .with_status(::hyper::StatusCode::Ok)
                     .with_header(::hyper::header::ContentType(
                         #mime.parse().expect("Statically supplied mime type must be parseable")))
@@ -84,7 +84,7 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                         ::hyper::header::CacheDirective::Public,
                     ]))
                     .with_header(::hyper::header::ETag(Self::etag()))
-                ).boxed()
+                ))
             }
 
             fn get(self: Box<Self>) ->
@@ -92,17 +92,17 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
             {
                 let body = include_bytes!(#abs_filename);
 
-                self.head().map(move |head|
+                Box::new(self.head().map(move |head|
                     head
                         .with_header(::hyper::header::ContentLength(body.len() as u64))
                         .with_body(body as &'static [u8])
-                ).boxed()
+                ))
             }
 
             fn put(self: Box<Self>, _body: ::hyper::Body) ->
                 ::futures::BoxFuture<::hyper::server::Response, Box<::std::error::Error + Send + Sync>>
             {
-                ::futures::finished(self.method_not_allowed()).boxed()
+                Box::new(::futures::finished(self.method_not_allowed()))
             }
         }
 

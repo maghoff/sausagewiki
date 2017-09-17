@@ -55,9 +55,9 @@ impl Lookup for WikiLookup {
         if path.starts_with("/_") {
             // Reserved namespace
 
-            return futures::finished(
+            return Box::new(futures::finished(
                 LOOKUP_MAP.get(path).map(|x| x())
-            ).boxed();
+            ));
         }
 
         let mut split = path[1..].split('/');
@@ -66,18 +66,18 @@ impl Lookup for WikiLookup {
 
         if split.next() != None {
             // Currently disallow any URLs of the form /slug/...
-            return futures::finished(None).boxed();
+            return Box::new(futures::finished(None));
         }
 
         if let Ok(article_id) = slug.parse() {
             let state = self.state.clone();
-            self.state.get_article_revision_by_id(article_id)
+            Box::new(self.state.get_article_revision_by_id(article_id)
                 .and_then(|x| Ok(x.map(move |article|
                     Box::new(ArticleResource::new(state, article)) as Box<Resource + Sync + Send>
                 )))
-                .boxed()
+            )
         } else {
-            futures::finished(None).boxed()
+            Box::new(futures::finished(None))
         }
     }
 }
