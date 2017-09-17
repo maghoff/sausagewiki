@@ -1,4 +1,3 @@
-use diesel::sqlite::SqliteConnection;
 use diesel::prelude::*;
 use diesel::expression::sql_literal::sql;
 use diesel::types::*;

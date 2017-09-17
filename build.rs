@@ -17,7 +17,7 @@ fn main() {
 
     let _ignore_failure = std::fs::remove_file(db_path);
 
-    let connection = diesel::sqlite::SqliteConnection::establish(db_path)
+    let connection = SqliteConnection::establish(db_path)
         .expect(&format!("Error esablishing a database connection to {}", db_path));
 
     // Integer is a dummy placeholder. Compiling fails when passing ().
