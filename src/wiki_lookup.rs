@@ -4,6 +4,7 @@ use futures::{Future, finished};
 
 use assets::*;
 use article_resource::ArticleResource;
+use article_redirect_resource::ArticleRedirectResource;
 use state::State;
 use web::{Lookup, Resource};
 
@@ -69,15 +70,18 @@ impl Lookup for WikiLookup {
             return Box::new(finished(None));
         }
 
-        if let Ok(article_id) = slug.parse() {
-            let state = self.state.clone();
-            Box::new(self.state.get_article_revision_by_id(article_id)
-                .and_then(|x| Ok(x.map(move |article|
-                    Box::new(ArticleResource::new(state, article)) as Box<Resource + Sync + Send>
-                )))
-            )
-        } else {
-            Box::new(finished(None))
-        }
+        let state = self.state.clone();
+
+        use state::SlugLookup;
+        Box::new(self.state.lookup_slug(slug.to_owned())
+            .and_then(|x| Ok(match x {
+                SlugLookup::Miss => None,
+                SlugLookup::Hit { article_id, revision } =>
+                    Some(Box::new(ArticleResource::new(state, article_id, revision))
+                        as Box<Resource + Sync + Send>),
+                SlugLookup::Redirect(slug) =>
+                    Some(Box::new(ArticleRedirectResource::new(slug))
+                        as Box<Resource + Sync + Send>)
+            })))
     }
 }

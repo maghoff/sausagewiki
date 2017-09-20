@@ -7,7 +7,6 @@ use serde_json;
 use serde_urlencoded;
 
 use assets::{StyleCss, ScriptJs};
-use models;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
@@ -54,12 +53,13 @@ fn render_markdown(src: &str) -> String {
 
 pub struct ArticleResource {
     state: State,
-    data: models::ArticleRevision,
+    article_id: i32,
+    revision: i32,
 }
 
 impl ArticleResource {
-    pub fn new(state: State, data: models::ArticleRevision) -> Self {
-        Self { state, data }
+    pub fn new(state: State, article_id: i32, revision: i32) -> Self {
+        Self { state, article_id, revision }
     }
 }
 
@@ -93,22 +93,27 @@ impl Resource for ArticleResource {
             script_js_checksum: &'a str,
         }
 
-        Box::new(self.head().map(move |head|
-            head
-                .with_body(Layout {
-                    title: &self.data.title,
-                    body: &Template {
-                        article_id: self.data.article_id,
-                        revision: self.data.revision,
-                        created: &Local.from_utc_datetime(&self.data.created),
-                        title: &self.data.title,
-                        raw: &self.data.body,
-                        rendered: render_markdown(&self.data.body),
-                        script_js_checksum: ScriptJs::checksum(),
-                    },
-                    style_css_checksum: StyleCss::checksum(),
-                }.to_string())
-        ))
+        let data = self.state.get_article_revision(self.article_id, self.revision)
+            .map(|x| x.expect("Data model guarantees that this exists"));
+        let head = self.head();
+
+        Box::new(data.join(head)
+            .and_then(move |(data, head)| {
+                Ok(head
+                    .with_body(Layout {
+                        title: &data.title,
+                        body: &Template {
+                            article_id: data.article_id,
+                            revision: data.revision,
+                            created: &Local.from_utc_datetime(&data.created),
+                            title: &data.title,
+                            raw: &data.body,
+                            rendered: render_markdown(&data.body),
+                            script_js_checksum: ScriptJs::checksum(),
+                        },
+                        style_css_checksum: StyleCss::checksum(),
+                    }.to_string()))
+            }))
     }
 
     fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture {
@@ -138,7 +143,7 @@ impl Resource for ArticleResource {
                     .map_err(Into::into)
             })
             .and_then(move |update: UpdateArticle| {
-                self.state.update_article(self.data.article_id, update.base_revision, update.body)
+                self.state.update_article(self.article_id, update.base_revision, update.body)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()

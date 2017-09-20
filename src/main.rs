@@ -1,3 +1,5 @@
+#![recursion_limit="128"] // for diesel's infer_schema!
+
 #[macro_use] extern crate bart_derive;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
@@ -18,6 +20,7 @@ extern crate serde_urlencoded;
 
 use std::net::SocketAddr;
 
+mod article_redirect_resource;
 mod article_resource;
 mod assets;
 mod db;
