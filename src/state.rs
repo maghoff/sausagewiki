@@ -75,9 +75,8 @@ impl State {
             Ok(article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .filter(article_revisions::revision.eq(revision))
-                .limit(1)
-                .load::<models::ArticleRevision>(&*connection_pool.get()?)?
-                .pop())
+                .first::<models::ArticleRevision>(&*connection_pool.get()?)
+                .optional()?)
         })
     }
 
@@ -100,14 +99,13 @@ impl State {
                 Ok(match article_revisions::table
                     .filter(article_revisions::slug.eq(slug))
                     .order(article_revisions::sequence_number.desc())
-                    .limit(1)
                     .select((
                         article_revisions::article_id,
                         article_revisions::revision,
                         article_revisions::latest,
                     ))
-                    .load::<ArticleRevisionStub>(&*conn)?
-                    .pop()
+                    .first::<ArticleRevisionStub>(&*conn)
+                    .optional()?
                 {
                     None => SlugLookup::Miss,
                     Some(ref stub) if stub.latest => SlugLookup::Hit {
@@ -118,11 +116,8 @@ impl State {
                         article_revisions::table
                             .filter(article_revisions::latest.eq(true))
                             .filter(article_revisions::article_id.eq(stub.article_id))
-                            .limit(1)
                             .select(article_revisions::slug)
-                            .load::<String>(&*conn)?
-                            .pop()
-                            .expect("Data model requires this to exist")
+                            .first::<String>(&*conn)?
                     )
                 })
             })
@@ -141,15 +136,12 @@ impl State {
                 let (latest_revision, prev_title, prev_slug) = article_revisions::table
                     .filter(article_revisions::article_id.eq(article_id))
                     .order(article_revisions::revision.desc())
-                    .limit(1)
                     .select((
                         article_revisions::revision,
                         article_revisions::title,
                         article_revisions::slug,
                     ))
-                    .load::<(i32, String, String)>(&*conn)?
-                    .pop()
-                    .unwrap_or_else(|| unimplemented!("TODO Missing an error type"));
+                    .first::<(i32, String, String)>(&*conn)?;
 
                 if latest_revision != base_revision {
                     // TODO: If it is the same edit repeated, just respond OK
