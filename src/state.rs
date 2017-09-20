@@ -26,6 +26,38 @@ pub enum SlugLookup {
     Redirect(String),
 }
 
+fn decide_slug(conn: &SqliteConnection, prev_title: &str, title: &str, prev_slug: &str) -> Result<String, Error> {
+    if title == prev_title {
+        return Ok(prev_slug.to_owned());
+    }
+
+    let base_slug = ::slug::slugify(title);
+
+    if base_slug == prev_slug {
+        return Ok(base_slug);
+    }
+
+    use schema::article_revisions;
+
+    let mut slug = base_slug.clone();
+    let mut disambiguator = 1;
+
+    loop {
+        let slug_in_use = article_revisions::table
+            .filter(article_revisions::slug.eq(&slug))
+            .filter(article_revisions::latest.eq(true))
+            .count()
+            .first::<i64>(conn)? != 0;
+
+        if !slug_in_use {
+            break Ok(slug);
+        }
+
+        disambiguator += 1;
+        slug = format!("{}-{}", base_slug, disambiguator);
+    }
+}
+
 impl State {
     pub fn new(connection_pool: Pool<ConnectionManager<SqliteConnection>>, cpu_pool: futures_cpupool::CpuPool) -> State {
         State {
@@ -106,8 +138,7 @@ impl State {
             conn.transaction(|| {
                 use schema::article_revisions;
 
-                // TODO: Get title and slug as parameters to update_article, so we can... update those
-                let (latest_revision, title, slug) = article_revisions::table
+                let (latest_revision, prev_title, prev_slug) = article_revisions::table
                     .filter(article_revisions::article_id.eq(article_id))
                     .order(article_revisions::revision.desc())
                     .limit(1)
@@ -127,6 +158,8 @@ impl State {
                 }
                 let new_revision = base_revision + 1;
 
+                let title = prev_title.clone(); // TODO Have title be a parameter to this function
+                let slug = decide_slug(&*conn, &prev_title, &title, &prev_slug)?;
 
                 #[derive(Insertable)]
                 #[table_name="article_revisions"]
