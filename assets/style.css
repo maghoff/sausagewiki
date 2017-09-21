@@ -35,7 +35,7 @@ h2 {
 header {
     max-width: 600px;
     width: 100%;
-    margin: 40px auto 0 auto;
+    margin: 60px auto 0 auto;
 }
 
 article {
@@ -122,7 +122,7 @@ footer dt::after {
 }
 
 footer dd::after {
-    content: "|";
+    content: "\00B7";
     margin: 0 12px;
 }
 
