@@ -109,6 +109,7 @@ impl Resource for NewArticleResource {
         #[derive(Serialize)]
         struct PutResponse<'a> {
             slug: &'a str,
+            article_id: i32,
             revision: i32,
             title: &'a str,
             rendered: &'a str,
@@ -134,6 +135,7 @@ impl Resource for NewArticleResource {
                     .with_header(ContentType(APPLICATION_JSON.clone()))
                     .with_body(serde_json::to_string(&PutResponse {
                         slug: &updated.slug,
+                        article_id: updated.article_id,
                         revision: updated.revision,
                         title: &updated.title,
                         rendered: &Template {

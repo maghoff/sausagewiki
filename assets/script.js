@@ -24,6 +24,7 @@ function openEditor() {
     const cancel = editor.querySelector('.cancel');
 
     const footer = document.querySelector("footer");
+    const articleId = footer.querySelector(".article-id");
     const revision = footer.querySelector(".revision");
     const lastUpdated = footer.querySelector(".last-updated");
 
@@ -65,8 +66,9 @@ function openEditor() {
             const result = await response.json();
 
             // Update url-bar, page title and footer
-            window.history.replaceState(null, result.title, result.slug);
+            window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
             document.querySelector("title").textContent = result.title;
+            if (result.article_id != null) articleId.textContent = result.article_id;
             revision.textContent = result.revision;
             lastUpdated.textContent = result.created;
 
