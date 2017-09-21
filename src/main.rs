@@ -18,6 +18,7 @@ extern crate r2d2_diesel;
 extern crate serde_json;
 extern crate serde_urlencoded;
 extern crate slug;
+extern crate titlecase;
 
 use std::net::SocketAddr;
 

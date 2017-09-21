@@ -21,7 +21,7 @@ edit-link below and saving a new article.</p>
 ";
 
 fn title_from_slug(slug: &str) -> String {
-    slug.replace('-', " ")
+    ::titlecase::titlecase(&slug.replace('-', " "))
 }
 
 pub struct NewArticleResource {
