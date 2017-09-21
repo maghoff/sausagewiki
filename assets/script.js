@@ -15,9 +15,9 @@ function queryArgsFromForm(form) {
 
 let hasBeenOpen = false;
 function openEditor() {
-    const article = document.querySelector("article");
-    const rendered = article.querySelector(".rendered");
-    const editor = article.querySelector(".editor");
+    const container = document.querySelector(".container");
+    const rendered = container.querySelector(".rendered");
+    const editor = container.querySelector(".editor");
     const textarea = editor.querySelector('textarea[name="body"]');
     const shadow = editor.querySelector('textarea.shadow-control');
     const form = editor.querySelector("form");
@@ -29,7 +29,7 @@ function openEditor() {
 
     textarea.style.height = rendered.clientHeight + "px";
 
-    article.classList.add('edit');
+    container.classList.add('edit');
 
     autosizeTextarea(textarea, shadow);
 
@@ -63,11 +63,23 @@ function openEditor() {
             if (!response.ok) throw new Error("Unexpected status code (" + response.status + ")");
 
             const result = await response.json();
-            form.elements.base_revision.value = result.revision;
+
+            // Update url-bar, page title and footer
+            window.history.replaceState(null, result.title, result.slug);
+            document.querySelector("title").textContent = result.title;
             revision.textContent = result.revision;
             lastUpdated.textContent = result.created;
+
+            // Update body:
             rendered.innerHTML = result.rendered;
-            article.classList.remove('edit');
+
+            // Update form:
+            form.elements.base_revision.value = result.revision;
+            for (const element of form.elements) {
+                element.defaultValue = element.value;
+            }
+
+            container.classList.remove('edit');
 
             textarea.disabled = false;
         }()
@@ -82,7 +94,7 @@ function openEditor() {
         ev.preventDefault();
         ev.stopPropagation();
 
-        article.classList.remove('edit');
+        container.classList.remove('edit');
         form.reset();
     });
 }

@@ -91,7 +91,7 @@ body {
   display: flex;
   flex-direction: column;
 }
-article {
+.container {
   flex: 1;
 }
 
@@ -144,6 +144,15 @@ textarea {
     width: 100%;
     resize: none;
     overflow: hidden;
+}
+
+h1>input {
+    font: inherit;
+    border: none;
+    background: none;
+    padding: 0;
+
+    width: 100%;
 }
 
 .shadow-control {

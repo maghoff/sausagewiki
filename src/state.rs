@@ -26,7 +26,7 @@ pub enum SlugLookup {
     Redirect(String),
 }
 
-fn decide_slug(conn: &SqliteConnection, prev_title: &str, title: &str, prev_slug: &str) -> Result<String, Error> {
+fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: &str) -> Result<String, Error> {
     if title == prev_title {
         return Ok(prev_slug.to_owned());
     }
@@ -44,6 +44,7 @@ fn decide_slug(conn: &SqliteConnection, prev_title: &str, title: &str, prev_slug
 
     loop {
         let slug_in_use = article_revisions::table
+            .filter(article_revisions::article_id.ne(article_id))
             .filter(article_revisions::slug.eq(&slug))
             .filter(article_revisions::latest.eq(true))
             .count()
@@ -124,7 +125,9 @@ impl State {
         })
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, body: String) -> CpuFuture<models::ArticleRevision, Error> {
+    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String)
+        -> CpuFuture<models::ArticleRevision, Error>
+    {
         let connection_pool = self.connection_pool.clone();
 
         self.cpu_pool.spawn_fn(move || {
@@ -150,8 +153,7 @@ impl State {
                 }
                 let new_revision = base_revision + 1;
 
-                let title = prev_title.clone(); // TODO Have title be a parameter to this function
-                let slug = decide_slug(&*conn, &prev_title, &title, &prev_slug)?;
+                let slug = decide_slug(&*conn, article_id, &prev_title, &title, &prev_slug)?;
 
                 #[derive(Insertable)]
                 #[table_name="article_revisions"]
