@@ -193,9 +193,7 @@ impl State {
                 Ok(article_revisions::table
                     .filter(article_revisions::article_id.eq(article_id))
                     .filter(article_revisions::revision.eq(new_revision))
-                    .load::<models::ArticleRevision>(&*conn)?
-                    .pop()
-                    .expect("We just inserted this row!")
+                    .first::<models::ArticleRevision>(&*conn)?
                 )
             })
         })

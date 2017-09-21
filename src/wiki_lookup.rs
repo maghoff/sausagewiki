@@ -5,6 +5,7 @@ use futures::{Future, finished};
 use assets::*;
 use article_resource::ArticleResource;
 use article_redirect_resource::ArticleRedirectResource;
+use new_article_resource::NewArticleResource;
 use state::State;
 use web::{Lookup, Resource};
 
@@ -63,25 +64,37 @@ impl Lookup for WikiLookup {
 
         let mut split = path[1..].split('/');
 
-        let slug = split.next().expect("Always at least one element");
+        let slug = split.next().expect("Always at least one element").to_owned();
 
         if split.next() != None {
             // Currently disallow any URLs of the form /slug/...
             return Box::new(finished(None));
         }
 
+        // Normalize all user-generated slugs:
+        let slugified_slug = ::slug::slugify(&slug);
+        if slugified_slug != slug {
+            return Box::new(finished(Some(
+                Box::new(ArticleRedirectResource::new(slugified_slug))
+                        as Box<Resource + Sync + Send>
+            )));
+        }
+
         let state = self.state.clone();
 
         use state::SlugLookup;
-        Box::new(self.state.lookup_slug(slug.to_owned())
-            .and_then(|x| Ok(match x {
-                SlugLookup::Miss => None,
+        Box::new(self.state.lookup_slug(slug.clone())
+            .and_then(|x| Ok(Some(match x {
+                SlugLookup::Miss =>
+                    Box::new(NewArticleResource::new(state, slug))
+                        as Box<Resource + Sync + Send>,
                 SlugLookup::Hit { article_id, revision } =>
-                    Some(Box::new(ArticleResource::new(state, article_id, revision))
-                        as Box<Resource + Sync + Send>),
+                    Box::new(ArticleResource::new(state, article_id, revision))
+                        as Box<Resource + Sync + Send>,
                 SlugLookup::Redirect(slug) =>
-                    Some(Box::new(ArticleRedirectResource::new(slug))
-                        as Box<Resource + Sync + Send>)
+                    Box::new(ArticleRedirectResource::new(slug))
+                        as Box<Resource + Sync + Send>
             })))
+        )
     }
 }

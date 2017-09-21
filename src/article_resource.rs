@@ -1,55 +1,16 @@
 use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
-use hyper::mime;
 use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
 
 use assets::{StyleCss, ScriptJs};
+use mimes::*;
+use rendering::render_markdown;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
-
-lazy_static! {
-    static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
-    static ref APPLICATION_JSON: mime::Mime = "application/json".parse().unwrap();
-}
-
-fn render_markdown(src: &str) -> String {
-    use pulldown_cmark::Event;
-
-    struct EscapeHtml<'a, I: Iterator<Item=Event<'a>>> {
-        inner: I,
-    }
-
-    impl<'a, I: Iterator<Item=Event<'a>>> EscapeHtml<'a, I> {
-        fn new(inner: I) -> EscapeHtml<'a, I> {
-            EscapeHtml { inner }
-        }
-    }
-
-    impl<'a, I: Iterator<Item=Event<'a>>> Iterator for EscapeHtml<'a, I> {
-        type Item = Event<'a>;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            use pulldown_cmark::Event::{Text, Html, InlineHtml};
-
-            match self.inner.next() {
-                Some(Html(x)) => Some(Text(x)),
-                Some(InlineHtml(x)) => Some(Text(x)),
-                x => x
-            }
-        }
-    }
-
-    use pulldown_cmark::{Parser, html};
-
-    let p = EscapeHtml::new(Parser::new(src));
-    let mut buf = String::new();
-    html::push_html(&mut buf, p);
-    buf
-}
 
 pub struct ArticleResource {
     state: State,
