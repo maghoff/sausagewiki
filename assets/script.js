@@ -46,25 +46,23 @@ function openEditor() {
         ev.preventDefault();
         ev.stopPropagation();
 
-        (async function () {
-            const body = queryArgsFromForm(form);
-            textarea.disabled = true;
+        const body = queryArgsFromForm(form);
+        textarea.disabled = true;
 
-            const response = await fetch(
-                form.getAttribute("action"),
-                {
-                    method: 'PUT',
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: body,
-                }
-            );
-
+        fetch(
+            form.getAttribute("action"),
+            {
+                method: 'PUT',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: body,
+            }
+        ).then(response => {
             if (!response.ok) throw new Error("Unexpected status code (" + response.status + ")");
 
-            const result = await response.json();
-
+            return response.json();
+        }).then(result => {
             // Update url-bar, page title and footer
             window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
             document.querySelector("title").textContent = result.title;
@@ -84,12 +82,11 @@ function openEditor() {
             container.classList.remove('edit');
 
             textarea.disabled = false;
-        }()
-        .catch(err => {
+        }).catch(err => {
             textarea.disabled = false;
             console.error(err);
             alert(err);
-        }));
+        });
     });
 
     cancel.addEventListener('click', function (ev) {

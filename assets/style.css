@@ -131,6 +131,10 @@ footer dd:last-child::after {
     margin: 0;
 }
 
+input:focus, textarea:focus {
+    outline: none;
+}
+
 textarea {
     border: none;
     background: none;
