@@ -2,9 +2,12 @@ use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
+use serde_json;
+use serde_urlencoded;
 
 use assets::{StyleCss, ScriptJs};
 use mimes::*;
+use rendering::render_markdown;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
@@ -83,7 +86,64 @@ impl Resource for NewArticleResource {
             }))
     }
 
-    fn put(self: Box<Self>, _body: hyper::Body) -> ResponseFuture {
-        unimplemented!()
+    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture {
+        // TODO Check incoming Content-Type
+
+        use chrono::{TimeZone, Local};
+        use futures::Stream;
+
+        #[derive(Deserialize)]
+        struct CreateArticle {
+            base_revision: String,
+            title: String,
+            body: String,
+        }
+
+        #[derive(BartDisplay)]
+        #[template="templates/article_revision_contents.html"]
+        struct Template<'a> {
+            title: &'a str,
+            rendered: String,
+        }
+
+        #[derive(Serialize)]
+        struct PutResponse<'a> {
+            slug: &'a str,
+            revision: i32,
+            title: &'a str,
+            rendered: &'a str,
+            created: &'a str,
+        }
+
+        Box::new(body
+            .concat2()
+            .map_err(Into::into)
+            .and_then(|body| {
+                serde_urlencoded::from_bytes(&body)
+                    .map_err(Into::into)
+            })
+            .and_then(move |arg: CreateArticle| {
+                // TODO Check that update.base_revision == NDASH
+                // ... which seems silly. But there should be a mechanism to indicate that
+                // the client is actually trying to create a new article
+                self.state.create_article(self.slug.clone(), arg.title, arg.body)
+            })
+            .and_then(|updated| {
+                futures::finished(Response::new()
+                    .with_status(hyper::StatusCode::Ok)
+                    .with_header(ContentType(APPLICATION_JSON.clone()))
+                    .with_body(serde_json::to_string(&PutResponse {
+                        slug: &updated.slug,
+                        revision: updated.revision,
+                        title: &updated.title,
+                        rendered: &Template {
+                            title: &updated.title,
+                            rendered: render_markdown(&updated.body),
+                        }.to_string(),
+                        created: &Local.from_utc_datetime(&updated.created).to_string(),
+                    }).expect("Should never fail"))
+                )
+            })
+        )
     }
 }

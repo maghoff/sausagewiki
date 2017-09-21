@@ -8,6 +8,7 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 
 use models;
+use schema::*;
 
 #[derive(Clone)]
 pub struct State {
@@ -24,6 +25,17 @@ pub enum SlugLookup {
         revision: i32,
     },
     Redirect(String),
+}
+
+#[derive(Insertable)]
+#[table_name="article_revisions"]
+struct NewRevision<'a> {
+    article_id: i32,
+    revision: i32,
+    slug: &'a str,
+    title: &'a str,
+    body: &'a str,
+    latest: bool,
 }
 
 fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: &str) -> Result<String, Error> {
@@ -160,17 +172,6 @@ impl State {
 
                 let slug = decide_slug(&*conn, article_id, &prev_title, &title, &prev_slug)?;
 
-                #[derive(Insertable)]
-                #[table_name="article_revisions"]
-                struct NewRevision<'a> {
-                    article_id: i32,
-                    revision: i32,
-                    slug: &'a str,
-                    title: &'a str,
-                    body: &'a str,
-                    latest: bool,
-                }
-
                 diesel::update(
                     article_revisions::table
                         .filter(article_revisions::article_id.eq(article_id))
@@ -178,6 +179,55 @@ impl State {
                 )
                     .set(article_revisions::latest.eq(false))
                     .execute(&*conn)?;
+
+                diesel::insert(&NewRevision {
+                        article_id,
+                        revision: new_revision,
+                        slug: &slug,
+                        title: &title,
+                        body: &body,
+                        latest: true,
+                    })
+                    .into(article_revisions::table)
+                    .execute(&*conn)?;
+
+                Ok(article_revisions::table
+                    .filter(article_revisions::article_id.eq(article_id))
+                    .filter(article_revisions::revision.eq(new_revision))
+                    .first::<models::ArticleRevision>(&*conn)?
+                )
+            })
+        })
+    }
+
+    pub fn create_article(&self, target_slug: String, title: String, body: String)
+        -> CpuFuture<models::ArticleRevision, Error>
+    {
+        let connection_pool = self.connection_pool.clone();
+
+        self.cpu_pool.spawn_fn(move || {
+            let conn = connection_pool.get()?;
+
+            conn.transaction(|| {
+                #[derive(Insertable)]
+                #[table_name="articles"]
+                struct NewArticle {
+                    id: Option<i32>
+                }
+
+                let article_id = {
+                    use diesel::expression::sql_literal::sql;
+                    // Diesel and SQLite are a bit in disagreement for how this should look:
+                    sql::<(diesel::types::Integer)>("INSERT INTO articles VALUES (null)")
+                        .execute(&*conn)?;
+                    sql::<(diesel::types::Integer)>("SELECT LAST_INSERT_ROWID()")
+                        .load::<i32>(&*conn)?
+                        .pop().expect("Statement must evaluate to an integer")
+                };
+
+                let slug = decide_slug(&*conn, article_id, "", &title, &target_slug)?;
+
+                let new_revision = 1;
 
                 diesel::insert(&NewRevision {
                         article_id,
