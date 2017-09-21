@@ -27,6 +27,11 @@ pub enum SlugLookup {
 }
 
 fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: &str) -> Result<String, Error> {
+    if prev_slug == "" {
+        // Never give a non-empty slug to the front page
+        return Ok(String::new());
+    }
+
     if title == prev_title {
         return Ok(prev_slug.to_owned());
     }
