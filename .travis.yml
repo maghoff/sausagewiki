@@ -1,14 +1,15 @@
 language: rust
 rust:
-- stable-x86_64-unknown-linux-musl
-- beta-x86_64-unknown-linux-musl
-- nightly-x86_64-unknown-linux-musl
+- stable
+- beta
+- nightly
 
 matrix:
   allow_failures:
   - rust: nightly
 
 script:
+- rustup target add x86_64-unknown-linux-musl
 - cargo build --release --target=x86_64-unknown-linux-musl
 - cargo test --release --target=x86_64-unknown-linux-musl
 - xz -9 < target/x86_64-unknown-linux-musl/release/sausagewiki > sausagewiki.xz
