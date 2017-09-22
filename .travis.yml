@@ -1,13 +1,33 @@
 language: rust
 rust:
-  - stable
-  - beta
-  - nightly
+- stable
+- beta
+- nightly
 
 matrix:
   allow_failures:
-    - rust: nightly
+  - rust: nightly
+
+script:
+- cargo build --release --target=x86_64-unknown-linux-musl
+- cargo test --release --target=x86_64-unknown-linux-musl
+- xz -9 < target/x86_64-unknown-linux-musl/release/sausagewiki > sausagewiki.xz
+
+deploy:
+  provider: releases
+  api_key:
+    secure: NmM+uk4ijbv5wFF3O7w9KLTrGYbe1mxWAzJDR8cD9rimgORWNQKlHOZtthAQxVgtvmhKAMkzwglgQSX3p0w4yGK5oaV3oO1aA21dzlf0BXL7/BOxgYSTjV+x8O1uIu57ERnf4k2WATCpLSx4r4LpfxMgjdEtIl6LDAnV/zX+HKu7pZAzXvmkS22m5CJbEY4M6DpCAIfpP99dolnyU7h5/AR1njMmzSqGB/naVe5O2j0sBveInsjC+4gPSh9QT/VHZBxbOctcy+kSzwN4iDktkFdYIGe9Z2sDjXsiI39ihXntyOHXA2iVpdkgpIGeLIYBOo+DobgMdS45CzZQ2y9zLnwXwODCgrh8qexxnRpC8RG7uKuVe50R6v4HDPgkjwCJoHicxaEUDiPIsg5qCxEfMYd5qUt21OwEwBN9N8K/RZD0fmgKLE5lQiyxubufeSB4wjpWrXct2M46t25qPFobbZ0kzLCXtZHtKk1mkkk+EWv8UOhRvJ8ih0Fb9ivSOrN6YA1/eRd9/SRntkJriMYmfAW50W3DnyFnPHqdV+x+jHJgcB+DnaDvQnPamk93ZDF/UyUDjVuPJFd0BAFxoRUy6HGaF/yajH4r9g3EdlfSu2IrGDo4vIA9qawBYpHyaSGvYwdCDx4/oUPIAf8sLBS01WOaDJgcmmFey7A/OqSEt6Q=
+  file: sausagewiki.xz
+  skip_cleanup: true
+  on:
+    repo: maghoff/sausagewiki
+    branch: master
+    rust: stable
 
 cache: cargo
 before_cache:
-  - chmod -R a+r $HOME/.cargo
+- chmod -R a+r $HOME/.cargo
+
+branches:
+  except:
+  - "/^untagged-/"
