@@ -1,8 +1,8 @@
 language: rust
 rust:
-- stable
-- beta
-- nightly
+- stable-x86_64-unknown-linux-musl
+- beta-x86_64-unknown-linux-musl
+- nightly-x86_64-unknown-linux-musl
 
 matrix:
   allow_failures:
