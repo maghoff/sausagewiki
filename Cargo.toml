@@ -2,6 +2,7 @@
 name = "sausagewiki"
 version = "0.1.0"
 authors = ["Magnus Hoff <maghoff@gmail.com>"]
+license = "GPL-3.0"
 
 [dependencies]
 futures = "0.1"
