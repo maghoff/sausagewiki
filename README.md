@@ -37,7 +37,6 @@ Command line arguments
     ARGS:
         <DATABASE>    Sets the database file to use
 
-Sausage will create an SQLite database file with the filename given in the
+Sausagewiki will create an SQLite database file with the filename given in the
 `DATABASE` parameter and open an HTTP server bound to `127.0.0.1` and the given
 port number. The default port number is 8080.
-
