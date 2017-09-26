@@ -32,18 +32,17 @@ h2 {
     margin-bottom: 0;
 }
 
-header {
-    max-width: 600px;
+header, article, footer {
+    box-sizing: border-box;
+    max-width: 612px;
     width: 100%;
     margin: 60px auto 0 auto;
+    padding: 0 6px;
 }
 
 article {
     font-size: 18px;
     line-height: 32px;
-    max-width: 600px;
-    width: 100%;
-    margin: 0 auto 120px auto;
 }
 
 blockquote {
@@ -80,6 +79,11 @@ a:hover {
     color: #79b9e1;
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 
 /* Sticky footer */
 html, body {
@@ -97,7 +101,9 @@ body {
 
 
 footer {
-    padding: 16px 0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+
     background: #f8f8f8;
     color: #444;
     text-align: center;
