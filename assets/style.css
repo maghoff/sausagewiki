@@ -22,26 +22,49 @@ h1 {
     line-height: 54px;
 }
 
-h2 {
+h2, h3 {
     font-family: inherit;
-    font-weight: bold;
-    font-style: normal;
     font-size: 18px;
     line-height: 32px;
     margin-top: 32px;
     margin-bottom: 0;
 }
 
+h2 {
+    font-weight: bold;
+    font-style: normal;
+}
+
+h3 {
+    font-weight: normal;
+    font-style: italic;
+}
+
+ul, ol {
+    padding-left: 24px;
+}
+
+h2+*, h3+* {
+    margin-top: 0;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid black;
+    width: 70%;
+    margin: 20px auto;
+}
+
 header, article {
     box-sizing: border-box;
     max-width: 612px;
     width: 100%;
-    padding-left: 6px;
-    padding-right: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 header {
-    margin: 60px auto 0 auto;
+    margin: 0 auto 0 auto;
 }
 
 article {
@@ -204,6 +227,10 @@ h1>input {
 }
 
 @media (min-width: 600px) {
+    header {
+        margin-top: 60px;
+    }
+
     .editor-controls {
         position: fixed;
         left: auto;
