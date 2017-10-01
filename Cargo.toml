@@ -28,6 +28,7 @@ chrono = "0.4"
 clap = "2.26"
 bart = "0.1.4"
 bart_derive = "0.1.4"
+percent-encoding = "1.0.0"
 
 [dependencies.libsqlite3-sys]
 features = ["bundled"]

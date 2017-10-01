@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use futures::{Future, finished};
+use futures::{Future, finished, failed};
+use percent_encoding::percent_decode;
 
 use assets::*;
 use article_resource::ArticleResource;
@@ -66,7 +67,11 @@ impl Lookup for WikiLookup {
 
         let mut split = path[1..].split('/');
 
-        let slug = split.next().expect("Always at least one element").to_owned();
+        let slug = split.next().expect("Always at least one element");
+        let slug = match percent_decode(slug.as_bytes()).decode_utf8() {
+            Ok(x) => x,
+            Err(x) => return Box::new(failed(x.into()))
+        }.to_string();
 
         if split.next() != None {
             // Currently disallow any URLs of the form /slug/...

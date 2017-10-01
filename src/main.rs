@@ -12,6 +12,7 @@ extern crate clap;
 extern crate futures;
 extern crate futures_cpupool;
 extern crate hyper;
+extern crate percent_encoding;
 extern crate pulldown_cmark;
 extern crate r2d2;
 extern crate r2d2_diesel;
