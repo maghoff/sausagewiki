@@ -9,25 +9,27 @@ use new_article_resource::NewArticleResource;
 use state::State;
 use web::{Lookup, Resource};
 
+type BoxResource = Box<Resource + Sync + Send>;
+
 lazy_static! {
-    static ref LOOKUP_MAP: HashMap<String, Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>> = {
+    static ref LOOKUP_MAP: HashMap<String, Box<Fn() -> BoxResource + Sync + Send>> = {
         let mut lookup_map = HashMap::new();
 
         lookup_map.insert(
             format!("/_assets/style-{}.css", StyleCss::checksum()),
-            Box::new(|| Box::new(StyleCss) as Box<Resource + Sync + Send>)
+            Box::new(|| Box::new(StyleCss) as BoxResource)
                 as Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>
         );
 
         lookup_map.insert(
             format!("/_assets/script-{}.js", ScriptJs::checksum()),
-            Box::new(|| Box::new(ScriptJs) as Box<Resource + Sync + Send>)
+            Box::new(|| Box::new(ScriptJs) as BoxResource)
                 as Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>
         );
 
         lookup_map.insert(
             format!("/_assets/amatic-sc-v9-latin-regular.woff"),
-            Box::new(|| Box::new(AmaticFont) as Box<Resource + Sync + Send>)
+            Box::new(|| Box::new(AmaticFont) as BoxResource)
                 as Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>
         );
 
@@ -47,7 +49,7 @@ impl WikiLookup {
 }
 
 impl Lookup for WikiLookup {
-    type Resource = Box<Resource + Send + Sync>;
+    type Resource = BoxResource;
     type Error = Box<::std::error::Error + Send + Sync>;
     type Future = Box<Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
@@ -75,8 +77,7 @@ impl Lookup for WikiLookup {
         let slugified_slug = ::slug::slugify(&slug);
         if slugified_slug != slug {
             return Box::new(finished(Some(
-                Box::new(ArticleRedirectResource::new(slugified_slug))
-                        as Box<Resource + Sync + Send>
+                Box::new(ArticleRedirectResource::new(slugified_slug)) as BoxResource
             )));
         }
 
@@ -86,14 +87,11 @@ impl Lookup for WikiLookup {
         Box::new(self.state.lookup_slug(slug.clone())
             .and_then(|x| Ok(Some(match x {
                 SlugLookup::Miss =>
-                    Box::new(NewArticleResource::new(state, slug))
-                        as Box<Resource + Sync + Send>,
+                    Box::new(NewArticleResource::new(state, slug)) as BoxResource,
                 SlugLookup::Hit { article_id, revision } =>
-                    Box::new(ArticleResource::new(state, article_id, revision))
-                        as Box<Resource + Sync + Send>,
+                    Box::new(ArticleResource::new(state, article_id, revision)) as BoxResource,
                 SlugLookup::Redirect(slug) =>
-                    Box::new(ArticleRedirectResource::new(slug))
-                        as Box<Resource + Sync + Send>
+                    Box::new(ArticleRedirectResource::new(slug)) as BoxResource,
             })))
         )
     }
