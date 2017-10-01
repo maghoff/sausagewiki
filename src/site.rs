@@ -4,10 +4,10 @@
 use std::fmt;
 
 use futures::{self, Future};
-use hyper;
 use hyper::header::ContentType;
 use hyper::mime;
 use hyper::server::*;
+use hyper;
 
 use assets::StyleCss;
 use web::Lookup;

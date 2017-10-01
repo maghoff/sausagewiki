@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use futures::{Future, finished, failed};
 use percent_encoding::percent_decode;
 
-use assets::*;
-use article_resource::ArticleResource;
 use article_redirect_resource::ArticleRedirectResource;
+use article_resource::ArticleResource;
+use assets::*;
 use new_article_resource::NewArticleResource;
 use state::State;
 use web::{Lookup, Resource};
