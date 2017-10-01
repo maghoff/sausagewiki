@@ -80,10 +80,6 @@ blockquote {
     border-left: 4px solid #eee;
 }
 
-p {
-    margin: 0 0 28px 0;
-}
-
 code, pre {
     background: #f8f8f8;
     font-family: "SF Mono", "Monaco",
@@ -130,7 +126,7 @@ body {
 
 
 footer {
-    padding: 16px 6px;
+    padding: 0 8px;
 
     background: #f8f8f8;
     color: #444;
@@ -139,10 +135,6 @@ footer {
         "Segoe UI", "Roboto", "Oxygen",
         "Ubuntu", "Cantarell", "Fira Sans",
         "Droid Sans", "Helvetica Neue", sans-serif;
-}
-
-footer dl {
-    margin: 0;
 }
 
 footer dt, footer dd {
