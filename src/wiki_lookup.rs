@@ -11,36 +11,32 @@ use state::State;
 use web::{Lookup, Resource};
 
 type BoxResource = Box<Resource + Sync + Send>;
+type ResourceFn = Box<Fn(State) -> BoxResource + Sync + Send>;
 
 lazy_static! {
-    static ref LOOKUP_MAP: HashMap<String, Box<Fn(State) -> BoxResource + Sync + Send>> = {
+    static ref LOOKUP_MAP: HashMap<String, ResourceFn> = {
         let mut lookup_map = HashMap::new();
 
         lookup_map.insert(
             "/_new".to_string(),
             Box::new(|state|
-                Box::new(
-                    NewArticleResource::new(state, None)
-                ) as BoxResource
-            ) as Box<Fn(State) -> BoxResource + Sync + Send>
+                Box::new(NewArticleResource::new(state, None)) as BoxResource
+            ) as ResourceFn
         );
 
         lookup_map.insert(
             format!("/_assets/style-{}.css", StyleCss::checksum()),
-            Box::new(|_| Box::new(StyleCss) as BoxResource)
-                as Box<Fn(State) -> BoxResource + Sync + Send>
+            Box::new(|_| Box::new(StyleCss) as BoxResource) as ResourceFn
         );
 
         lookup_map.insert(
             format!("/_assets/script-{}.js", ScriptJs::checksum()),
-            Box::new(|_| Box::new(ScriptJs) as BoxResource)
-                as Box<Fn(State) -> BoxResource + Sync + Send>
+            Box::new(|_| Box::new(ScriptJs) as BoxResource) as ResourceFn
         );
 
         lookup_map.insert(
             format!("/_assets/amatic-sc-v9-latin-regular.woff"),
-            Box::new(|_| Box::new(AmaticFont) as BoxResource)
-                as Box<Fn(State) -> BoxResource + Sync + Send>
+            Box::new(|_| Box::new(AmaticFont) as BoxResource) as ResourceFn
         );
 
         lookup_map
