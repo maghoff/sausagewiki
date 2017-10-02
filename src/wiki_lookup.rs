@@ -11,7 +11,7 @@ use state::State;
 use web::{Lookup, Resource};
 
 type BoxResource = Box<Resource + Sync + Send>;
-type ResourceFn = Box<Fn(State) -> BoxResource + Sync + Send>;
+type ResourceFn = Box<Fn(&State) -> BoxResource + Sync + Send>;
 
 lazy_static! {
     static ref LOOKUP_MAP: HashMap<String, ResourceFn> = {
@@ -19,24 +19,24 @@ lazy_static! {
 
         lookup_map.insert(
             "/_new".to_string(),
-            Box::new(|state|
-                Box::new(NewArticleResource::new(state, None)) as BoxResource
+            Box::new(|state: &State|
+                Box::new(NewArticleResource::new(state.clone(), None)) as BoxResource
             ) as ResourceFn
         );
 
         lookup_map.insert(
             format!("/_assets/style-{}.css", StyleCss::checksum()),
-            Box::new(|_| Box::new(StyleCss) as BoxResource) as ResourceFn
+            Box::new(|_: &State| Box::new(StyleCss) as BoxResource) as ResourceFn
         );
 
         lookup_map.insert(
             format!("/_assets/script-{}.js", ScriptJs::checksum()),
-            Box::new(|_| Box::new(ScriptJs) as BoxResource) as ResourceFn
+            Box::new(|_: &State| Box::new(ScriptJs) as BoxResource) as ResourceFn
         );
 
         lookup_map.insert(
             format!("/_assets/amatic-sc-v9-latin-regular.woff"),
-            Box::new(|_| Box::new(AmaticFont) as BoxResource) as ResourceFn
+            Box::new(|_: &State| Box::new(AmaticFont) as BoxResource) as ResourceFn
         );
 
         lookup_map
@@ -66,7 +66,7 @@ impl Lookup for WikiLookup {
             // Reserved namespace
 
             return Box::new(finished(
-                LOOKUP_MAP.get(path).map(|x| x(self.state.clone()))
+                LOOKUP_MAP.get(path).map(|x| x(&self.state))
             ));
         }
 
