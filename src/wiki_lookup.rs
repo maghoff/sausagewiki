@@ -59,7 +59,7 @@ impl Lookup for WikiLookup {
     type Error = Box<::std::error::Error + Send + Sync>;
     type Future = Box<Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
-    fn lookup(&self, path: &str, query: Option<&str>, _fragment: Option<&str>) -> Self::Future {
+    fn lookup(&self, path: &str, query: Option<&str>) -> Self::Future {
         assert!(path.starts_with("/"));
 
         if path.starts_with("/_") {

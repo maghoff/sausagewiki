@@ -77,7 +77,7 @@ impl Service for Site {
         let (method, uri, _http_version, _headers, body) = req.deconstruct();
         println!("{} {}", method, uri);
 
-        Box::new(self.root.lookup(uri.path(), uri.query(), None /*uri.fragment()*/)
+        Box::new(self.root.lookup(uri.path(), uri.query())
             .and_then(move |resource| match resource {
                 Some(resource) => {
                     use hyper::Method::*;
