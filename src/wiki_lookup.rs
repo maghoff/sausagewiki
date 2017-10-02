@@ -59,7 +59,7 @@ impl Lookup for WikiLookup {
     type Error = Box<::std::error::Error + Send + Sync>;
     type Future = Box<Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
-    fn lookup(&self, path: &str, _query: Option<&str>, _fragment: Option<&str>) -> Self::Future {
+    fn lookup(&self, path: &str, query: Option<&str>, _fragment: Option<&str>) -> Self::Future {
         assert!(path.starts_with("/"));
 
         if path.starts_with("/_") {
@@ -92,14 +92,15 @@ impl Lookup for WikiLookup {
         }
 
         let state = self.state.clone();
+        let edit = query == Some("edit");
 
         use state::SlugLookup;
         Box::new(self.state.lookup_slug(slug.clone())
-            .and_then(|x| Ok(Some(match x {
+            .and_then(move |x| Ok(Some(match x {
                 SlugLookup::Miss =>
                     Box::new(NewArticleResource::new(state, Some(slug))) as BoxResource,
                 SlugLookup::Hit { article_id, revision } =>
-                    Box::new(ArticleResource::new(state, article_id, revision)) as BoxResource,
+                    Box::new(ArticleResource::new(state, article_id, revision, edit)) as BoxResource,
                 SlugLookup::Redirect(slug) =>
                     Box::new(ArticleRedirectResource::new(slug)) as BoxResource,
             })))

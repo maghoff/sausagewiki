@@ -1,6 +1,6 @@
 <script src="_assets/script-{{script_js_checksum}}.js" defer></script>
 
-<div class="container {{^cancel_url}}edit{{/cancel_url}}">
+<div class="container {{#edit?}}edit{{/edit}}">
 <div class="rendered">
 {{>article_revision_contents.html}}
 </div>
@@ -32,7 +32,7 @@
 <footer>
 <ul>
     <li><a href="_new">Create article</a></li>
-    <li><a id="openEditor" href="?editor">Edit</a></li>
+    <li><a id="openEditor" href="?edit">Edit</a></li>
 </ul>
 <dl>
     <dt>Article ID</dt>

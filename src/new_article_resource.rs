@@ -56,6 +56,7 @@ impl Resource for NewArticleResource {
             revision: &'a str,
             created: &'a str,
 
+            edit: bool,
             cancel_url: Option<&'a str>,
             title: &'a str,
             raw: &'a str,
@@ -76,6 +77,11 @@ impl Resource for NewArticleResource {
                             article_id: NDASH,
                             revision: NDASH,
                             created: NDASH,
+
+                            // Implicitly start in edit-mode when no slug is given. This
+                            // currently directly corresponds to the /_new endpoint
+                            edit: self.slug.is_none(),
+
                             cancel_url: self.slug.as_ref().map(|x| &**x),
                             title: &title,
                             raw: "",

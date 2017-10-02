@@ -16,11 +16,12 @@ pub struct ArticleResource {
     state: State,
     article_id: i32,
     revision: i32,
+    edit: bool,
 }
 
 impl ArticleResource {
-    pub fn new(state: State, article_id: i32, revision: i32) -> Self {
-        Self { state, article_id, revision }
+    pub fn new(state: State, article_id: i32, revision: i32, edit: bool) -> Self {
+        Self { state, article_id, revision, edit }
     }
 }
 
@@ -47,6 +48,7 @@ impl Resource for ArticleResource {
             revision: i32,
             created: &'a chrono::DateTime<Local>,
 
+            edit: bool,
             cancel_url: Option<&'a str>,
             title: &'a str,
             raw: &'a str,
@@ -68,6 +70,7 @@ impl Resource for ArticleResource {
                             article_id: data.article_id,
                             revision: data.revision,
                             created: &Local.from_utc_datetime(&data.created),
+                            edit: self.edit,
                             cancel_url: Some(&data.slug),
                             title: &data.title,
                             raw: &data.body,
