@@ -38,20 +38,22 @@ struct NewRevision<'a> {
     latest: bool,
 }
 
-fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: &str) -> Result<String, Error> {
-    if prev_slug == "" {
-        // Never give a non-empty slug to the front page
-        return Ok(String::new());
-    }
-
-    if title == prev_title {
-        return Ok(prev_slug.to_owned());
-    }
-
+fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: Option<&str>) -> Result<String, Error> {
     let base_slug = ::slug::slugify(title);
 
-    if base_slug == prev_slug {
-        return Ok(base_slug);
+    if let Some(prev_slug) = prev_slug {
+        if prev_slug == "" {
+            // Never give a non-empty slug to the front page
+            return Ok(String::new());
+        }
+
+        if title == prev_title {
+            return Ok(prev_slug.to_owned());
+        }
+
+        if base_slug == prev_slug {
+            return Ok(base_slug);
+        }
     }
 
     use schema::article_revisions;
@@ -170,7 +172,7 @@ impl State {
                 }
                 let new_revision = base_revision + 1;
 
-                let slug = decide_slug(&*conn, article_id, &prev_title, &title, &prev_slug)?;
+                let slug = decide_slug(&*conn, article_id, &prev_title, &title, Some(&prev_slug))?;
 
                 diesel::update(
                     article_revisions::table
@@ -200,7 +202,7 @@ impl State {
         })
     }
 
-    pub fn create_article(&self, target_slug: String, title: String, body: String)
+    pub fn create_article(&self, target_slug: Option<String>, title: String, body: String)
         -> CpuFuture<models::ArticleRevision, Error>
     {
         let connection_pool = self.connection_pool.clone();
@@ -225,7 +227,7 @@ impl State {
                         .pop().expect("Statement must evaluate to an integer")
                 };
 
-                let slug = decide_slug(&*conn, article_id, "", &title, &target_slug)?;
+                let slug = decide_slug(&*conn, article_id, "", &title, target_slug.as_ref().map(|x| &**x))?;
 
                 let new_revision = 1;
 

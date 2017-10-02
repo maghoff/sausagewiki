@@ -107,3 +107,7 @@ document
 
         openEditor();
     })
+
+if (document.querySelector(".container").classList.contains("edit")) {
+    openEditor();
+}

@@ -1,6 +1,6 @@
 <script src="_assets/script-{{script_js_checksum}}.js" defer></script>
 
-<div class="container">
+<div class="container {{^cancel_url}}edit{{/cancel_url}}">
 <div class="rendered">
 {{>article_revision_contents.html}}
 </div>
@@ -19,7 +19,9 @@
 </article>
 
 <div class="editor-controls">
-    <a class="cancel" href="{{slug}}">Cancel</a>
+{{#cancel_url}}
+    <a class="cancel" href="{{.}}">Cancel</a>
+{{/cancel_url}}
     <button type=submit>Save</button>
 </div>
 

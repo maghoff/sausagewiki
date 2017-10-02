@@ -26,11 +26,11 @@ fn title_from_slug(slug: &str) -> String {
 
 pub struct NewArticleResource {
     state: State,
-    slug: String,
+    slug: Option<String>,
 }
 
 impl NewArticleResource {
-    pub fn new(state: State, slug: String) -> Self {
+    pub fn new(state: State, slug: Option<String>) -> Self {
         Self { state, slug }
     }
 }
@@ -56,7 +56,7 @@ impl Resource for NewArticleResource {
             revision: &'a str,
             created: &'a str,
 
-            slug: &'a str,
+            cancel_url: Option<&'a str>,
             title: &'a str,
             raw: &'a str,
             rendered: &'a str,
@@ -64,7 +64,8 @@ impl Resource for NewArticleResource {
             script_js_checksum: &'a str,
         }
 
-        let title = title_from_slug(&self.slug);
+        let title = self.slug.as_ref()
+            .map_or("".to_owned(), |x| title_from_slug(x));
 
         Box::new(self.head()
             .and_then(move |head| {
@@ -75,7 +76,7 @@ impl Resource for NewArticleResource {
                             article_id: NDASH,
                             revision: NDASH,
                             created: NDASH,
-                            slug: &self.slug,
+                            cancel_url: self.slug.as_ref().map(|x| &**x),
                             title: &title,
                             raw: "",
                             rendered: EMPTY_ARTICLE_MESSAGE,

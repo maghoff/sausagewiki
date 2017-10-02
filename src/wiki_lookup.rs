@@ -13,25 +13,34 @@ use web::{Lookup, Resource};
 type BoxResource = Box<Resource + Sync + Send>;
 
 lazy_static! {
-    static ref LOOKUP_MAP: HashMap<String, Box<Fn() -> BoxResource + Sync + Send>> = {
+    static ref LOOKUP_MAP: HashMap<String, Box<Fn(State) -> BoxResource + Sync + Send>> = {
         let mut lookup_map = HashMap::new();
 
         lookup_map.insert(
+            "/_new".to_string(),
+            Box::new(|state|
+                Box::new(
+                    NewArticleResource::new(state, None)
+                ) as BoxResource
+            ) as Box<Fn(State) -> BoxResource + Sync + Send>
+        );
+
+        lookup_map.insert(
             format!("/_assets/style-{}.css", StyleCss::checksum()),
-            Box::new(|| Box::new(StyleCss) as BoxResource)
-                as Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>
+            Box::new(|_| Box::new(StyleCss) as BoxResource)
+                as Box<Fn(State) -> BoxResource + Sync + Send>
         );
 
         lookup_map.insert(
             format!("/_assets/script-{}.js", ScriptJs::checksum()),
-            Box::new(|| Box::new(ScriptJs) as BoxResource)
-                as Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>
+            Box::new(|_| Box::new(ScriptJs) as BoxResource)
+                as Box<Fn(State) -> BoxResource + Sync + Send>
         );
 
         lookup_map.insert(
             format!("/_assets/amatic-sc-v9-latin-regular.woff"),
-            Box::new(|| Box::new(AmaticFont) as BoxResource)
-                as Box<Fn() -> Box<Resource + Sync + Send> + Sync + Send>
+            Box::new(|_| Box::new(AmaticFont) as BoxResource)
+                as Box<Fn(State) -> BoxResource + Sync + Send>
         );
 
         lookup_map
@@ -61,7 +70,7 @@ impl Lookup for WikiLookup {
             // Reserved namespace
 
             return Box::new(finished(
-                LOOKUP_MAP.get(path).map(|x| x())
+                LOOKUP_MAP.get(path).map(|x| x(self.state.clone()))
             ));
         }
 
@@ -92,7 +101,7 @@ impl Lookup for WikiLookup {
         Box::new(self.state.lookup_slug(slug.clone())
             .and_then(|x| Ok(Some(match x {
                 SlugLookup::Miss =>
-                    Box::new(NewArticleResource::new(state, slug)) as BoxResource,
+                    Box::new(NewArticleResource::new(state, Some(slug))) as BoxResource,
                 SlugLookup::Hit { article_id, revision } =>
                     Box::new(ArticleResource::new(state, article_id, revision)) as BoxResource,
                 SlugLookup::Redirect(slug) =>

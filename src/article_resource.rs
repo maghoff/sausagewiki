@@ -47,7 +47,7 @@ impl Resource for ArticleResource {
             revision: i32,
             created: &'a chrono::DateTime<Local>,
 
-            slug: &'a str,
+            cancel_url: Option<&'a str>,
             title: &'a str,
             raw: &'a str,
             rendered: String,
@@ -68,7 +68,7 @@ impl Resource for ArticleResource {
                             article_id: data.article_id,
                             revision: data.revision,
                             created: &Local.from_utc_datetime(&data.created),
-                            slug: &data.slug,
+                            cancel_url: Some(&data.slug),
                             title: &data.title,
                             raw: &data.body,
                             rendered: render_markdown(&data.body),
