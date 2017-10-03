@@ -26,6 +26,7 @@ use std::net::SocketAddr;
 mod article_redirect_resource;
 mod article_resource;
 mod assets;
+mod changes_resource;
 mod db;
 mod mimes;
 mod models;

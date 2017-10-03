@@ -14,3 +14,17 @@ pub struct ArticleRevision {
 
     pub latest: bool,
 }
+
+#[derive(Debug, Queryable)]
+pub struct ArticleRevisionStub {
+    pub sequence_number: i32,
+
+    pub article_id: i32,
+    pub revision: i32,
+    pub created: chrono::NaiveDateTime,
+
+    pub slug: String,
+    pub title: String,
+
+    pub latest: bool,
+}

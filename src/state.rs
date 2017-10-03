@@ -100,6 +100,35 @@ impl State {
         })
     }
 
+    pub fn get_article_revision_stubs(&self, before: Option<i32>, limit: i32) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error> {
+        let connection_pool = self.connection_pool.clone();
+
+        self.cpu_pool.spawn_fn(move || {
+            use schema::article_revisions;
+
+            let query = article_revisions::table
+                .order(article_revisions::sequence_number.desc())
+                .limit(limit as i64)
+                .select((
+                    article_revisions::sequence_number,
+                    article_revisions::article_id,
+                    article_revisions::revision,
+                    article_revisions::created,
+                    article_revisions::slug,
+                    article_revisions::title,
+                    article_revisions::latest,
+                ))
+                .into_boxed();
+
+            let query = match before {
+                Some(before) => query.filter(article_revisions::sequence_number.lt(before)),
+                None => query
+            };
+
+            Ok(query.load(&*connection_pool.get()?)?)
+        })
+    }
+
     pub fn lookup_slug(&self, slug: String) -> CpuFuture<SlugLookup, Error> {
         #[derive(Queryable)]
         struct ArticleRevisionStub {

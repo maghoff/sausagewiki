@@ -1,0 +1,37 @@
+<div class="container">
+<header>
+<h1>Changes</h1>
+</header>
+
+<article>
+<table>
+    <tr>
+        <th>Title</th>
+        <th>Slug</th>
+        <th>Article ID</th>
+        <th>Revision</th>
+        <th>Created</th>
+    </tr>
+    {{#changes}}
+    <tr>
+        <td>
+            {{#.latest?}}<a href="{{#..slug.is_empty()?}}.{{/..slug.is_empty()}}{{..slug}}">{{/.latest}}
+            {{.title}}
+            {{#.latest?}}</a>{{/.latest}}
+        </td>
+        <td>{{#.slug.is_empty()?}}/{{/.slug.is_empty()}}{{.slug}}</td>
+        <td>{{.article_id}}</td>
+        <td>{{.revision}}</td>
+        <td>{{.created}}</td>
+    </tr>
+    {{/changes}}
+</table>
+</article>
+</div>
+
+<footer>
+    <ul>
+        <li><a href="_new">Create article</a></li>
+    </ul>
+    <p>Powered by <a href="https://github.com/maghoff/sausagewiki">Sausagewiki</a></p>
+</footer>

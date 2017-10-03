@@ -17,6 +17,16 @@ lazy_static! {
     static ref LOOKUP_MAP: HashMap<String, ResourceFn> = {
         let mut lookup_map = HashMap::new();
 
+        use changes_resource::ChangesResource;
+
+        lookup_map.insert(
+            "/_changes".to_string(),
+            Box::new(|state: &State|
+                // TODO Use query arguments to fill in the `before` parameter below
+                Box::new(ChangesResource::new(state.clone(), None)) as BoxResource
+            ) as ResourceFn
+        );
+
         lookup_map.insert(
             "/_new".to_string(),
             Box::new(|state: &State|
