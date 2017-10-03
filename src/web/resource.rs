@@ -12,9 +12,34 @@ pub type ResponseFuture = Box<futures::Future<Item = server::Response, Error = E
 
 pub trait Resource {
     fn allow(&self) -> Vec<hyper::Method>;
-    fn head(&self) -> ResponseFuture;
-    fn get(self: Box<Self>) -> ResponseFuture;
-    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture;
+
+    fn head(&self) -> ResponseFuture {
+        Box::new(futures::finished(self.method_not_allowed()))
+    }
+
+    fn get(self: Box<Self>) -> ResponseFuture {
+        Box::new(futures::finished(self.method_not_allowed()))
+    }
+
+    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture
+        where Self: 'static
+    {
+        use futures::{Future, Stream};
+
+        // TODO Cleanup by moving to the built in never type, !, when it stabilizes
+        enum Never {};
+        impl std::convert::From<Never> for hyper::Error {
+            fn from(_: Never) -> hyper::Error {
+                panic!()
+            }
+        }
+
+        Box::new(body
+            .fold((), |_, _| -> Result<(), Never> { Ok(()) })
+            .map_err(Into::into)
+            .and_then(move |_| futures::finished(self.method_not_allowed()))
+        )
+    }
 
     fn options(&self) -> Response {
         Response::new()
