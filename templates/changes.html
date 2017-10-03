@@ -6,22 +6,12 @@
 <article>
 <table>
     <tr>
-        <th>Title</th>
-        <th>Slug</th>
-        <th>Article ID</th>
-        <th>Revision</th>
-        <th>Created</th>
+        <th>Article</th>
+        <th>Updated</th>
     </tr>
     {{#changes}}
     <tr>
-        <td>
-            {{#.latest?}}<a href="{{#..slug.is_empty()?}}.{{/..slug.is_empty()}}{{..slug}}">{{/.latest}}
-            {{.title}}
-            {{#.latest?}}</a>{{/.latest}}
-        </td>
-        <td>{{#.slug.is_empty()?}}/{{/.slug.is_empty()}}{{.slug}}</td>
-        <td>{{.article_id}}</td>
-        <td>{{.revision}}</td>
+        <td><a href="{{#.slug.is_empty()?}}.{{/.slug.is_empty()}}{{.slug}}">{{.title}}</a></td>
         <td>{{.created}}</td>
     </tr>
     {{/changes}}

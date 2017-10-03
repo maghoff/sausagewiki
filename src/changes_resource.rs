@@ -37,14 +37,14 @@ impl Resource for ChangesResource {
         use chrono::{TimeZone, Local};
 
         struct Row {
-            article_id: i32,
-            revision: i32,
+            _article_id: i32,
+            _revision: i32,
             created: String,
 
             slug: String,
             title: String,
 
-            latest: bool,
+            _latest: bool,
         }
 
         #[derive(BartDisplay)]
@@ -62,12 +62,12 @@ impl Resource for ChangesResource {
 
                 let changes = &data.into_iter().map(|x| {
                     Row {
-                        article_id: x.article_id,
-                        revision: x.revision,
-                        created: Local.from_utc_datetime(&x.created).to_string(),
+                        _article_id: x.article_id,
+                        _revision: x.revision,
+                        created: Local.from_utc_datetime(&x.created).to_rfc2822(),
                         slug: x.slug,
                         title: x.title,
-                        latest: x.latest,
+                        _latest: x.latest,
                     }
                 }).collect::<Vec<_>>();
 
