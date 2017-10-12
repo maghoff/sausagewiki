@@ -25,7 +25,8 @@ impl<'a, I: Iterator<Item=Event<'a>>> Iterator for EscapeHtml<'a, I> {
 }
 
 pub fn render_markdown(src: &str) -> String {
-    let p = EscapeHtml::new(Parser::new(src));
+    let opts = ::pulldown_cmark::OPTION_ENABLE_TABLES;
+    let p = EscapeHtml::new(Parser::new_ext(src, opts));
     let mut buf = String::new();
     html::push_html(&mut buf, p);
     buf
