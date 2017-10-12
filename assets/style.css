@@ -22,6 +22,11 @@ h1 {
     line-height: 54px;
 }
 
+article h1 {
+    margin-top: 32px;
+    margin-bottom: 0;
+}
+
 h2, h3 {
     font-family: inherit;
     font-size: 18px;
@@ -40,11 +45,11 @@ h3 {
     font-style: italic;
 }
 
-ul, ol {
-    padding-left: 24px;
+article ul, article ol {
+    padding-left: 32px;
 }
 
-h2+*, h3+* {
+h1+*, h2+*, h3+* {
     margin-top: 0;
 }
 
@@ -55,16 +60,18 @@ hr {
     margin: 20px auto;
 }
 
-header, article {
+header, article>* {
     box-sizing: border-box;
-    max-width: 612px;
+    max-width: 616px;
     width: 100%;
     padding-left: 8px;
     padding-right: 8px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 header {
-    margin: 0 auto 0 auto;
+    margin: 0 auto;
 }
 
 article {
@@ -77,7 +84,33 @@ article {
 blockquote {
     margin-left: 0;
     padding-left: 12px;
+    border: none;
     border-left: 4px solid #eee;
+    max-width: 600px;
+}
+
+article>blockquote {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 630px) {
+    article>blockquote {
+        margin-left: 8px;
+        margin-right: 0;
+        width: calc(100% - 8px);
+    }
+}
+
+article>table {
+    width: unset;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+table {
+    border-spacing: 8px 2px;
 }
 
 code, pre {
@@ -237,7 +270,7 @@ h1>input {
     padding: 10px 20px;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 630px) {
     header {
         margin-top: 60px;
     }
