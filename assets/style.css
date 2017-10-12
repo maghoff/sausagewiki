@@ -214,9 +214,11 @@ input:focus, textarea:focus {
 }
 
 textarea {
+    display: block;
+
     border: none;
     background: none;
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
     font-family: "SF Mono", "Monaco",
         "Inconsolata", "Fira Mono",
