@@ -39,14 +39,14 @@ impl Resource for ArticleResource {
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
-        use chrono::{self, TimeZone, Local};
+        use chrono::{TimeZone, Local};
 
         #[derive(BartDisplay)]
         #[template="templates/article_revision.html"]
         struct Template<'a> {
             article_id: i32,
             revision: i32,
-            created: &'a chrono::DateTime<Local>,
+            created: &'a str,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -70,7 +70,7 @@ impl Resource for ArticleResource {
                         body: &Template {
                             article_id: data.article_id,
                             revision: data.revision,
-                            created: &Local.from_utc_datetime(&data.created),
+                            created: &Local.from_utc_datetime(&data.created).to_rfc2822(),
                             edit: self.edit,
                             cancel_url: Some(&data.slug),
                             title: &data.title,
