@@ -214,8 +214,6 @@ input:focus, textarea:focus {
 }
 
 textarea {
-    display: block;
-
     border: none;
     background: none;
     margin: 0 auto;
