@@ -26,11 +26,11 @@ pub struct Layout<'a, T: 'a + fmt::Display> {
 }
 
 #[derive(BartDisplay)]
-#[template = "templates/404.html"]
+#[template = "templates/error/404.html"]
 struct NotFound;
 
 #[derive(BartDisplay)]
-#[template = "templates/500.html"]
+#[template = "templates/error/500.html"]
 struct InternalServerError;
 
 pub struct Site {
