@@ -126,15 +126,12 @@ pre {
 }
 
 a {
-    color: #5e90af;
-}
-
-a:visited {
-    color: inherit;
+    color: #457796;
+    text-decoration: none;
 }
 
 a:hover {
-    color: #79b9e1;
+    text-decoration: underline;
 }
 
 img {
