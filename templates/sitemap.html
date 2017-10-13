@@ -1,0 +1,20 @@
+<div class="container">
+<header>
+<h1>Sitemap</h1>
+</header>
+
+<article>
+<ul class="dense">
+    {{#articles}}
+    <li><a href="{{.link}}">{{.title}}</a></li>
+    {{/articles}}
+</ul>
+</article>
+</div>
+
+<footer>
+    <ul class="dense">
+        <li><a href="_new">Create article</a></li>
+    </ul>
+    <p>Powered by <a href="https://github.com/maghoff/sausagewiki">Sausagewiki</a></p>
+</footer>

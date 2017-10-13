@@ -7,6 +7,7 @@ use article_redirect_resource::ArticleRedirectResource;
 use article_resource::ArticleResource;
 use assets::*;
 use new_article_resource::NewArticleResource;
+use sitemap_resource::SitemapResource;
 use state::State;
 use web::{Lookup, Resource};
 
@@ -24,6 +25,13 @@ lazy_static! {
             Box::new(|state: &State|
                 // TODO Use query arguments to fill in the `before` parameter below
                 Box::new(ChangesResource::new(state.clone(), None)) as BoxResource
+            ) as ResourceFn
+        );
+
+        lookup_map.insert(
+            "/_sitemap".to_string(),
+            Box::new(|state: &State|
+                Box::new(SitemapResource::new(state.clone())) as BoxResource
             ) as ResourceFn
         );
 

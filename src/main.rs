@@ -34,6 +34,7 @@ mod new_article_resource;
 mod rendering;
 mod schema;
 mod site;
+mod sitemap_resource;
 mod state;
 mod web;
 mod wiki_lookup;

@@ -170,21 +170,21 @@ footer {
         "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
-footer ul {
+ul.dense {
     list-style: none;
     padding: 0;
 }
 
-footer li {
+ul.dense>li {
     display: inline;
 }
 
-footer li::after {
+ul.dense>li::after {
     content: "\00B7";
     margin: 0 12px;
 }
 
-footer li:last-child::after {
+ul.dense>li:last-child::after {
     content: "";
     margin: 0;
 }
