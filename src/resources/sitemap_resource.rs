@@ -60,6 +60,7 @@ impl Resource for SitemapResource {
 
                 Ok(head
                     .with_body(Layout {
+                        base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Sitemap",
                         body: &Template { articles },
                         style_css_checksum: StyleCss::checksum(),

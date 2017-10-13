@@ -72,6 +72,7 @@ impl Resource for NewArticleResource {
             .and_then(move |head| {
                 Ok(head
                     .with_body(Layout {
+                        base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
                         body: &Template {
                             article_id: NDASH,

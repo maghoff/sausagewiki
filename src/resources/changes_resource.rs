@@ -73,6 +73,7 @@ impl Resource for ChangesResource {
 
                 Ok(head
                     .with_body(Layout {
+                        base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Changes",
                         body: &Template { changes },
                         style_css_checksum: StyleCss::checksum(),

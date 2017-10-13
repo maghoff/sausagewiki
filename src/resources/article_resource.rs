@@ -65,6 +65,7 @@ impl Resource for ArticleResource {
             .and_then(move |(data, head)| {
                 Ok(head
                     .with_body(Layout {
+                        base: None, // Hmm, should perhaps accept `base` as argument
                         title: &data.title,
                         body: &Template {
                             article_id: data.article_id,

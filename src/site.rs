@@ -20,6 +20,7 @@ lazy_static! {
 #[derive(BartDisplay)]
 #[template = "templates/layout.html"]
 pub struct Layout<'a, T: 'a + fmt::Display> {
+    pub base: Option<&'a str>,
     pub title: &'a str,
     pub body: &'a T,
     pub style_css_checksum: &'a str,
@@ -42,10 +43,11 @@ impl Site {
         Site { root }
     }
 
-    fn not_found() -> Response {
+    fn not_found(base: Option<&str>) -> Response {
         Response::new()
             .with_header(ContentType(TEXT_HTML.clone()))
             .with_body(Layout {
+                base: base,
                 title: "Not found",
                 body: &NotFound,
                 style_css_checksum: StyleCss::checksum(),
@@ -53,17 +55,28 @@ impl Site {
             .with_status(hyper::StatusCode::NotFound)
     }
 
-    fn internal_server_error(err: Box<::std::error::Error + Send + Sync>) -> Response {
+    fn internal_server_error(base: Option<&str>, err: Box<::std::error::Error + Send + Sync>) -> Response {
         eprintln!("Internal Server Error:\n{:#?}", err);
 
         Response::new()
             .with_header(ContentType(TEXT_HTML.clone()))
             .with_body(Layout {
+                base,
                 title: "Internal server error",
                 body: &InternalServerError,
                 style_css_checksum: StyleCss::checksum(),
             }.to_string())
             .with_status(hyper::StatusCode::InternalServerError)
+    }
+}
+
+fn root_base_from_request_uri(path: &str) -> Option<String> {
+    assert!(path.starts_with("/"));
+    let slashes = path[1..].matches('/').count();
+
+    match slashes {
+        0 => None,
+        n => Some(::std::iter::repeat("../").take(n).collect())
     }
 }
 
@@ -77,6 +90,9 @@ impl Service for Site {
         let (method, uri, _http_version, _headers, body) = req.deconstruct();
         println!("{} {}", method, uri);
 
+        let base = root_base_from_request_uri(uri.path());
+        let base2 = base.clone(); // Bah, stupid clone
+
         Box::new(self.root.lookup(uri.path(), uri.query())
             .and_then(move |resource| match resource {
                 Some(resource) => {
@@ -89,9 +105,9 @@ impl Service for Site {
                         _ => Box::new(futures::finished(resource.method_not_allowed()))
                     }
                 },
-                None => Box::new(futures::finished(Self::not_found()))
+                None => Box::new(futures::finished(Self::not_found(base.as_ref().map(|x| &**x))))
             })
-            .or_else(|err| Ok(Self::internal_server_error(err)))
+            .or_else(move |err| Ok(Self::internal_server_error(base2.as_ref().map(|x| &**x), err)))
         )
     }
 }
