@@ -119,6 +119,8 @@ code, pre {
         "Inconsolata", "Fira Mono",
         "Droid Sans Mono", "Source Code Pro",
         monospace;
+
+    font-size: 14px;
 }
 
 pre {
