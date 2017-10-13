@@ -23,18 +23,14 @@ extern crate titlecase;
 
 use std::net::SocketAddr;
 
-mod article_redirect_resource;
-mod article_resource;
 mod assets;
-mod changes_resource;
 mod db;
 mod mimes;
 mod models;
-mod new_article_resource;
 mod rendering;
+mod resources;
 mod schema;
 mod site;
-mod sitemap_resource;
 mod state;
 mod web;
 mod wiki_lookup;

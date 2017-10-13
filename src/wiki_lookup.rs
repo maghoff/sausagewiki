@@ -3,11 +3,8 @@ use std::collections::HashMap;
 use futures::{Future, finished, failed};
 use percent_encoding::percent_decode;
 
-use article_redirect_resource::ArticleRedirectResource;
-use article_resource::ArticleResource;
+use resources::*;
 use assets::*;
-use new_article_resource::NewArticleResource;
-use sitemap_resource::SitemapResource;
 use state::State;
 use web::{Lookup, Resource};
 
@@ -17,8 +14,6 @@ type ResourceFn = Box<Fn(&State) -> BoxResource + Sync + Send>;
 lazy_static! {
     static ref LOOKUP_MAP: HashMap<String, ResourceFn> = {
         let mut lookup_map = HashMap::new();
-
-        use changes_resource::ChangesResource;
 
         lookup_map.insert(
             "/_changes".to_string(),
