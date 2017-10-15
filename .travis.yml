@@ -16,6 +16,7 @@ script:
 - rustup target add x86_64-unknown-linux-musl
 - cargo build --release --target=x86_64-unknown-linux-musl
 - cargo test --release --target=x86_64-unknown-linux-musl
+- strip -s target/x86_64-unknown-linux-musl/release/sausagewiki
 - xz -9 < target/x86_64-unknown-linux-musl/release/sausagewiki > sausagewiki.xz
 
 deploy:
