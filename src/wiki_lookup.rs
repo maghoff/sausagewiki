@@ -61,18 +61,22 @@ impl WikiLookup {
     }
 
     fn reserved_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
-        match split_one(path) {
-            Ok((ref x, Some(asset))) if x == "_assets" =>
+        let (head, tail) = match split_one(path) {
+            Ok(x) => x,
+            Err(x) => return Box::new(failed(x.into())),
+        };
+
+        match (head.as_ref(), tail) {
+            ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
-            Ok((ref x, None)) if x == "_changes" =>
+            ("_changes", None) =>
                 // TODO Use query to fill in `before` argument to ChangesResource
                 Box::new(finished(Some(Box::new(ChangesResource::new(self.state.clone(), None)) as BoxResource))),
-            Ok((ref x, None)) if x == "_new" =>
+            ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
-            Ok((ref x, None)) if x == "_sitemap" =>
+            ("_sitemap", None) =>
                 Box::new(finished(Some(Box::new(SitemapResource::new(self.state.clone())) as BoxResource))),
-            Ok(_) => Box::new(finished(None)),
-            Err(x) => return Box::new(failed(x.into())),
+            _ => Box::new(finished(None)),
         }
     }
 
