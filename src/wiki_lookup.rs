@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use futures::{Future, finished, failed};
 use percent_encoding::percent_decode;
+use serde_urlencoded;
 
 use resources::*;
 use assets::*;
@@ -69,7 +70,7 @@ impl WikiLookup {
         WikiLookup { state }
     }
 
-    fn reserved_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
+    fn reserved_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
         let (head, tail) = match split_one(path) {
             Ok(x) => x,
             Err(x) => return Box::new(failed(x.into())),
@@ -78,9 +79,19 @@ impl WikiLookup {
         match (head.as_ref(), tail) {
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
-            ("_changes", None) =>
-                // TODO Use query to fill in `before` argument to ChangesResource
-                Box::new(finished(Some(Box::new(ChangesResource::new(self.state.clone(), None)) as BoxResource))),
+            ("_changes", None) => {
+                #[derive(Deserialize)]
+                struct Query {
+                    before: Option<i32>,
+                }
+
+                let query: Query = match serde_urlencoded::from_str(query.unwrap_or("")) {
+                    Ok(x) => x,
+                    Err(x) => return Box::new(failed(x.into())),
+                };
+
+                Box::new(finished(Some(Box::new(ChangesResource::new(self.state.clone(), query.before)) as BoxResource)))
+            },
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
             ("_sitemap", None) =>
