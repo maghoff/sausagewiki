@@ -9,47 +9,25 @@ use state::State;
 use web::{Lookup, Resource};
 
 type BoxResource = Box<Resource + Sync + Send>;
-type ResourceFn = Box<Fn(&State) -> BoxResource + Sync + Send>;
+type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
     static ref LOOKUP_MAP: HashMap<String, ResourceFn> = {
         let mut lookup_map = HashMap::new();
 
         lookup_map.insert(
-            "_changes".to_string(),
-            Box::new(|state: &State|
-                // TODO Use query arguments to fill in the `before` parameter below
-                Box::new(ChangesResource::new(state.clone(), None)) as BoxResource
-            ) as ResourceFn
+            format!("style-{}.css", StyleCss::checksum()),
+            Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn
         );
 
         lookup_map.insert(
-            "_sitemap".to_string(),
-            Box::new(|state: &State|
-                Box::new(SitemapResource::new(state.clone())) as BoxResource
-            ) as ResourceFn
+            format!("script-{}.js", ScriptJs::checksum()),
+            Box::new(|| Box::new(ScriptJs) as BoxResource) as ResourceFn
         );
 
         lookup_map.insert(
-            "_new".to_string(),
-            Box::new(|state: &State|
-                Box::new(NewArticleResource::new(state.clone(), None)) as BoxResource
-            ) as ResourceFn
-        );
-
-        lookup_map.insert(
-            format!("_assets/style-{}.css", StyleCss::checksum()),
-            Box::new(|_: &State| Box::new(StyleCss) as BoxResource) as ResourceFn
-        );
-
-        lookup_map.insert(
-            format!("_assets/script-{}.js", ScriptJs::checksum()),
-            Box::new(|_: &State| Box::new(ScriptJs) as BoxResource) as ResourceFn
-        );
-
-        lookup_map.insert(
-            format!("_assets/amatic-sc-v9-latin-regular.woff"),
-            Box::new(|_: &State| Box::new(AmaticFont) as BoxResource) as ResourceFn
+            format!("amatic-sc-v9-latin-regular.woff"),
+            Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn
         );
 
         lookup_map
@@ -70,15 +48,32 @@ fn split_one(path: &str) -> Result<(::std::borrow::Cow<str>, Option<&str>), ::st
     Ok((head, tail))
 }
 
+fn asset_lookup(path: &str) -> ::futures::future::FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>> {
+    match LOOKUP_MAP.get(path) {
+        Some(resource_fn) => finished(Some(resource_fn())),
+        None => finished(None),
+    }
+}
+
 impl WikiLookup {
     pub fn new(state: State) -> WikiLookup {
         WikiLookup { state }
     }
 
     fn reserved_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
-        Box::new(finished(
-            LOOKUP_MAP.get(path).map(|x| x(&self.state))
-        ))
+        match split_one(path) {
+            Ok((ref x, Some(asset))) if x == "_assets" =>
+                Box::new(asset_lookup(asset)),
+            Ok((ref x, None)) if x == "_changes" =>
+                // TODO Use query to fill in `before` argument to ChangesResource
+                Box::new(finished(Some(Box::new(ChangesResource::new(self.state.clone(), None)) as BoxResource))),
+            Ok((ref x, None)) if x == "_new" =>
+                Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
+            Ok((ref x, None)) if x == "_sitemap" =>
+                Box::new(finished(Some(Box::new(SitemapResource::new(self.state.clone())) as BoxResource))),
+            Ok(_) => Box::new(finished(None)),
+            Err(x) => return Box::new(failed(x.into())),
+        }
     }
 
     fn article_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
