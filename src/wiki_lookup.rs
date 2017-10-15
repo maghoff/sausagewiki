@@ -1,8 +1,12 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::str::Utf8Error;
 
 use futures::{Future, finished, failed};
+use futures::future::FutureResult;
 use percent_encoding::percent_decode;
 use serde_urlencoded;
+use slug::slugify;
 
 use resources::*;
 use assets::*;
@@ -40,7 +44,7 @@ pub struct WikiLookup {
     state: State
 }
 
-fn split_one(path: &str) -> Result<(::std::borrow::Cow<str>, Option<&str>), ::std::str::Utf8Error> {
+fn split_one(path: &str) -> Result<(Cow<str>, Option<&str>), Utf8Error> {
     let mut split = path.splitn(2, '/');
     let head = split.next().expect("At least one item must be returned");
     let head = percent_decode(head.as_bytes()).decode_utf8()?;
@@ -49,7 +53,7 @@ fn split_one(path: &str) -> Result<(::std::borrow::Cow<str>, Option<&str>), ::st
     Ok((head, tail))
 }
 
-fn asset_lookup(path: &str) -> ::futures::future::FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>> {
+fn asset_lookup(path: &str) -> FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>> {
     let (head, tail) = match split_one(path) {
         Ok(x) => x,
         Err(x) => return failed(x.into()),
@@ -112,7 +116,7 @@ impl WikiLookup {
         }
 
         // Normalize all user-generated slugs:
-        let slugified_slug = ::slug::slugify(&slug);
+        let slugified_slug = slugify(&slug);
         if slugified_slug != slug {
             return Box::new(finished(Some(
                 Box::new(ArticleRedirectResource::new(slugified_slug)) as BoxResource
