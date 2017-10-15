@@ -50,15 +50,34 @@ impl Resource for ChangesResource {
         #[derive(BartDisplay)]
         #[template="templates/changes.html"]
         struct Template<'a> {
+            link_newer: Option<String>,
+            link_older: Option<String>,
             changes: &'a [Row],
         }
 
-        let data = self.state.get_article_revision_stubs(self.before, 30);
+        const PAGE_SIZE: i32 = 30;
+
+        let data = self.state.get_article_revision_stubs(self.before, PAGE_SIZE);
         let head = self.head();
 
         Box::new(data.join(head)
             .and_then(move |(data, head)| {
                 use std::iter::Iterator;
+
+                let link_newer = self.before.and_then(|_| {
+                    data.first().and_then(|x| {
+                        match x.sequence_number {
+                            seq => Some(format!("?before={}", seq + PAGE_SIZE)),
+                        }
+                    })
+                });
+
+                let link_older = data.last().and_then(|x| {
+                    match x.sequence_number {
+                        1 => None,
+                        seq => Some(format!("?before={}", seq)),
+                    }
+                });
 
                 let changes = &data.into_iter().map(|x| {
                     Row {
@@ -75,7 +94,11 @@ impl Resource for ChangesResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Changes",
-                        body: &Template { changes },
+                        body: &Template {
+                            link_newer,
+                            link_older,
+                            changes
+                        },
                         style_css_checksum: StyleCss::checksum(),
                     }.to_string()))
             }))
