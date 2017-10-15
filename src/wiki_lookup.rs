@@ -12,25 +12,25 @@ type BoxResource = Box<Resource + Sync + Send>;
 type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
-    static ref LOOKUP_MAP: HashMap<String, ResourceFn> = {
-        let mut lookup_map = HashMap::new();
+    static ref ASSETS_MAP: HashMap<String, ResourceFn> = {
+        let mut map = HashMap::new();
 
-        lookup_map.insert(
+        map.insert(
             format!("style-{}.css", StyleCss::checksum()),
             Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn
         );
 
-        lookup_map.insert(
+        map.insert(
             format!("script-{}.js", ScriptJs::checksum()),
             Box::new(|| Box::new(ScriptJs) as BoxResource) as ResourceFn
         );
 
-        lookup_map.insert(
+        map.insert(
             format!("amatic-sc-v9-latin-regular.woff"),
             Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn
         );
 
-        lookup_map
+        map
     };
 }
 
@@ -49,7 +49,16 @@ fn split_one(path: &str) -> Result<(::std::borrow::Cow<str>, Option<&str>), ::st
 }
 
 fn asset_lookup(path: &str) -> ::futures::future::FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>> {
-    match LOOKUP_MAP.get(path) {
+    let (head, tail) = match split_one(path) {
+        Ok(x) => x,
+        Err(x) => return failed(x.into()),
+    };
+
+    if tail.is_some() {
+        return finished(None);
+    }
+
+    match ASSETS_MAP.get(head.as_ref()) {
         Some(resource_fn) => finished(Some(resource_fn())),
         None => finished(None),
     }
