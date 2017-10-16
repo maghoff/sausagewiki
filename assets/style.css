@@ -121,7 +121,7 @@ code, pre {
         "Droid Sans Mono", "Source Code Pro",
         monospace;
 
-    font-size: 14px;
+    font-size-adjust: 0.4;
 }
 
 pre {
