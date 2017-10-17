@@ -116,13 +116,10 @@ table {
 
 code, pre {
     background: #f8f8f8;
-    font-family: "SF Mono", "Menlo",
-        "Inconsolata", "Fira Mono",
+    font-family: "Inconsolata", "Fira Mono",
         "DejaVu Sans Mono",
         "Droid Sans Mono", "Source Code Pro",
         monospace;
-
-    font-size-adjust: 0.4;
 }
 
 pre {
