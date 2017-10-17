@@ -9,14 +9,16 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
+use super::pagination::Pagination;
+
 pub struct ChangesResource {
     state: State,
     before: Option<i32>,
 }
 
 impl ChangesResource {
-    pub fn new(state: State, before: Option<i32>) -> Self {
-        Self { state, before }
+    pub fn new(state: State, pagination: Pagination<i32>) -> Self {
+        Self { state, before: match pagination { Pagination::Before(x) => Some(x), _ => None } }
     }
 }
 

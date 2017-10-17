@@ -1,3 +1,5 @@
+pub mod pagination;
+
 mod article_redirect_resource;
 mod article_resource;
 mod changes_resource;

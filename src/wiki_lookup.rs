@@ -2,10 +2,9 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::Utf8Error;
 
-use futures::{Future, finished, failed};
+use futures::{Future, finished, failed, done};
 use futures::future::FutureResult;
 use percent_encoding::percent_decode;
-use serde_urlencoded;
 use slug::slugify;
 
 use resources::*;
@@ -84,17 +83,12 @@ impl WikiLookup {
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
             ("_changes", None) => {
-                #[derive(Deserialize)]
-                struct Query {
-                    before: Option<i32>,
-                }
-
-                let query: Query = match serde_urlencoded::from_str(query.unwrap_or("")) {
-                    Ok(x) => x,
-                    Err(x) => return Box::new(failed(x.into())),
-                };
-
-                Box::new(finished(Some(Box::new(ChangesResource::new(self.state.clone(), query.before)) as BoxResource)))
+                Box::new(done(
+                    pagination::from_str(query.unwrap_or("")).map_err(Into::into)
+                    .and_then(|pagination| Ok(Some(
+                        Box::new(ChangesResource::new(self.state.clone(), pagination)) as BoxResource
+                    )))
+                ))
             },
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
