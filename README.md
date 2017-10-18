@@ -25,11 +25,14 @@ is built like other Rust projects, with `cargo build`.
 Command line arguments
 ----------------------
     USAGE:
-        sausagewiki [OPTIONS] <DATABASE>
+        sausagewiki [FLAGS] [OPTIONS] <DATABASE>
 
     FLAGS:
-        -h, --help       Prints help information
-        -V, --version    Prints version information
+        -h, --help              Prints help information
+            --trust_identity    Trust the value in the X-Identity header to be an authenticated username.
+                                This only makes sense when Sausagewiki runs behind a reverse proxy which
+                                sets this header.
+        -V, --version           Prints version information
 
     OPTIONS:
         -p, --port <port>    Sets the listening port

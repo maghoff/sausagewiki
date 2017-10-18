@@ -17,6 +17,8 @@ lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
 }
 
+header! { (XIdentity, "X-Identity") => [String] }
+
 #[derive(BartDisplay)]
 #[template = "templates/layout.html"]
 pub struct Layout<'a, T: 'a + fmt::Display> {
@@ -36,11 +38,12 @@ struct InternalServerError;
 
 pub struct Site {
     root: WikiLookup,
+    trust_identity: bool,
 }
 
 impl Site {
-    pub fn new(root: WikiLookup) -> Site {
-        Site { root }
+    pub fn new(root: WikiLookup, trust_identity: bool) -> Site {
+        Site { root, trust_identity }
     }
 
     fn not_found(base: Option<&str>) -> Response {
@@ -91,8 +94,10 @@ impl Service for Site {
 
         println!("{} {}", method, uri);
 
-        header! { (XIdentity, "X-Identity") => [String] }
-        let identity: Option<String> = headers.get().map(|x: &XIdentity| x.to_string());
+        let identity: Option<String> = match self.trust_identity {
+            true => headers.get().map(|x: &XIdentity| x.to_string()),
+            false => None,
+        };
 
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone

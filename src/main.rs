@@ -52,6 +52,11 @@ fn args<'a>() -> clap::ArgMatches<'a> {
                 Err(_) => Err("Must be an integer in the range [0, 65535]".to_owned())
             })
             .takes_value(true))
+        .arg(Arg::with_name("trust_identity")
+            .help("Trust the value in the X-Identity header to be an \
+                authenticated username. This only makes sense when Sausagewiki \
+                runs behind a reverse proxy which sets this header.")
+            .long("trust_identity"))
         .get_matches()
 }
 
@@ -64,6 +69,8 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
 
+    let trust_identity = args.is_present("trust_identity");
+
     let db_pool = db::create_pool(db_file)?;
     let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
 
@@ -74,7 +81,7 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         hyper::server::Http::new()
             .bind(
                 &SocketAddr::new(bind_host, bind_port),
-                move || Ok(site::Site::new(lookup.clone()))
+                move || Ok(site::Site::new(lookup.clone(), trust_identity))
             )?;
 
     println!("Listening on http://{}", server.local_addr().unwrap());
