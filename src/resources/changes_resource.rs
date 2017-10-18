@@ -40,6 +40,7 @@ impl Resource for ChangesResource {
             _article_id: i32,
             _revision: i32,
             created: String,
+            author: Option<String>,
 
             slug: String,
             title: String,
@@ -84,6 +85,7 @@ impl Resource for ChangesResource {
                         _article_id: x.article_id,
                         _revision: x.revision,
                         created: Local.from_utc_datetime(&x.created).to_rfc2822(),
+                        author: x.author,
                         slug: x.slug,
                         title: x.title,
                         _latest: x.latest,

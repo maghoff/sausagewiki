@@ -9,11 +9,13 @@
     <tr>
         <th>Article</th>
         <th>Updated</th>
+        <th>Author</th>
     </tr>
     {{#changes}}
     <tr>
         <td><a href="{{#.slug.is_empty()?}}.{{/.slug.is_empty()}}{{.slug}}">{{.title}}</a></td>
         <td>{{.created}}</td>
+        <td>{{#.author}}{{.}}{{/.author}}{{^.author}}<i>Anonymous</i>{{/.author}}</td>
     </tr>
     {{/changes}}
 </table>

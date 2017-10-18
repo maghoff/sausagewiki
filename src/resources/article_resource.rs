@@ -47,6 +47,7 @@ impl Resource for ArticleResource {
             article_id: i32,
             revision: i32,
             created: &'a str,
+            author: Option<&'a str>,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -71,6 +72,7 @@ impl Resource for ArticleResource {
                             article_id: data.article_id,
                             revision: data.revision,
                             created: &Local.from_utc_datetime(&data.created).to_rfc2822(),
+                            author: data.author.as_ref().map(|x| &**x),
                             edit: self.edit,
                             cancel_url: Some(&data.slug),
                             title: &data.title,

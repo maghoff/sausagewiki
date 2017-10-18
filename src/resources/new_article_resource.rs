@@ -55,6 +55,7 @@ impl Resource for NewArticleResource {
             article_id: &'a str,
             revision: &'a str,
             created: &'a str,
+            author: Option<&'a str>,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -78,6 +79,7 @@ impl Resource for NewArticleResource {
                             article_id: NDASH,
                             revision: NDASH,
                             created: NDASH,
+                            author: None,
 
                             // Implicitly start in edit-mode when no slug is given. This
                             // currently directly corresponds to the /_new endpoint
