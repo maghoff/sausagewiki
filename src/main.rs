@@ -3,6 +3,7 @@
 #[macro_use] extern crate bart_derive;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
+#[macro_use] extern crate hyper;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate static_resource_derive;
@@ -11,7 +12,6 @@ extern crate chrono;
 extern crate clap;
 extern crate futures;
 extern crate futures_cpupool;
-extern crate hyper;
 extern crate percent_encoding;
 extern crate pulldown_cmark;
 extern crate r2d2;

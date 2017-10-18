@@ -87,8 +87,12 @@ impl Service for Site {
     type Future = Box<futures::Future<Item = Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let (method, uri, _http_version, _headers, body) = req.deconstruct();
+        let (method, uri, _http_version, headers, body) = req.deconstruct();
+
         println!("{} {}", method, uri);
+
+        header! { (XIdentity, "X-Identity") => [String] }
+        let identity: Option<String> = headers.get().map(|x: &XIdentity| x.to_string());
 
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone
@@ -101,7 +105,7 @@ impl Service for Site {
                         Options => Box::new(futures::finished(resource.options())),
                         Head => resource.head(),
                         Get => resource.get(),
-                        Put => resource.put(body),
+                        Put => resource.put(body, identity),
                         _ => Box::new(futures::finished(resource.method_not_allowed()))
                     }
                 },

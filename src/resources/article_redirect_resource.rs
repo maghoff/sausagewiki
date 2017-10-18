@@ -41,7 +41,7 @@ impl Resource for ArticleRedirectResource {
             }))
     }
 
-    fn put(self: Box<Self>, _body: hyper::Body) -> ResponseFuture {
+    fn put(self: Box<Self>, _body: hyper::Body, _identity: Option<String>) -> ResponseFuture {
         Box::new(self.head()
             .and_then(move |head| {
                 Ok(head

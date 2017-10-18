@@ -21,7 +21,7 @@ pub trait Resource {
         Box::new(futures::finished(self.method_not_allowed()))
     }
 
-    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture
+    fn put(self: Box<Self>, body: hyper::Body, _identity: Option<String>) -> ResponseFuture
         where Self: 'static
     {
         use futures::{Future, Stream};

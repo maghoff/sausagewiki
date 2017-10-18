@@ -94,10 +94,6 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
                         .with_body(body as &'static [u8])
                 ))
             }
-
-            fn put(self: Box<Self>, _body: ::hyper::Body) -> ResponseFuture {
-                Box::new(::futures::finished(self.method_not_allowed()))
-            }
         }
 
         impl #impl_generics #name #ty_generics #where_clause {

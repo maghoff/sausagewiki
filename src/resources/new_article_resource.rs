@@ -94,7 +94,7 @@ impl Resource for NewArticleResource {
             }))
     }
 
-    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture {
+    fn put(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
         // TODO Check incoming Content-Type
 
         use chrono::{TimeZone, Local};
@@ -135,7 +135,7 @@ impl Resource for NewArticleResource {
                 // TODO Check that update.base_revision == NDASH
                 // ... which seems silly. But there should be a mechanism to indicate that
                 // the client is actually trying to create a new article
-                self.state.create_article(self.slug.clone(), arg.title, arg.body)
+                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()

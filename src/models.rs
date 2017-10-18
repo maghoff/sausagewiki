@@ -13,6 +13,8 @@ pub struct ArticleRevision {
     pub body: String,
 
     pub latest: bool,
+
+    pub author: Option<String>,
 }
 
 #[derive(Debug, Queryable)]
@@ -27,4 +29,6 @@ pub struct ArticleRevisionStub {
     pub title: String,
 
     pub latest: bool,
+
+    pub author: Option<String>,
 }

@@ -83,7 +83,7 @@ impl Resource for ArticleResource {
             }))
     }
 
-    fn put(self: Box<Self>, body: hyper::Body) -> ResponseFuture {
+    fn put(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
         // TODO Check incoming Content-Type
 
         use chrono::{TimeZone, Local};
@@ -120,7 +120,7 @@ impl Resource for ArticleResource {
                     .map_err(Into::into)
             })
             .and_then(move |update: UpdateArticle| {
-                self.state.update_article(self.article_id, update.base_revision, update.title, update.body)
+                self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()
@@ -134,7 +134,7 @@ impl Resource for ArticleResource {
                             title: &updated.title,
                             rendered: render_markdown(&updated.body),
                         }.to_string(),
-                        created: &Local.from_utc_datetime(&updated.created).to_string(),
+                        created: &Local.from_utc_datetime(&updated.created).to_rfc2822(),
                     }).expect("Should never fail"))
                 )
             })

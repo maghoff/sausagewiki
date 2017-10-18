@@ -35,6 +35,7 @@ struct NewRevision<'a> {
     slug: &'a str,
     title: &'a str,
     body: &'a str,
+    author: Option<&'a str>,
     latest: bool,
 }
 
@@ -117,6 +118,7 @@ impl State {
                     article_revisions::slug,
                     article_revisions::title,
                     article_revisions::latest,
+                    article_revisions::author,
                 ))
                 .into_boxed();
 
@@ -146,6 +148,7 @@ impl State {
                     article_revisions::slug,
                     article_revisions::title,
                     article_revisions::latest,
+                    article_revisions::author,
                 ))
                 .load(&*connection_pool.get()?)?)
         })
@@ -195,7 +198,7 @@ impl State {
         })
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String)
+    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>)
         -> CpuFuture<models::ArticleRevision, Error>
     {
         let connection_pool = self.connection_pool.clone();
@@ -239,6 +242,7 @@ impl State {
                         slug: &slug,
                         title: &title,
                         body: &body,
+                        author: author.as_ref().map(|x| &**x),
                         latest: true,
                     })
                     .into(article_revisions::table)
@@ -253,7 +257,7 @@ impl State {
         })
     }
 
-    pub fn create_article(&self, target_slug: Option<String>, title: String, body: String)
+    pub fn create_article(&self, target_slug: Option<String>, title: String, body: String, author: Option<String>)
         -> CpuFuture<models::ArticleRevision, Error>
     {
         let connection_pool = self.connection_pool.clone();
@@ -288,6 +292,7 @@ impl State {
                         slug: &slug,
                         title: &title,
                         body: &body,
+                        author: author.as_ref().map(|x| &**x),
                         latest: true,
                     })
                     .into(article_revisions::table)
