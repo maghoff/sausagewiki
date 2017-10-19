@@ -1,3 +1,4 @@
+use chrono::{TimeZone, DateTime, Local};
 use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
@@ -25,6 +26,20 @@ impl ArticleResource {
     }
 }
 
+pub fn last_updated(created: &DateTime<Local>, author: Option<&str>) -> String {
+    #[derive(BartDisplay)]
+    #[template_string = "Last updated {{created}}{{#author}} by {{.}}{{/author}}"]
+    struct Template<'a> {
+        created: &'a str,
+        author: Option<&'a str>,
+    }
+
+    Template {
+        created: &created.to_rfc2822(),
+        author
+    }.to_string()
+}
+
 impl Resource for ArticleResource {
     fn allow(&self) -> Vec<hyper::Method> {
         use hyper::Method::*;
@@ -39,15 +54,11 @@ impl Resource for ArticleResource {
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
-        use chrono::{TimeZone, Local};
-
         #[derive(BartDisplay)]
         #[template="templates/article_revision.html"]
         struct Template<'a> {
-            article_id: i32,
             revision: i32,
-            created: &'a str,
-            author: Option<&'a str>,
+            last_updated: &'a str,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -69,10 +80,11 @@ impl Resource for ArticleResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &data.title,
                         body: &Template {
-                            article_id: data.article_id,
                             revision: data.revision,
-                            created: &Local.from_utc_datetime(&data.created).to_rfc2822(),
-                            author: data.author.as_ref().map(|x| &**x),
+                            last_updated: &last_updated(
+                                &Local.from_utc_datetime(&data.created),
+                                data.author.as_ref().map(|x| &**x)
+                            ),
                             edit: self.edit,
                             cancel_url: Some(&data.slug),
                             title: &data.title,
@@ -88,7 +100,6 @@ impl Resource for ArticleResource {
     fn put(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
         // TODO Check incoming Content-Type
 
-        use chrono::{TimeZone, Local};
         use futures::Stream;
 
         #[derive(Deserialize)]
@@ -111,7 +122,7 @@ impl Resource for ArticleResource {
             revision: i32,
             title: &'a str,
             rendered: &'a str,
-            created: &'a str,
+            last_updated: &'a str,
         }
 
         Box::new(body
@@ -136,7 +147,10 @@ impl Resource for ArticleResource {
                             title: &updated.title,
                             rendered: render_markdown(&updated.body),
                         }.to_string(),
-                        created: &Local.from_utc_datetime(&updated.created).to_rfc2822(),
+                        last_updated: &last_updated(
+                            &Local.from_utc_datetime(&updated.created),
+                            updated.author.as_ref().map(|x| &**x)
+                        ),
                     }).expect("Should never fail"))
                 )
             })

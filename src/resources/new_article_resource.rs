@@ -52,10 +52,8 @@ impl Resource for NewArticleResource {
         #[derive(BartDisplay)]
         #[template="templates/article_revision.html"]
         struct Template<'a> {
-            article_id: &'a str,
             revision: &'a str,
-            created: &'a str,
-            author: Option<&'a str>,
+            last_updated: &'a str,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -76,10 +74,8 @@ impl Resource for NewArticleResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
                         body: &Template {
-                            article_id: NDASH,
                             revision: NDASH,
-                            created: NDASH,
-                            author: None,
+                            last_updated: NDASH,
 
                             // Implicitly start in edit-mode when no slug is given. This
                             // currently directly corresponds to the /_new endpoint
@@ -98,6 +94,7 @@ impl Resource for NewArticleResource {
 
     fn put(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
         // TODO Check incoming Content-Type
+        // TODO Refactor. Reduce duplication with ArticleResource::put
 
         use chrono::{TimeZone, Local};
         use futures::Stream;
@@ -123,7 +120,7 @@ impl Resource for NewArticleResource {
             revision: i32,
             title: &'a str,
             rendered: &'a str,
-            created: &'a str,
+            last_updated: &'a str,
         }
 
         Box::new(body
@@ -152,7 +149,10 @@ impl Resource for NewArticleResource {
                             title: &updated.title,
                             rendered: render_markdown(&updated.body),
                         }.to_string(),
-                        created: &Local.from_utc_datetime(&updated.created).to_string(),
+                        last_updated: &super::article_resource::last_updated(
+                            &Local.from_utc_datetime(&updated.created),
+                            updated.author.as_ref().map(|x| &**x)
+                        ),
                     }).expect("Should never fail"))
                 )
             })

@@ -67,9 +67,7 @@ function openEditor() {
             // Update url-bar, page title and footer
             window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
             document.querySelector("title").textContent = result.title;
-            if (result.article_id != null) articleId.textContent = result.article_id;
-            revision.textContent = result.revision;
-            lastUpdated.textContent = result.created;
+            lastUpdated.textContent = result.last_updated;
 
             // Update body:
             rendered.innerHTML = result.rendered;
