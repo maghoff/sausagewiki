@@ -214,6 +214,10 @@ footer dd:last-child::after {
     margin: 0;
 }
 
+li.missing, ul.dense>li.missing {
+    display: none;
+}
+
 input:focus, textarea:focus {
     outline: none;
 }

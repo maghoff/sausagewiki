@@ -58,7 +58,7 @@ impl Resource for ArticleResource {
         #[template="templates/article_revision.html"]
         struct Template<'a> {
             revision: i32,
-            last_updated: &'a str,
+            last_updated: Option<&'a str>,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -81,10 +81,10 @@ impl Resource for ArticleResource {
                         title: &data.title,
                         body: &Template {
                             revision: data.revision,
-                            last_updated: &last_updated(
+                            last_updated: Some(&last_updated(
                                 &Local.from_utc_datetime(&data.created),
                                 data.author.as_ref().map(|x| &**x)
-                            ),
+                            )),
                             edit: self.edit,
                             cancel_url: Some(&data.slug),
                             title: &data.title,

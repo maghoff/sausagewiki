@@ -53,7 +53,7 @@ impl Resource for NewArticleResource {
         #[template="templates/article_revision.html"]
         struct Template<'a> {
             revision: &'a str,
-            last_updated: &'a str,
+            last_updated: Option<&'a str>,
 
             edit: bool,
             cancel_url: Option<&'a str>,
@@ -75,7 +75,7 @@ impl Resource for NewArticleResource {
                         title: &title,
                         body: &Template {
                             revision: NDASH,
-                            last_updated: NDASH,
+                            last_updated: None,
 
                             // Implicitly start in edit-mode when no slug is given. This
                             // currently directly corresponds to the /_new endpoint

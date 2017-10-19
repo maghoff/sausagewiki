@@ -33,7 +33,7 @@
 
 <footer>
 <ul class="dense"
-    ><li class="last-updated">{{last_updated}}</li
+    ><li class="last-updated {{^last_updated}}missing{{/last_updated}}">{{#last_updated}}{{.}}{{/last_updated}}</li
     ><li><a id="openEditor" href="?edit">Edit</a></li
 ></ul>
 {{>footer/items.html}}

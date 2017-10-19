@@ -24,8 +24,6 @@ function openEditor() {
     const cancel = editor.querySelector('.cancel');
 
     const footer = document.querySelector("footer");
-    const articleId = footer.querySelector(".article-id");
-    const revision = footer.querySelector(".revision");
     const lastUpdated = footer.querySelector(".last-updated");
 
     textarea.style.height = rendered.clientHeight + "px";
@@ -68,6 +66,7 @@ function openEditor() {
             window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
             document.querySelector("title").textContent = result.title;
             lastUpdated.textContent = result.last_updated;
+            lastUpdated.classList.remove("missing");
 
             // Update body:
             rendered.innerHTML = result.rendered;
