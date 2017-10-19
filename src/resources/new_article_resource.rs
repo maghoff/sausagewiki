@@ -12,7 +12,7 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
-const NDASH: &str = "\u{2013}";
+const NEW: &str = "NEW";
 
 const EMPTY_ARTICLE_MESSAGE: &str = "
 <p>Not found</p>
@@ -74,7 +74,7 @@ impl Resource for NewArticleResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
                         body: &Template {
-                            revision: NDASH,
+                            revision: NEW,
                             last_updated: None,
 
                             // Implicitly start in edit-mode when no slug is given. This
@@ -94,7 +94,7 @@ impl Resource for NewArticleResource {
 
     fn put(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
         // TODO Check incoming Content-Type
-        // TODO Refactor. Reduce duplication with ArticleResource::put
+        // TODO Refactor? Reduce duplication with ArticleResource::put?
 
         use chrono::{TimeZone, Local};
         use futures::Stream;
@@ -131,9 +131,9 @@ impl Resource for NewArticleResource {
                     .map_err(Into::into)
             })
             .and_then(move |arg: CreateArticle| {
-                // TODO Check that update.base_revision == NDASH
-                // ... which seems silly. But there should be a mechanism to indicate that
-                // the client is actually trying to create a new article
+                if arg.base_revision != NEW {
+                    unimplemented!("Version update conflict");
+                }
                 self.state.create_article(self.slug.clone(), arg.title, arg.body, identity)
             })
             .and_then(|updated| {
