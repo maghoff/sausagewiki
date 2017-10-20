@@ -101,33 +101,31 @@ impl State {
         })
     }
 
-    pub fn get_article_revision_stubs(&self, before: Option<i32>, limit: i32) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error> {
+    pub fn query_article_revision_stubs<F>(&self, f: F) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error>
+    where
+        F: 'static + Send + Sync,
+        for <'a> F:
+            FnOnce(article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>) ->
+                article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
+    {
         let connection_pool = self.connection_pool.clone();
 
         self.cpu_pool.spawn_fn(move || {
-            use schema::article_revisions;
+            use schema::article_revisions::dsl::*;
 
-            let query = article_revisions::table
-                .order(article_revisions::sequence_number.desc())
-                .limit(limit as i64)
+            Ok(f(article_revisions.into_boxed())
                 .select((
-                    article_revisions::sequence_number,
-                    article_revisions::article_id,
-                    article_revisions::revision,
-                    article_revisions::created,
-                    article_revisions::slug,
-                    article_revisions::title,
-                    article_revisions::latest,
-                    article_revisions::author,
+                    sequence_number,
+                    article_id,
+                    revision,
+                    created,
+                    slug,
+                    title,
+                    latest,
+                    author,
                 ))
-                .into_boxed();
-
-            let query = match before {
-                Some(before) => query.filter(article_revisions::sequence_number.lt(before)),
-                None => query
-            };
-
-            Ok(query.load(&*connection_pool.get()?)?)
+                .load(&*connection_pool.get()?)?
+            )
         })
     }
 

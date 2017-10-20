@@ -13,12 +13,12 @@ use super::pagination::Pagination;
 
 pub struct ChangesResource {
     state: State,
-    before: Option<i32>,
+    pagination: Pagination<i32>,
 }
 
 impl ChangesResource {
     pub fn new(state: State, pagination: Pagination<i32>) -> Self {
-        Self { state, before: match pagination { Pagination::Before(x) => Some(x), _ => None } }
+        Self { state, pagination }
     }
 }
 
@@ -60,27 +60,55 @@ impl Resource for ChangesResource {
 
         const PAGE_SIZE: i32 = 30;
 
-        let data = self.state.get_article_revision_stubs(self.before, PAGE_SIZE);
+        let pagination = self.pagination.clone();
+        let data = self.state.query_article_revision_stubs(move |query| {
+            use diesel::prelude::*;
+            use schema::article_revisions::dsl::*;
+
+            let query = query
+                .limit(PAGE_SIZE as i64 + 1);
+
+            match pagination {
+                Pagination::After(x) => query
+                    .filter(sequence_number.gt(x))
+                    .order(sequence_number.asc()),
+                Pagination::Before(x) => query
+                    .filter(sequence_number.lt(x))
+                    .order(sequence_number.desc()),
+                Pagination::None => query
+                    .order(sequence_number.desc()),
+            }
+        });
+
         let head = self.head();
 
         Box::new(data.join(head)
-            .and_then(move |(data, head)| {
+            .and_then(move |(mut data, head)| {
                 use std::iter::Iterator;
 
-                let link_newer = self.before.and_then(|_| {
-                    data.first().and_then(|x| {
-                        match x.sequence_number {
-                            seq => Some(format!("?before={}", seq + PAGE_SIZE)),
-                        }
-                    })
-                });
+                let extra_element = if data.len() > PAGE_SIZE as usize {
+                    data.pop()
+                } else {
+                    None
+                };
 
-                let link_older = data.last().and_then(|x| {
-                    match x.sequence_number {
-                        1 => None,
-                        seq => Some(format!("?before={}", seq)),
-                    }
-                });
+                let (link_newer, link_older) = match self.pagination {
+                    Pagination::After(x) => {
+                        data.reverse();
+                        (
+                            extra_element.map(|_| format!("?after={}", data.first().unwrap().sequence_number)),
+                            Some(format!("?before={}", x + 1))
+                        )
+                    },
+                    Pagination::Before(x) => (
+                        Some(format!("?after={}", x - 1)),
+                        extra_element.map(|_| format!("?before={}", data.last().unwrap().sequence_number)),
+                    ),
+                    Pagination::None => (
+                        None,
+                        extra_element.map(|_| format!("?before={}", data.last().unwrap().sequence_number)),
+                    ),
+                };
 
                 let changes = &data.into_iter().map(|x| {
                     Row {
