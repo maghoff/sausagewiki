@@ -50,11 +50,16 @@ impl Resource for ChangesResource {
             _latest: bool,
         }
 
+        struct NavLinks {
+            more: String,
+            end: String,
+        }
+
         #[derive(BartDisplay)]
         #[template="templates/changes.html"]
         struct Template<'a> {
-            link_newer: Option<String>,
-            link_older: Option<String>,
+            newer: Option<NavLinks>,
+            older: Option<NavLinks>,
             changes: &'a [Row],
         }
 
@@ -92,21 +97,36 @@ impl Resource for ChangesResource {
                     None
                 };
 
-                let (link_newer, link_older) = match self.pagination {
+                let (newer, older) = match self.pagination {
                     Pagination::After(x) => {
                         data.reverse();
                         (
-                            extra_element.map(|_| format!("?after={}", data.first().unwrap().sequence_number)),
-                            Some(format!("?before={}", x + 1))
+                            extra_element.map(|_| NavLinks {
+                                more: format!("?after={}", data.first().unwrap().sequence_number),
+                                end: format!("_changes"),
+                            }),
+                            Some(NavLinks {
+                                more: format!("?before={}", x + 1),
+                                end: format!("?after=0"),
+                            })
                         )
                     },
                     Pagination::Before(x) => (
-                        Some(format!("?after={}", x - 1)),
-                        extra_element.map(|_| format!("?before={}", data.last().unwrap().sequence_number)),
+                        Some(NavLinks {
+                            more: format!("?after={}", x - 1),
+                            end: format!("_changes"),
+                        }),
+                        extra_element.map(|_| NavLinks {
+                            more: format!("?before={}", data.last().unwrap().sequence_number),
+                            end: format!("?after=0"),
+                        })
                     ),
                     Pagination::None => (
                         None,
-                        extra_element.map(|_| format!("?before={}", data.last().unwrap().sequence_number)),
+                        extra_element.map(|_| NavLinks {
+                            more: format!("?before={}", data.last().unwrap().sequence_number),
+                            end: format!("?after=0"),
+                        }),
                     ),
                 };
 
@@ -127,8 +147,8 @@ impl Resource for ChangesResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Changes",
                         body: &Template {
-                            link_newer,
-                            link_older,
+                            newer,
+                            older,
                             changes
                         },
                         style_css_checksum: StyleCss::checksum(),

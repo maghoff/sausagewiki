@@ -140,6 +140,10 @@ img {
     height: auto;
 }
 
+nav {
+    text-align: center;
+}
+
 
 /* Sticky footer */
 html, body {
