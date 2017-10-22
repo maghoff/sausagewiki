@@ -1,4 +1,5 @@
 use futures::{self, Future};
+use futures::future::finished;
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
@@ -11,14 +12,44 @@ use web::{Resource, ResponseFuture};
 
 use super::pagination::Pagination;
 
+const PAGE_SIZE: i32 = 30;
+
 pub struct ChangesResource {
     state: State,
     pagination: Pagination<i32>,
 }
 
 impl ChangesResource {
-    pub fn new(state: State, pagination: Pagination<i32>) -> Self {
-        Self { state, pagination }
+    pub fn new(state: State, pagination: Pagination<i32>) -> Box<Future<Item=ChangesResource, Error=::web::Error>> {
+        match pagination {
+            Pagination::After(x) => Box::new(
+                state.query_article_revision_stubs(move |query| {
+                    use diesel::prelude::*;
+                    use schema::article_revisions::dsl::*;
+
+                    query
+                        .limit(PAGE_SIZE as i64 + 1)
+                        .filter(sequence_number.gt(x))
+                        .order(sequence_number.asc())
+                }).and_then(|mut data| {
+                    let extra_element = if data.len() > PAGE_SIZE as usize {
+                        data.pop()
+                    } else {
+                        None
+                    };
+
+                    Ok(Self {
+                        state,
+                        pagination: match extra_element {
+                            Some(x) => Pagination::Before(x.sequence_number),
+                            None => Pagination::None
+                        }
+                    })
+                })
+            ),
+            Pagination::Before(x) => Box::new(finished(Self { state, pagination })),
+            Pagination::None => Box::new(finished(Self { state, pagination })),
+        }
     }
 }
 
@@ -62,8 +93,6 @@ impl Resource for ChangesResource {
             older: Option<NavLinks>,
             changes: &'a [Row],
         }
-
-        const PAGE_SIZE: i32 = 30;
 
         let pagination = self.pagination.clone();
         let data = self.state.query_article_revision_stubs(move |query| {

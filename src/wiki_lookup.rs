@@ -83,12 +83,12 @@ impl WikiLookup {
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
             ("_changes", None) => {
-                Box::new(done(
-                    pagination::from_str(query.unwrap_or("")).map_err(Into::into)
-                    .and_then(|pagination| Ok(Some(
-                        Box::new(ChangesResource::new(self.state.clone(), pagination)) as BoxResource
-                    )))
-                ))
+                let state = self.state.clone();
+                Box::new(
+                    done(pagination::from_str(query.unwrap_or("")).map_err(Into::into))
+                    .and_then(move |pagination| ChangesResource::new(state, pagination))
+                    .and_then(|changes_resource| Ok(Some(Box::new(changes_resource) as BoxResource)))
+                )
             },
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
