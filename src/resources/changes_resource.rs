@@ -16,7 +16,7 @@ const PAGE_SIZE: i32 = 30;
 
 pub struct ChangesResource {
     state: State,
-    pagination: Pagination<i32>,
+    before: Option<i32>,
 }
 
 impl ChangesResource {
@@ -40,15 +40,12 @@ impl ChangesResource {
 
                     Ok(Self {
                         state,
-                        pagination: match extra_element {
-                            Some(x) => Pagination::Before(x.sequence_number),
-                            None => Pagination::None
-                        }
+                        before: extra_element.map(|x| x.sequence_number),
                     })
                 })
             ),
-            Pagination::Before(x) => Box::new(finished(Self { state, pagination })),
-            Pagination::None => Box::new(finished(Self { state, pagination })),
+            Pagination::Before(x) => Box::new(finished(Self { state, before: Some(x) })),
+            Pagination::None => Box::new(finished(Self { state, before: None })),
         }
     }
 }
@@ -94,23 +91,18 @@ impl Resource for ChangesResource {
             changes: &'a [Row],
         }
 
-        let pagination = self.pagination.clone();
+        let before = self.before.clone();
         let data = self.state.query_article_revision_stubs(move |query| {
             use diesel::prelude::*;
             use schema::article_revisions::dsl::*;
 
             let query = query
+                .order(sequence_number.desc())
                 .limit(PAGE_SIZE as i64 + 1);
 
-            match pagination {
-                Pagination::After(x) => query
-                    .filter(sequence_number.gt(x))
-                    .order(sequence_number.asc()),
-                Pagination::Before(x) => query
-                    .filter(sequence_number.lt(x))
-                    .order(sequence_number.desc()),
-                Pagination::None => query
-                    .order(sequence_number.desc()),
+            match before {
+                Some(x) => query.filter(sequence_number.lt(x)),
+                None => query,
             }
         });
 
@@ -120,27 +112,19 @@ impl Resource for ChangesResource {
             .and_then(move |(mut data, head)| {
                 use std::iter::Iterator;
 
+                if data.len() == 0 {
+                    // TODO Handle degenerate case
+                    unimplemented!("Cannot deal with empty result sets");
+                }
+
                 let extra_element = if data.len() > PAGE_SIZE as usize {
                     data.pop()
                 } else {
                     None
                 };
 
-                let (newer, older) = match self.pagination {
-                    Pagination::After(x) => {
-                        data.reverse();
-                        (
-                            extra_element.map(|_| NavLinks {
-                                more: format!("?after={}", data.first().unwrap().sequence_number),
-                                end: format!("_changes"),
-                            }),
-                            Some(NavLinks {
-                                more: format!("?before={}", x + 1),
-                                end: format!("?after=0"),
-                            })
-                        )
-                    },
-                    Pagination::Before(x) => (
+                let (newer, older) = match self.before {
+                    Some(x) => (
                         Some(NavLinks {
                             more: format!("?after={}", x - 1),
                             end: format!("_changes"),
@@ -150,7 +134,7 @@ impl Resource for ChangesResource {
                             end: format!("?after=0"),
                         })
                     ),
-                    Pagination::None => (
+                    None => (
                         None,
                         extra_element.map(|_| NavLinks {
                             more: format!("?before={}", data.last().unwrap().sequence_number),
