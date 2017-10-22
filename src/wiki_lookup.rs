@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::Utf8Error;
 
-use futures::{Future, finished, failed, done};
+use futures::{Future, finished, failed};
 use futures::future::FutureResult;
 use percent_encoding::percent_decode;
 use slug::slugify;
@@ -40,7 +40,8 @@ lazy_static! {
 
 #[derive(Clone)]
 pub struct WikiLookup {
-    state: State
+    state: State,
+    changes_lookup: ChangesLookup,
 }
 
 fn split_one(path: &str) -> Result<(Cow<str>, Option<&str>), Utf8Error> {
@@ -70,7 +71,9 @@ fn asset_lookup(path: &str) -> FutureResult<Option<BoxResource>, Box<::std::erro
 
 impl WikiLookup {
     pub fn new(state: State) -> WikiLookup {
-        WikiLookup { state }
+        let changes_lookup = ChangesLookup::new(state.clone());
+
+        WikiLookup { state, changes_lookup }
     }
 
     fn reserved_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
@@ -82,14 +85,8 @@ impl WikiLookup {
         match (head.as_ref(), tail) {
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
-            ("_changes", None) => {
-                let state = self.state.clone();
-                Box::new(
-                    done(pagination::from_str(query.unwrap_or("")).map_err(Into::into))
-                    .and_then(move |pagination| ChangesResource::new(state, pagination))
-                    .and_then(|resource| Ok(Some(resource)))
-                )
-            },
+            ("_changes", None) =>
+                Box::new(ChangesLookup::new(self.state.clone()).lookup(query)),
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
             ("_sitemap", None) =>

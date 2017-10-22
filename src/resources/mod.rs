@@ -9,7 +9,7 @@ mod temporary_redirect_resource;
 
 pub use self::article_redirect_resource::ArticleRedirectResource;
 pub use self::article_resource::ArticleResource;
-pub use self::changes_resource::ChangesResource;
+pub use self::changes_resource::{ChangesLookup, ChangesResource};
 pub use self::new_article_resource::NewArticleResource;
 pub use self::sitemap_resource::SitemapResource;
 pub use self::temporary_redirect_resource::TemporaryRedirectResource;

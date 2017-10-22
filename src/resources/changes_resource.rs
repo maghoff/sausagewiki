@@ -1,5 +1,5 @@
 use futures::{self, Future};
-use futures::future::finished;
+use futures::future::{done, finished};
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
@@ -17,39 +17,61 @@ const PAGE_SIZE: i32 = 30;
 
 type BoxResource = Box<Resource + Sync + Send>;
 
+#[derive(Clone)]
+pub struct ChangesLookup {
+    state: State,
+}
+
+impl ChangesLookup {
+    pub fn new(state: State) -> ChangesLookup {
+        Self { state }
+    }
+
+    pub fn lookup(&self, query: Option<&str>) -> Box<Future<Item=Option<BoxResource>, Error=::web::Error>> {
+        use super::pagination;
+
+        let state = self.state.clone();
+
+        Box::new(
+            done(pagination::from_str(query.unwrap_or("")).map_err(Into::into))
+            .and_then(move |pagination| match pagination {
+                Pagination::After(x) => Box::new(
+                    state.query_article_revision_stubs(move |query| {
+                        use diesel::prelude::*;
+                        use schema::article_revisions::dsl::*;
+
+                        query
+                            .limit(PAGE_SIZE as i64 + 1)
+                            .filter(sequence_number.gt(x))
+                            .order(sequence_number.asc())
+                    }).and_then(|mut data| {
+                        let extra_element = if data.len() > PAGE_SIZE as usize {
+                            data.pop()
+                        } else {
+                            None
+                        };
+
+                        Ok(Some(match extra_element {
+                            Some(x) => Box::new(TemporaryRedirectResource::new(format!("?before={}", x.sequence_number))) as BoxResource,
+                            None => Box::new(TemporaryRedirectResource::new(format!("_changes"))) as BoxResource,
+                        }))
+                    })
+                ) as Box<Future<Item=Option<BoxResource>, Error=::web::Error>>,
+                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, Some(x))) as BoxResource))),
+                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, None)) as BoxResource))),
+            })
+        )
+    }
+}
+
 pub struct ChangesResource {
     state: State,
     before: Option<i32>,
 }
 
 impl ChangesResource {
-    pub fn new(state: State, pagination: Pagination<i32>) -> Box<Future<Item=BoxResource, Error=::web::Error>> {
-        match pagination {
-            Pagination::After(x) => Box::new(
-                state.query_article_revision_stubs(move |query| {
-                    use diesel::prelude::*;
-                    use schema::article_revisions::dsl::*;
-
-                    query
-                        .limit(PAGE_SIZE as i64 + 1)
-                        .filter(sequence_number.gt(x))
-                        .order(sequence_number.asc())
-                }).and_then(|mut data| {
-                    let extra_element = if data.len() > PAGE_SIZE as usize {
-                        data.pop()
-                    } else {
-                        None
-                    };
-
-                    Ok(match extra_element {
-                        Some(x) => Box::new(TemporaryRedirectResource::new(format!("?before={}", x.sequence_number))) as BoxResource,
-                        None => Box::new(TemporaryRedirectResource::new(format!("_changes"))) as BoxResource,
-                    })
-                })
-            ),
-            Pagination::Before(x) => Box::new(finished(Box::new(Self { state, before: Some(x) }) as BoxResource)),
-            Pagination::None => Box::new(finished(Box::new(Self { state, before: None }) as BoxResource)),
-        }
+    pub fn new(state: State, before: Option<i32>) -> Self {
+        Self { state, before }
     }
 }
 
