@@ -11,8 +11,11 @@ use state::State;
 use web::{Resource, ResponseFuture};
 
 use super::pagination::Pagination;
+use super::TemporaryRedirectResource;
 
 const PAGE_SIZE: i32 = 30;
+
+type BoxResource = Box<Resource + Sync + Send>;
 
 pub struct ChangesResource {
     state: State,
@@ -20,7 +23,7 @@ pub struct ChangesResource {
 }
 
 impl ChangesResource {
-    pub fn new(state: State, pagination: Pagination<i32>) -> Box<Future<Item=ChangesResource, Error=::web::Error>> {
+    pub fn new(state: State, pagination: Pagination<i32>) -> Box<Future<Item=BoxResource, Error=::web::Error>> {
         match pagination {
             Pagination::After(x) => Box::new(
                 state.query_article_revision_stubs(move |query| {
@@ -38,14 +41,14 @@ impl ChangesResource {
                         None
                     };
 
-                    Ok(Self {
-                        state,
-                        before: extra_element.map(|x| x.sequence_number),
+                    Ok(match extra_element {
+                        Some(x) => Box::new(TemporaryRedirectResource::new(format!("?before={}", x.sequence_number))) as BoxResource,
+                        None => Box::new(TemporaryRedirectResource::new(format!("_changes"))) as BoxResource,
                     })
                 })
             ),
-            Pagination::Before(x) => Box::new(finished(Self { state, before: Some(x) })),
-            Pagination::None => Box::new(finished(Self { state, before: None })),
+            Pagination::Before(x) => Box::new(finished(Box::new(Self { state, before: Some(x) }) as BoxResource)),
+            Pagination::None => Box::new(finished(Box::new(Self { state, before: None }) as BoxResource)),
         }
     }
 }

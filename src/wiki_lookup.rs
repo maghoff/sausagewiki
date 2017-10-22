@@ -87,7 +87,7 @@ impl WikiLookup {
                 Box::new(
                     done(pagination::from_str(query.unwrap_or("")).map_err(Into::into))
                     .and_then(move |pagination| ChangesResource::new(state, pagination))
-                    .and_then(|changes_resource| Ok(Some(Box::new(changes_resource) as BoxResource)))
+                    .and_then(|resource| Ok(Some(resource)))
                 )
             },
             ("_new", None) =>
