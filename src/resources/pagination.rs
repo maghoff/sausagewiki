@@ -42,7 +42,11 @@ impl<T> PaginationStruct<T> {
     }
 }
 
-pub fn from_str<'a, T: serde::Deserialize<'a>>(s: &'a str) -> Result<Pagination<T>, Error> {
+pub fn _from_str<'a, T: serde::Deserialize<'a>>(s: &'a str) -> Result<Pagination<T>, Error> {
     let pagination: PaginationStruct<T> = serde_urlencoded::from_str(s).map_err(|_| Error)?; // TODO Proper error reporting
     Ok(pagination.into_enum()?)
+}
+
+pub fn from_fields<T>(after: Option<T>, before: Option<T>) -> Result<Pagination<T>, Error> {
+    Ok(PaginationStruct { after, before }.into_enum()?)
 }
