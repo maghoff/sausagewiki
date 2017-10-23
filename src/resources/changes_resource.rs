@@ -247,11 +247,6 @@ impl Resource for ChangesResource {
             .and_then(move |(mut data, head)| {
                 use std::iter::Iterator;
 
-                if data.len() == 0 {
-                    // TODO Handle degenerate case
-                    unimplemented!("Cannot deal with empty result sets");
-                }
-
                 let extra_element = if data.len() > self.limit as usize {
                     data.pop()
                 } else {

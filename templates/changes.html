@@ -9,11 +9,13 @@
     ><li><a rel="first" href="{{.end}}">Most recent changes</a></li
 ></ul></nav>{{/newer}}
 <table>
+    {{#changes?}}
     <tr>
         <th>Article</th>
         <th>Updated</th>
         <th>Author</th>
     </tr>
+    {{/changes}}
     {{#changes}}
     <tr>
         <td><a href="{{#.slug.is_empty()?}}.{{/.slug.is_empty()}}{{.slug}}">{{.title}}</a></td>
@@ -22,6 +24,9 @@
     </tr>
     {{/changes}}
 </table>
+{{^changes?}}
+<p>No hits</p>
+{{/changes}}
 {{#older}}<nav><ul class="dense"
     ><li><a rel="next" href="{{.more}}">Older changes</a></li
     ><li><a rel="last" href="{{.end}}">First changes</a></li
