@@ -13,6 +13,8 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
+use super::changes_resource::QueryParameters;
+
 pub struct ArticleResource {
     state: State,
     article_id: i32,
@@ -26,17 +28,27 @@ impl ArticleResource {
     }
 }
 
-pub fn last_updated(created: &DateTime<Local>, author: Option<&str>) -> String {
+pub fn last_updated(article_id: i32, created: &DateTime<Local>, author: Option<&str>) -> String {
+    struct Author<'a> {
+        author: &'a str,
+        history: String,
+    }
+
     #[derive(BartDisplay)]
-    #[template_string = "Last updated {{created}}{{#author}} by {{.}}{{/author}}"]
+    #[template_string = "Last updated <a href=\"{{article_history}}\">{{created}}</a>{{#author}} by <a href=\"{{.history}}\">{{.author}}</a>{{/author}}"]
     struct Template<'a> {
         created: &'a str,
-        author: Option<&'a str>,
+        article_history: &'a str,
+        author: Option<Author<'a>>,
     }
 
     Template {
         created: &created.to_rfc2822(),
-        author
+        article_history: &format!("_changes{}", QueryParameters::default().article_id(Some(article_id)).into_link()),
+        author: author.map(|author| Author {
+            author: &author,
+            history: format!("_changes{}", QueryParameters::default().author(Some(author.to_owned())).into_link()),
+        }),
     }.to_string()
 }
 
@@ -82,6 +94,7 @@ impl Resource for ArticleResource {
                         body: &Template {
                             revision: data.revision,
                             last_updated: Some(&last_updated(
+                                data.article_id,
                                 &Local.from_utc_datetime(&data.created),
                                 data.author.as_ref().map(|x| &**x)
                             )),
@@ -148,6 +161,7 @@ impl Resource for ArticleResource {
                             rendered: render_markdown(&updated.body),
                         }.to_string(),
                         last_updated: &last_updated(
+                            updated.article_id,
                             &Local.from_utc_datetime(&updated.created),
                             updated.author.as_ref().map(|x| &**x)
                         ),

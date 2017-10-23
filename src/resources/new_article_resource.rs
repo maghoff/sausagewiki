@@ -150,6 +150,7 @@ impl Resource for NewArticleResource {
                             rendered: render_markdown(&updated.body),
                         }.to_string(),
                         last_updated: &super::article_resource::last_updated(
+                            updated.article_id,
                             &Local.from_utc_datetime(&updated.created),
                             updated.author.as_ref().map(|x| &**x)
                         ),

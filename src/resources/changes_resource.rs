@@ -26,7 +26,7 @@ pub struct ChangesLookup {
 }
 
 #[derive(Serialize, Deserialize, Default)]
-struct QueryParameters {
+pub struct QueryParameters {
     after: Option<i32>,
     before: Option<i32>,
 
@@ -37,7 +37,7 @@ struct QueryParameters {
 }
 
 impl QueryParameters {
-    fn pagination(self, pagination: Pagination<i32>) -> Self {
+    pub fn pagination(self, pagination: Pagination<i32>) -> Self {
         Self {
             after: if let Pagination::After(x) = pagination { Some(x) } else { None },
             before: if let Pagination::Before(x) = pagination { Some(x) } else { None },
@@ -45,22 +45,22 @@ impl QueryParameters {
         }
     }
 
-    fn article_id(self, article_id: Option<i32>) -> Self {
+    pub fn article_id(self, article_id: Option<i32>) -> Self {
         Self { article_id, ..self }
     }
 
-    fn author(self, author: Option<String>) -> Self {
+    pub fn author(self, author: Option<String>) -> Self {
         Self { author, ..self }
     }
 
-    fn limit(self, limit: i32) -> Self {
+    pub fn limit(self, limit: i32) -> Self {
         Self {
             limit: if limit != DEFAULT_LIMIT { Some(limit) } else { None },
             ..self
         }
     }
 
-    fn into_link(self) -> String {
+    pub fn into_link(self) -> String {
         let args = serde_urlencoded::to_string(self).expect("Serializing to String cannot fail");
         if args.len() > 0 {
             format!("?{}", args)
