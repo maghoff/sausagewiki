@@ -25,13 +25,14 @@ pub struct ChangesLookup {
     state: State,
 }
 
-// TODO: Optionally filter by article_id
 // TODO: Optionally filter by author
 
 #[derive(Serialize, Deserialize, Default)]
 struct QueryParameters {
     after: Option<i32>,
     before: Option<i32>,
+
+    article_id: Option<i32>,
 
     limit: Option<i32>,
 }
@@ -41,6 +42,13 @@ impl QueryParameters {
         Self {
             after: if let Pagination::After(x) = pagination { Some(x) } else { None },
             before: if let Pagination::Before(x) = pagination { Some(x) } else { None },
+            ..self
+        }
+    }
+
+    fn article_id(self, article_id: Option<i32>) -> Self {
+        Self {
+            article_id,
             ..self
         }
     }
@@ -63,15 +71,19 @@ impl QueryParameters {
 }
 
 fn apply_query_config<'a>(
-    query: article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
+    mut query: article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
+    article_id: Option<i32>,
     limit: i32,
 )
     -> article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>
 {
     use diesel::prelude::*;
 
-    query
-        .limit(limit as i64 + 1)
+    if let Some(article_id) = article_id {
+        query = query.filter(article_revisions::article_id.eq(article_id));
+    }
+
+    query.limit(limit as i64 + 1)
 }
 
 impl ChangesLookup {
@@ -96,17 +108,16 @@ impl ChangesLookup {
                     _ => Err("`limit` argument must be in range [1, 100]"),
                 }?;
 
-                Ok((pagination, limit))
+                Ok((pagination, params.article_id, limit))
             })())
-            .and_then(move |(pagination, limit)| match pagination {
+            .and_then(move |(pagination, article_id, limit)| match pagination {
                 Pagination::After(x) => Box::new(
                     state.query_article_revision_stubs(move |query| {
                         use diesel::prelude::*;
-                        use schema::article_revisions::dsl::*;
 
-                        apply_query_config(query, limit)
-                            .filter(sequence_number.gt(x))
-                            .order(sequence_number.asc())
+                        apply_query_config(query, article_id, limit)
+                            .filter(article_revisions::sequence_number.gt(x))
+                            .order(article_revisions::sequence_number.asc())
                     }).and_then(move |mut data| {
                         let extra_element = if data.len() > limit as usize {
                             data.pop()
@@ -114,23 +125,29 @@ impl ChangesLookup {
                             None
                         };
 
+                        let args =
+                            QueryParameters {
+                                after: None,
+                                before: None,
+                                article_id,
+                                limit: None,
+                            }
+                            .limit(limit);
+
                         Ok(Some(match extra_element {
                             Some(x) => Box::new(TemporaryRedirectResource::new(
-                                QueryParameters::default()
-                                    .limit(limit)
+                                args
                                     .pagination(Pagination::Before(x.sequence_number))
                                     .into_link()
                             )) as BoxResource,
                             None => Box::new(TemporaryRedirectResource::new(
-                                QueryParameters::default()
-                                    .limit(limit)
-                                    .into_link()
+                                args.into_link()
                             )) as BoxResource,
                         }))
                     })
                 ) as Box<Future<Item=Option<BoxResource>, Error=::web::Error>>,
-                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, Some(x), limit)) as BoxResource))),
-                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, None, limit)) as BoxResource))),
+                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, Some(x), article_id, limit)) as BoxResource))),
+                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, None, article_id, limit)) as BoxResource))),
             })
         )
     }
@@ -139,18 +156,20 @@ impl ChangesLookup {
 pub struct ChangesResource {
     state: State,
     before: Option<i32>,
+    article_id: Option<i32>,
     limit: i32,
 }
 
 impl ChangesResource {
-    pub fn new(state: State, before: Option<i32>, limit: i32) -> Self {
-        Self { state, before, limit }
+    pub fn new(state: State, before: Option<i32>, article_id: Option<i32>, limit: i32) -> Self {
+        Self { state, before, article_id, limit }
     }
 
     fn query_args(&self) -> QueryParameters {
         QueryParameters {
             after: None,
             before: self.before,
+            article_id: self.article_id,
             ..QueryParameters::default()
         }
         .limit(self.limit)
@@ -198,17 +217,16 @@ impl Resource for ChangesResource {
             changes: &'a [Row],
         }
 
-        let before = self.before.clone();
-        let limit = self.limit;
+        let (before, article_id, limit) =
+            (self.before.clone(), self.article_id.clone(), self.limit);
         let data = self.state.query_article_revision_stubs(move |query| {
             use diesel::prelude::*;
-            use schema::article_revisions::dsl::*;
 
-            let query = apply_query_config(query, limit)
-                .order(sequence_number.desc());
+            let query = apply_query_config(query, article_id, limit)
+                .order(article_revisions::sequence_number.desc());
 
             match before {
-                Some(x) => query.filter(sequence_number.lt(x)),
+                Some(x) => query.filter(article_revisions::sequence_number.lt(x)),
                 None => query,
             }
         });
