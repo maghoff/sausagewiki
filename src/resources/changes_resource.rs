@@ -25,14 +25,13 @@ pub struct ChangesLookup {
     state: State,
 }
 
-// TODO: Optionally filter by author
-
 #[derive(Serialize, Deserialize, Default)]
 struct QueryParameters {
     after: Option<i32>,
     before: Option<i32>,
 
     article_id: Option<i32>,
+    author: Option<String>,
 
     limit: Option<i32>,
 }
@@ -47,10 +46,11 @@ impl QueryParameters {
     }
 
     fn article_id(self, article_id: Option<i32>) -> Self {
-        Self {
-            article_id,
-            ..self
-        }
+        Self { article_id, ..self }
+    }
+
+    fn author(self, author: Option<String>) -> Self {
+        Self { author, ..self }
     }
 
     fn limit(self, limit: i32) -> Self {
@@ -73,6 +73,7 @@ impl QueryParameters {
 fn apply_query_config<'a>(
     mut query: article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
     article_id: Option<i32>,
+    author: Option<String>,
     limit: i32,
 )
     -> article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>
@@ -81,6 +82,10 @@ fn apply_query_config<'a>(
 
     if let Some(article_id) = article_id {
         query = query.filter(article_revisions::article_id.eq(article_id));
+    }
+
+    if let Some(author) = author {
+        query = query.filter(article_revisions::author.eq(author));
     }
 
     query.limit(limit as i64 + 1)
@@ -108,14 +113,16 @@ impl ChangesLookup {
                     _ => Err("`limit` argument must be in range [1, 100]"),
                 }?;
 
-                Ok((pagination, params.article_id, limit))
+                Ok((pagination, params.article_id, params.author, limit))
             })())
-            .and_then(move |(pagination, article_id, limit)| match pagination {
-                Pagination::After(x) => Box::new(
-                    state.query_article_revision_stubs(move |query| {
+            .and_then(move |(pagination, article_id, author, limit)| match pagination {
+                Pagination::After(x) => {
+                    let author2 = author.clone();
+
+                    Box::new(state.query_article_revision_stubs(move |query| {
                         use diesel::prelude::*;
 
-                        apply_query_config(query, article_id, limit)
+                        apply_query_config(query, article_id, author2, limit)
                             .filter(article_revisions::sequence_number.gt(x))
                             .order(article_revisions::sequence_number.asc())
                     }).and_then(move |mut data| {
@@ -130,6 +137,7 @@ impl ChangesLookup {
                                 after: None,
                                 before: None,
                                 article_id,
+                                author,
                                 limit: None,
                             }
                             .limit(limit);
@@ -144,10 +152,10 @@ impl ChangesLookup {
                                 args.into_link()
                             )) as BoxResource,
                         }))
-                    })
-                ) as Box<Future<Item=Option<BoxResource>, Error=::web::Error>>,
-                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, Some(x), article_id, limit)) as BoxResource))),
-                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, None, article_id, limit)) as BoxResource))),
+                    })) as Box<Future<Item=Option<BoxResource>, Error=::web::Error>>
+                },
+                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, Some(x), article_id, author, limit)) as BoxResource))),
+                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, None, article_id, author, limit)) as BoxResource))),
             })
         )
     }
@@ -157,12 +165,13 @@ pub struct ChangesResource {
     state: State,
     before: Option<i32>,
     article_id: Option<i32>,
+    author: Option<String>,
     limit: i32,
 }
 
 impl ChangesResource {
-    pub fn new(state: State, before: Option<i32>, article_id: Option<i32>, limit: i32) -> Self {
-        Self { state, before, article_id, limit }
+    pub fn new(state: State, before: Option<i32>, article_id: Option<i32>, author: Option<String>, limit: i32) -> Self {
+        Self { state, before, article_id, author, limit }
     }
 
     fn query_args(&self) -> QueryParameters {
@@ -170,6 +179,7 @@ impl ChangesResource {
             after: None,
             before: self.before,
             article_id: self.article_id,
+            author: self.author.clone(),
             ..QueryParameters::default()
         }
         .limit(self.limit)
@@ -217,12 +227,12 @@ impl Resource for ChangesResource {
             changes: &'a [Row],
         }
 
-        let (before, article_id, limit) =
-            (self.before.clone(), self.article_id.clone(), self.limit);
+        let (before, article_id, author, limit) =
+            (self.before.clone(), self.article_id.clone(), self.author.clone(), self.limit);
         let data = self.state.query_article_revision_stubs(move |query| {
             use diesel::prelude::*;
 
-            let query = apply_query_config(query, article_id, limit)
+            let query = apply_query_config(query, article_id, author, limit)
                 .order(article_revisions::sequence_number.desc());
 
             match before {
