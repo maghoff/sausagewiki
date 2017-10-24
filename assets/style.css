@@ -64,6 +64,8 @@ article>hr {
 .notice {
     background: lightyellow;
     padding: 32px 48px;
+    font-size: 18px;
+    line-height: 32px;
 
     box-sizing: border-box;
     max-width: 616px;
