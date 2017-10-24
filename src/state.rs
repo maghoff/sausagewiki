@@ -316,7 +316,18 @@ impl State {
                 format!("\"{}\"", src.replace('\"', "\"\""))
             }
 
-            let query = fts_quote(&query_string);
+            let words = query_string
+                .split_whitespace()
+                .map(fts_quote)
+                .collect::<Vec<_>>();
+
+            let query = if words.len() > 1 {
+                format!("NEAR({})", words.join(" "))
+            } else if words.len() == 1 {
+                format!("{}*", words[0])
+            } else {
+                "\"\"".to_owned()
+            };
 
             Ok(
                 sql::<(Text, Text, Text)>(
