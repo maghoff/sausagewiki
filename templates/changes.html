@@ -18,9 +18,9 @@
     {{/changes}}
     {{#changes}}
     <tr>
-        <td><a href="{{#.slug.is_empty()?}}.{{/.slug.is_empty()}}{{.slug}}">{{.title}}</a></td>
+        <td><a href="_revisions/{{.article_id}}/{{.revision}}">{{.title}}</a></td>
         <td>{{.created}}</td>
-        <td>{{#.author}}{{.}}{{/.author}}{{^.author}}<i>Anonymous</i>{{/.author}}</td>
+        <td>{{#.author}}<a href="_changes?before={{..sequence_number_plus_one}}&amp;author={{.}}">{{.}}</a>{{/.author}}{{^.author}}<i>Anonymous</i>{{/.author}}</td>
     </tr>
     {{/changes}}
 </table>

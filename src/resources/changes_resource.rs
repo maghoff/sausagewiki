@@ -203,12 +203,14 @@ impl Resource for ChangesResource {
         use chrono::{TimeZone, Local};
 
         struct Row {
-            _article_id: i32,
-            _revision: i32,
+            sequence_number_plus_one: i32,
+
+            article_id: i32,
+            revision: i32,
             created: String,
             author: Option<String>,
 
-            slug: String,
+            _slug: String,
             title: String,
 
             _latest: bool,
@@ -279,11 +281,12 @@ impl Resource for ChangesResource {
 
                 let changes = &data.into_iter().map(|x| {
                     Row {
-                        _article_id: x.article_id,
-                        _revision: x.revision,
+                        sequence_number_plus_one: x.sequence_number + 1,
+                        article_id: x.article_id,
+                        revision: x.revision,
                         created: Local.from_utc_datetime(&x.created).to_rfc2822(),
                         author: x.author,
-                        slug: x.slug,
+                        _slug: x.slug,
                         title: x.title,
                         _latest: x.latest,
                     }
