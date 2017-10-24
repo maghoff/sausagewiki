@@ -4,6 +4,16 @@
 </header>
 
 <article>
+<p>
+    These are the {{^newer}}most recent{{/newer}} changes that have been
+    made to{{{subject_clause()}}}{{{author_clause()}}}.
+</p>
+
+<nav><ul class="dense">
+    {{#all_articles_link()}}<li><a href="{{.}}">All articles</a></li>{{/all_articles_link()}}
+    {{#all_authors_link()}}<li><a href="{{.}}">All authors</a></li>{{/all_authors_link()}}
+</ul></nav>
+
 {{#newer}}<nav><ul class="dense"
     ><li><a rel="prev" href="{{.more}}">More recent changes</a></li
     ><li><a rel="first" href="{{.end}}">Most recent changes</a></li
@@ -25,12 +35,13 @@
     {{/changes}}
 </table>
 {{^changes?}}
-<p>No hits</p>
+<p>There are no changes to show.</p>
 {{/changes}}
 {{#older}}<nav><ul class="dense"
     ><li><a rel="next" href="{{.more}}">Older changes</a></li
     ><li><a rel="last" href="{{.end}}">First changes</a></li
 ></ul></nav>{{/older}}
+{{#changes?}}{{^older}}<p>There are no older changes.</p>{{/older}}{{/changes}}
 </article>
 </div>
 

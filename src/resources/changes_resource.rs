@@ -234,9 +234,55 @@ impl Resource for ChangesResource {
         #[derive(BartDisplay)]
         #[template="templates/changes.html"]
         struct Template<'a> {
+            resource: &'a ChangesResource,
+
             newer: Option<NavLinks>,
             older: Option<NavLinks>,
             changes: &'a [Row<'a>],
+        }
+
+        impl<'a> Template<'a> {
+            fn subject_clause(&self) -> String {
+                match self.resource.article_id {
+                    Some(x) => format!(" <a href=\"_by_id/{}\">this article</a>", x),
+                    None => format!(" the wiki"),
+                }
+            }
+
+            fn author_clause(&self) -> String {
+                #[derive(BartDisplay)]
+                #[template_string=" by <a href=\"{{link}}\">{{author}}</a>"]
+                struct AuthorClause<'a> {
+                    link: &'a str,
+                    author: &'a str,
+                }
+
+                match self.resource.author {
+                    Some(ref x) => AuthorClause {
+                        link: &self.resource.query_args()
+                            .author(Some(x.clone()))
+                            .into_link(),
+                        author: &x
+                    }.to_string(),
+                    None => "".to_owned(),
+                }
+            }
+
+            fn all_articles_link(&self) -> Option<String> {
+                self.resource.article_id.map(|_| {
+                    self.resource.query_args()
+                        .article_id(None)
+                        .into_link()
+                })
+            }
+
+            fn all_authors_link(&self) -> Option<String> {
+                self.resource.author.as_ref().map(|_| {
+                    self.resource.query_args()
+                        .author(None)
+                        .into_link()
+                })
+            }
         }
 
         let (before, article_id, author, limit) =
@@ -308,6 +354,7 @@ impl Resource for ChangesResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Changes",
                         body: &Template {
+                            resource: &self,
                             newer,
                             older,
                             changes
