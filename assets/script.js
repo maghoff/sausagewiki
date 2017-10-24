@@ -65,7 +65,7 @@ function openEditor() {
             // Update url-bar, page title and footer
             window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
             document.querySelector("title").textContent = result.title;
-            lastUpdated.textContent = result.last_updated;
+            lastUpdated.innerHTML = result.last_updated;
             lastUpdated.classList.remove("missing");
 
             // Update body:
