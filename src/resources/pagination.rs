@@ -24,7 +24,7 @@ struct PaginationStruct<T> {
     before: Option<T>,
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum Pagination<T> {
     After(T),
     Before(T),

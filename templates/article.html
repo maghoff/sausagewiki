@@ -1,0 +1,40 @@
+<script src="_assets/script-{{script_js_checksum}}.js" defer></script>
+
+<div class="container {{#edit?}}edit{{/edit}}">
+<div class="rendered">
+{{>article_contents.html}}
+</div>
+
+<div class="editor">
+<form action="" method="POST">
+
+<header>
+<h1><input autocomplete=off type=text name=title value="{{title}}" placeholder="Title"></h1>
+</header>
+
+<article>
+<p>
+<input autocomplete=off type=hidden name=base_revision value="{{revision}}">
+<textarea autocomplete=off name=body placeholder="Article goes here">{{raw}}</textarea>
+<textarea autocomplete=off class="shadow-control"></textarea>
+</p>
+</article>
+
+<div class="editor-controls">
+{{#cancel_url}}
+    <a class="cancel" href="{{.}}">Cancel</a>
+{{/cancel_url}}
+    <button type=submit>Save</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<footer>
+<ul class="dense"
+    ><li class="last-updated {{^last_updated}}missing{{/last_updated}}">{{#last_updated}}{{{.}}}{{/last_updated}}</li
+    ><li><a id="openEditor" href="?edit">Edit</a></li
+></ul>
+{{>footer/items.html}}
+</footer>

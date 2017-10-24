@@ -50,7 +50,7 @@ impl Resource for NewArticleResource {
 
     fn get(self: Box<Self>) -> ResponseFuture {
         #[derive(BartDisplay)]
-        #[template="templates/article_revision.html"]
+        #[template="templates/article.html"]
         struct Template<'a> {
             revision: &'a str,
             last_updated: Option<&'a str>,
@@ -107,7 +107,7 @@ impl Resource for NewArticleResource {
         }
 
         #[derive(BartDisplay)]
-        #[template="templates/article_revision_contents.html"]
+        #[template="templates/article_contents.html"]
         struct Template<'a> {
             title: &'a str,
             rendered: String,

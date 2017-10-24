@@ -61,6 +61,17 @@ article>hr {
     margin: 20px auto;
 }
 
+.notice {
+    background: lightyellow;
+    padding: 32px 48px;
+
+    box-sizing: border-box;
+    max-width: 616px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 header, article>* {
     box-sizing: border-box;
     max-width: 616px;

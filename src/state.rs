@@ -87,6 +87,21 @@ impl State {
         }
     }
 
+    pub fn get_article_slug(&self, article_id: i32) -> CpuFuture<Option<String>, Error> {
+        let connection_pool = self.connection_pool.clone();
+
+        self.cpu_pool.spawn_fn(move || {
+            use schema::article_revisions;
+
+            Ok(article_revisions::table
+                .filter(article_revisions::article_id.eq(article_id))
+                .filter(article_revisions::latest.eq(true))
+                .select((article_revisions::slug))
+                .first::<String>(&*connection_pool.get()?)
+                .optional()?)
+        })
+    }
+
     pub fn get_article_revision(&self, article_id: i32, revision: i32) -> CpuFuture<Option<models::ArticleRevision>, Error> {
         let connection_pool = self.connection_pool.clone();
 

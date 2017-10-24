@@ -76,6 +76,53 @@ impl WikiLookup {
         WikiLookup { state, changes_lookup }
     }
 
+    fn revisions_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
+        let (article_id, revision): (i32, i32) = match (|| -> Result<_, <Self as Lookup>::Error> {
+            let (article_id, tail) = split_one(path)?;
+            let (revision, tail) = split_one(tail.ok_or("Not found")?)?;
+            if tail.is_some() {
+                return Err("Not found".into());
+            }
+
+            Ok((article_id.parse()?, revision.parse()?))
+        })() {
+            Ok(x) => x,
+            Err(_) => return Box::new(finished(None)),
+        };
+
+        Box::new(
+            self.state.get_article_revision(article_id, revision)
+                .and_then(|article_revision|
+                    Ok(article_revision.map(move |x| Box::new(
+                        ArticleRevisionResource::new(x)
+                    ) as BoxResource))
+                )
+        )
+    }
+
+    fn by_id_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
+        let article_id: i32 = match (|| -> Result<_, <Self as Lookup>::Error> {
+            let (article_id, tail) = split_one(path)?;
+            if tail.is_some() {
+                return Err("Not found".into());
+            }
+
+            Ok(article_id.parse()?)
+        })() {
+            Ok(x) => x,
+            Err(_) => return Box::new(finished(None)),
+        };
+
+        Box::new(
+            self.state.get_article_slug(article_id)
+                .and_then(|slug|
+                    Ok(slug.map(|slug| Box::new(
+                        TemporaryRedirectResource::new(format!("../{}", slug))
+                    ) as BoxResource))
+                )
+        )
+    }
+
     fn reserved_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
         let (head, tail) = match split_one(path) {
             Ok(x) => x,
@@ -85,10 +132,14 @@ impl WikiLookup {
         match (head.as_ref(), tail) {
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
+            ("_by_id", Some(tail)) =>
+                self.by_id_lookup(tail, query),
             ("_changes", None) =>
                 Box::new(self.changes_lookup.lookup(query)),
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
+            ("_revisions", Some(tail)) =>
+                self.revisions_lookup(tail, query),
             ("_sitemap", None) =>
                 Box::new(finished(Some(Box::new(SitemapResource::new(self.state.clone())) as BoxResource))),
             _ => Box::new(finished(None)),
