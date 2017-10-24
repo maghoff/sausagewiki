@@ -202,8 +202,9 @@ impl Resource for ChangesResource {
     fn get(self: Box<Self>) -> ResponseFuture {
         use chrono::{TimeZone, Local};
 
-        struct Row {
-            sequence_number_plus_one: i32,
+        struct Row<'a> {
+            resource: &'a ChangesResource,
+            sequence_number: i32,
 
             article_id: i32,
             revision: i32,
@@ -216,6 +217,15 @@ impl Resource for ChangesResource {
             _latest: bool,
         }
 
+        impl<'a> Row<'a> {
+            fn author_link(&self) -> String {
+                self.resource.query_args()
+                    .pagination(Pagination::After(self.sequence_number))
+                    .author(self.author.clone())
+                    .into_link()
+            }
+        }
+
         struct NavLinks {
             more: String,
             end: String,
@@ -226,7 +236,7 @@ impl Resource for ChangesResource {
         struct Template<'a> {
             newer: Option<NavLinks>,
             older: Option<NavLinks>,
-            changes: &'a [Row],
+            changes: &'a [Row<'a>],
         }
 
         let (before, article_id, author, limit) =
@@ -281,7 +291,8 @@ impl Resource for ChangesResource {
 
                 let changes = &data.into_iter().map(|x| {
                     Row {
-                        sequence_number_plus_one: x.sequence_number + 1,
+                        resource: &self,
+                        sequence_number: x.sequence_number,
                         article_id: x.article_id,
                         revision: x.revision,
                         created: Local.from_utc_datetime(&x.created).to_rfc2822(),

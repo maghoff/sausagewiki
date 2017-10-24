@@ -20,7 +20,7 @@
     <tr>
         <td><a href="_revisions/{{.article_id}}/{{.revision}}">{{.title}}</a></td>
         <td>{{.created}}</td>
-        <td>{{#.author}}<a href="_changes?before={{..sequence_number_plus_one}}&amp;author={{.}}">{{.}}</a>{{/.author}}{{^.author}}<i>Anonymous</i>{{/.author}}</td>
+        <td>{{#.author}}<a href="{{..author_link()}}">{{.}}</a>{{/.author}}{{^.author}}<i>Anonymous</i>{{/.author}}</td>
     </tr>
     {{/changes}}
 </table>

@@ -38,7 +38,7 @@ pub fn timestamp_and_author(sequence_number: i32, article_id: i32, created: &Dat
         author: Option<Author<'a>>,
     }
 
-    let pagination = Pagination::Before(sequence_number + 1);
+    let pagination = Pagination::After(sequence_number - 1);
 
     Template {
         created: &created.to_rfc2822(),
@@ -53,6 +53,7 @@ pub fn timestamp_and_author(sequence_number: i32, article_id: i32, created: &Dat
             history: format!("_changes{}",
                 QueryParameters::default()
                     .pagination(pagination)
+                    .article_id(Some(article_id))
                     .author(Some(author.to_owned()))
                     .into_link()
             ),
