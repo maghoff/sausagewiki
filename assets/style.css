@@ -208,26 +208,6 @@ ul.dense>li:last-child::after {
     margin: 0;
 }
 
-footer dt, footer dd {
-    display: inline;
-    margin: 0;
-}
-
-footer dt::after {
-    content: ": ";
-    display: inline;
-}
-
-footer dd::after {
-    content: "\00B7";
-    margin: 0 12px;
-}
-
-footer dd:last-child::after {
-    content: "";
-    margin: 0;
-}
-
 li.missing, ul.dense>li.missing {
     display: none;
 }
