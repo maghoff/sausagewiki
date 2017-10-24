@@ -29,8 +29,17 @@ fn main() {
 
     let infer_schema_path = Path::new(&out_dir).join("infer_schema.rs");
     let mut file = File::create(infer_schema_path).expect("Unable to open file for writing");
+
     file.write_all(quote! {
-        infer_schema!(#db_path);
+        mod __diesel_infer_schema_articles {
+            infer_table_from_schema!(#db_path, "articles");
+        }
+        pub use self::__diesel_infer_schema_articles::*;
+
+        mod __diesel_infer_schema_article_revisions {
+            infer_table_from_schema!(#db_path, "article_revisions");
+        }
+        pub use self::__diesel_infer_schema_article_revisions::*;
     }.as_str().as_bytes()).expect("Unable to write to file");
 
     for entry in WalkDir::new("migrations").into_iter().filter_map(|e| e.ok()) {

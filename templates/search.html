@@ -1,0 +1,26 @@
+<div class="container">
+<header>
+<h1>Search</h1>
+</header>
+
+<article>
+<form method="GET"><input autofocus name="q" autocomplete=off value="{{query}}"></form>
+
+{{#hits?}}
+<p>Search results for the query <b>{{query}}</b>:</p>
+
+<ul class="search-results">
+    {{#hits}}
+    <li class="search-result"><a href="{{.link()}}">{{.title}}</a> &ndash; <span class="snippet">{{.snippet}}</span></li>
+    {{/hits}}
+</ul>
+{{/hits}}
+
+{{^hits?}}
+<p>Your search for <b>{{query}}</b> gave no results.</p>
+{{/hits}}
+
+</article>
+</div>
+
+{{>footer/default.html}}

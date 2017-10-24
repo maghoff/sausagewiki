@@ -32,3 +32,10 @@ pub struct ArticleRevisionStub {
 
     pub author: Option<String>,
 }
+
+#[derive(Debug, Queryable)]
+pub struct SearchResult {
+    pub title: String,
+    pub snippet: String,
+    pub slug: String,
+}

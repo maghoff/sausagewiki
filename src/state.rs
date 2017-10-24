@@ -319,4 +319,24 @@ impl State {
             })
         })
     }
+
+    pub fn search_query(&self, query_string: String) -> CpuFuture<Vec<models::SearchResult>, Error> {
+        let connection_pool = self.connection_pool.clone();
+
+        self.cpu_pool.spawn_fn(move || {
+            use diesel::expression::sql_literal::sql;
+            use diesel::types::Text;
+
+            Ok(
+                sql::<(Text, Text, Text)>(
+                    "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', 8), slug \
+                        FROM article_search \
+                        WHERE article_search MATCH ?
+                        ORDER BY rank"
+                )
+                .bind::<Text, _>(query_string)
+                .load(&*connection_pool.get()?)?)
+        })
+    }
+
 }

@@ -307,3 +307,16 @@ h1>input {
         box-shadow: 2px 2px 8px rgba(0,0,0, 0.25);
     }
 }
+
+article ul.search-results {
+    padding-left: 8px;
+    list-style: none;
+}
+.search-result {
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    margin-bottom: 16px;
+}
+.snippet {
+    white-space: pre-line;
+}
