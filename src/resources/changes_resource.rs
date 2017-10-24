@@ -249,23 +249,8 @@ impl Resource for ChangesResource {
                 }
             }
 
-            fn author_clause(&self) -> String {
-                #[derive(BartDisplay)]
-                #[template_string=" by <a href=\"{{link}}\">{{author}}</a>"]
-                struct AuthorClause<'a> {
-                    link: &'a str,
-                    author: &'a str,
-                }
-
-                match self.resource.author {
-                    Some(ref x) => AuthorClause {
-                        link: &self.resource.query_args()
-                            .author(Some(x.clone()))
-                            .into_link(),
-                        author: &x
-                    }.to_string(),
-                    None => "".to_owned(),
-                }
+            fn author(&self) -> Option<String> {
+                self.resource.author.clone()
             }
 
             fn all_articles_link(&self) -> Option<String> {
