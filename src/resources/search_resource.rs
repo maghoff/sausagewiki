@@ -11,21 +11,23 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
-const DEFAULT_LIMIT: i32 = 30;
+const DEFAULT_LIMIT: i32 = 10;
+const DEFAULT_SNIPPET_SIZE: i32 = 8;
 
 type BoxResource = Box<Resource + Sync + Send>;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct QueryParameters {
     q: Option<String>,
-    skip: Option<i32>,
+    offset: Option<i32>,
     limit: Option<i32>,
+    snippet_size: Option<i32>,
 }
 
 impl QueryParameters {
-    pub fn skip(self, skip: i32) -> Self {
+    pub fn offset(self, offset: i32) -> Self {
         Self {
-            skip: if skip != 0 { Some(skip) } else { None },
+            offset: if offset != 0 { Some(offset) } else { None },
             ..self
         }
     }
@@ -60,18 +62,30 @@ impl SearchLookup {
     pub fn lookup(&self, query: Option<&str>) -> Result<Option<BoxResource>, ::web::Error> {
         let args: QueryParameters = serde_urlencoded::from_str(query.unwrap_or(""))?;
 
-        Ok(Some(Box::new(SearchResource::new(self.state.clone(), args))))
+        Ok(Some(Box::new(
+            SearchResource::new(
+                self.state.clone(),
+                args.q,
+                args.limit.unwrap_or(DEFAULT_LIMIT),
+                args.offset.unwrap_or(0),
+                args.snippet_size.unwrap_or(DEFAULT_SNIPPET_SIZE),
+            )
+        )))
     }
 }
 
 pub struct SearchResource {
     state: State,
-    query_args: QueryParameters,
+
+    query: Option<String>,
+    limit: i32,
+    offset: i32,
+    snippet_size: i32,
 }
 
 impl SearchResource {
-    pub fn new(state: State, query_args: QueryParameters) -> Self {
-        Self { state, query_args }
+    pub fn new(state: State, query: Option<String>, limit: i32, offset: i32, snippet_size: i32) -> Self {
+        Self { state, query, limit, offset, snippet_size }
     }
 }
 
@@ -107,9 +121,9 @@ impl Resource for SearchResource {
         }
 
         // TODO: Show a search "front page" when no query is given:
-        let query = self.query_args.q.as_ref().map(|x| x.clone()).unwrap_or("".to_owned());
+        let query = self.query.as_ref().map(|x| x.clone()).unwrap_or("".to_owned());
 
-        let data = self.state.search_query(query);
+        let data = self.state.search_query(query, self.limit, self.offset, self.snippet_size);
         let head = self.head();
 
         Box::new(data.join(head)
@@ -119,7 +133,7 @@ impl Resource for SearchResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Search",
                         body: &Template {
-                            query: self.query_args.q.as_ref().map(|x| &**x).unwrap_or(""),
+                            query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
                             hits: data,
                         },
                         style_css_checksum: StyleCss::checksum(),

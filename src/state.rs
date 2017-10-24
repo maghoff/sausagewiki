@@ -305,12 +305,12 @@ impl State {
         })
     }
 
-    pub fn search_query(&self, query_string: String) -> CpuFuture<Vec<models::SearchResult>, Error> {
+    pub fn search_query(&self, query_string: String, limit: i32, offset: i32, snippet_size: i32) -> CpuFuture<Vec<models::SearchResult>, Error> {
         let connection_pool = self.connection_pool.clone();
 
         self.cpu_pool.spawn_fn(move || {
             use diesel::expression::sql_literal::sql;
-            use diesel::types::Text;
+            use diesel::types::{Integer, Text};
 
             fn fts_quote(src: &str) -> String {
                 format!("\"{}\"", src.replace('\"', "\"\""))
@@ -331,12 +331,16 @@ impl State {
 
             Ok(
                 sql::<(Text, Text, Text)>(
-                    "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', 8), slug \
+                    "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', ?), slug \
                         FROM article_search \
                         WHERE article_search MATCH ? \
-                        ORDER BY rank"
+                        ORDER BY rank \
+                        LIMIT ? OFFSET ?"
                 )
+                .bind::<Integer, _>(snippet_size)
                 .bind::<Text, _>(query)
+                .bind::<Integer, _>(limit)
+                .bind::<Integer, _>(offset)
                 .load(&*connection_pool.get()?)?)
         })
     }
