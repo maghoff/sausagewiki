@@ -145,25 +145,10 @@ impl State {
     }
 
     pub fn get_latest_article_revision_stubs(&self) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error> {
-        let connection_pool = self.connection_pool.clone();
-
-        self.cpu_pool.spawn_fn(move || {
-            use schema::article_revisions;
-
-            Ok(article_revisions::table
+        self.query_article_revision_stubs(|query| {
+            query
                 .filter(article_revisions::latest.eq(true))
                 .order(article_revisions::title.asc())
-                .select((
-                    article_revisions::sequence_number,
-                    article_revisions::article_id,
-                    article_revisions::revision,
-                    article_revisions::created,
-                    article_revisions::slug,
-                    article_revisions::title,
-                    article_revisions::latest,
-                    article_revisions::author,
-                ))
-                .load(&*connection_pool.get()?)?)
         })
     }
 
