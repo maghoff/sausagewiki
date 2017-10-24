@@ -199,7 +199,7 @@ ul.dense>li {
 }
 
 ul.dense>li::after {
-    content: "\00B7";
+    content: "\200B\00B7\200B";
     margin: 0 12px;
 }
 
