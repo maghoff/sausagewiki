@@ -327,14 +327,20 @@ impl State {
             use diesel::expression::sql_literal::sql;
             use diesel::types::Text;
 
+            fn fts_quote(src: &str) -> String {
+                format!("\"{}\"", src.replace('\"', "\"\""))
+            }
+
+            let query = fts_quote(&query_string);
+
             Ok(
                 sql::<(Text, Text, Text)>(
                     "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', 8), slug \
                         FROM article_search \
-                        WHERE article_search MATCH ?
+                        WHERE article_search MATCH ? \
                         ORDER BY rank"
                 )
-                .bind::<Text, _>(query_string)
+                .bind::<Text, _>(query)
                 .load(&*connection_pool.get()?)?)
         })
     }
