@@ -86,7 +86,7 @@ impl WikiLookup {
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
             ("_changes", None) =>
-                Box::new(ChangesLookup::new(self.state.clone()).lookup(query)),
+                Box::new(self.changes_lookup.lookup(query)),
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
             ("_sitemap", None) =>
