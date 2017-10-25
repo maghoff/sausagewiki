@@ -74,7 +74,7 @@ article>hr {
     margin-right: auto;
 }
 
-header, article>* {
+header, article>*, .search {
     box-sizing: border-box;
     max-width: 616px;
     width: 100%;
@@ -274,10 +274,6 @@ h1>input {
 }
 
 @media (min-width: 630px) {
-    header {
-        margin-top: 60px;
-    }
-
     .editor-controls {
         position: fixed;
         left: auto;
@@ -299,4 +295,39 @@ article ul.search-results {
 }
 .snippet {
     white-space: pre-line;
+}
+
+
+.search {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.search input {
+    font-size: 18px;
+    font: inherit;
+    font-size: 18px;
+    line-height: 32px;
+    border-radius: 18px;
+    padding: 0 16px;
+    border: 1px solid #ccc;
+    transition: max-width 200ms;
+    width: 100%;
+    max-width: 250px;
+    box-sizing: border-box;
+}
+
+.search input:focus {
+    max-width: 250px;
+    border-color: #999;
+}
+
+@media (min-width: 630px) {
+    .search {
+        text-align: right;
+    }
+
+    .search input {
+        max-width: 125px;
+    }
 }
