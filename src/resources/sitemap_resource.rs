@@ -3,7 +3,6 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
-use assets::StyleCss;
 use mimes::*;
 use site::Layout;
 use state::State;
@@ -63,7 +62,6 @@ impl Resource for SitemapResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Sitemap",
                         body: &Template { articles },
-                        style_css_checksum: StyleCss::checksum(),
                     }.to_string()))
             }))
     }

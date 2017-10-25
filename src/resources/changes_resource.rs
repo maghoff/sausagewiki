@@ -6,7 +6,6 @@ use hyper::header::ContentType;
 use hyper::server::*;
 use serde_urlencoded;
 
-use assets::StyleCss;
 use mimes::*;
 use schema::article_revisions;
 use site::Layout;
@@ -344,7 +343,6 @@ impl Resource for ChangesResource {
                             older,
                             changes
                         },
-                        style_css_checksum: StyleCss::checksum(),
                     }.to_string()))
             }))
     }

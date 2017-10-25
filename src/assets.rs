@@ -11,6 +11,11 @@ pub struct StyleCss;
 #[mime = "application/javascript"]
 pub struct ScriptJs;
 
+#[derive(StaticResource)]
+#[filename = "assets/search.js"]
+#[mime = "application/javascript"]
+pub struct SearchJs;
+
 // SIL Open Font License 1.1: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
 // Copyright 2015 The Amatic SC Project Authors (contact@sansoxygen.com)
 #[derive(StaticResource)]

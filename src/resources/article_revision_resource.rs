@@ -4,7 +4,6 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
-use assets::StyleCss;
 use mimes::*;
 use models;
 use rendering::render_markdown;
@@ -105,7 +104,6 @@ impl Resource for ArticleRevisionResource {
                             title: &data.title,
                             rendered: render_markdown(&data.body),
                         },
-                        style_css_checksum: StyleCss::checksum(),
                     }.to_string()))
             ))
     }

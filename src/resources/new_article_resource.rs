@@ -5,7 +5,7 @@ use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
 
-use assets::{StyleCss, ScriptJs};
+use assets::ScriptJs;
 use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
@@ -87,7 +87,6 @@ impl Resource for NewArticleResource {
                             rendered: EMPTY_ARTICLE_MESSAGE,
                             script_js_checksum: ScriptJs::checksum(),
                         },
-                        style_css_checksum: StyleCss::checksum(),
                     }.to_string()))
             }))
     }

@@ -286,6 +286,8 @@ h1>input {
 
 article ul.search-results {
     padding-left: 8px;
+}
+.search-results {
     list-style: none;
 }
 .search-result {
@@ -301,6 +303,7 @@ article ul.search-results {
 .search {
     text-align: center;
     margin-top: 30px;
+    position: relative;
 }
 
 .search input {
@@ -313,13 +316,58 @@ article ul.search-results {
     border: 1px solid #ccc;
     transition: max-width 200ms;
     width: 100%;
-    max-width: 250px;
+    max-width: 300px;
     box-sizing: border-box;
 }
 
-.search input:focus {
-    max-width: 250px;
+.search input:focus, .search.focus input {
+    max-width: 300px;
     border-color: #999;
+}
+
+.search .live-results {
+    text-align: left;
+
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 268px;
+
+    background: white;
+    padding: 0;
+    margin: 0 auto;
+
+    overflow: hidden;
+
+    transition: max-height 200ms;
+    max-height: 0px;
+}
+
+.live-results.show {
+    max-height: 500px;
+}
+
+.live-results .search-result {
+    padding: 0;
+    border-top: none;
+    margin: 0;
+}
+
+.live-results .search-result li {
+    padding: 0;
+}
+.live-results .search-result a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    padding: 8px;
+}
+.live-results .search-result a:hover {
+    background: #0074D9;
+    color: white;
+}
+
+.prototype {
+    display: none;
 }
 
 @media (min-width: 630px) {
@@ -329,5 +377,16 @@ article ul.search-results {
 
     .search input {
         max-width: 125px;
+    }
+
+    .search .live-results {
+        position: absolute;
+        right: 8px;
+        margin: 0 16px;
+        display: none;
+    }
+
+    .search.focus .live-results {
+        display: block;
     }
 }

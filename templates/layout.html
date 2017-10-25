@@ -5,10 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {{#base}}<base href="{{.}}">{{/base}}
 <link rel=preload href="_assets/amatic-sc-v9-latin-regular.woff" as=font crossorigin>
-<link href="_assets/style-{{style_css_checksum}}.css" rel="stylesheet">
+<link href="_assets/style-{{style_css_checksum()}}.css" rel="stylesheet">
 </head>
 <body>
-<form class=search action=_search method=GET><input type=search name=q placeholder=search autocomplete=off></form>
+<form class=search action=_search method=GET>
+    <input type=search name=q placeholder=search autocomplete=off>
+    <ul class="live-results search-results">
+    </ul>
+</form>
+<ul id="search-result-prototype" class="prototype"><li class="search-result" tabindex="0"><a class="link" href=""><span class="title"></span> &ndash; <span class="snippet"></span></a></li></ul>
+<script src="_assets/search-{{search_js_checksum()}}.js" defer></script>
 {{{body}}}
 </body>
 </html>

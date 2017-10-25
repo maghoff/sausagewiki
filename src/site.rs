@@ -9,7 +9,7 @@ use hyper::mime;
 use hyper::server::*;
 use hyper;
 
-use assets::StyleCss;
+use assets::{StyleCss, SearchJs};
 use web::Lookup;
 use wiki_lookup::WikiLookup;
 
@@ -25,7 +25,16 @@ pub struct Layout<'a, T: 'a + fmt::Display> {
     pub base: Option<&'a str>,
     pub title: &'a str,
     pub body: &'a T,
-    pub style_css_checksum: &'a str,
+}
+
+impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
+    pub fn style_css_checksum(&self) -> &str {
+        StyleCss::checksum()
+    }
+
+    pub fn search_js_checksum(&self) -> &str {
+        SearchJs::checksum()
+    }
 }
 
 #[derive(BartDisplay)]
@@ -53,7 +62,6 @@ impl Site {
                 base: base,
                 title: "Not found",
                 body: &NotFound,
-                style_css_checksum: StyleCss::checksum(),
             }.to_string())
             .with_status(hyper::StatusCode::NotFound)
     }
@@ -67,7 +75,6 @@ impl Site {
                 base,
                 title: "Internal server error",
                 body: &InternalServerError,
-                style_css_checksum: StyleCss::checksum(),
             }.to_string())
             .with_status(hyper::StatusCode::InternalServerError)
     }

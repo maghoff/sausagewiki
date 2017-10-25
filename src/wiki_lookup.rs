@@ -30,6 +30,11 @@ lazy_static! {
         );
 
         map.insert(
+            format!("search-{}.js", SearchJs::checksum()),
+            Box::new(|| Box::new(SearchJs) as BoxResource) as ResourceFn
+        );
+
+        map.insert(
             format!("amatic-sc-v9-latin-regular.woff"),
             Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn
         );

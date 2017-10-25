@@ -5,7 +5,6 @@ use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
 
-use assets::StyleCss;
 use mimes::*;
 use models;
 use site::Layout;
@@ -175,7 +174,6 @@ impl Resource for SearchResource {
                                 query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
                                 hits: data,
                             },
-                            style_css_checksum: StyleCss::checksum(),
                         }.to_string())),
                 }
             }))
