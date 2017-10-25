@@ -18,11 +18,6 @@ function debouncer(interval, callback) {
     const results = form.querySelector('.live-results');
     const resultPrototype = document.getElementById('search-result-prototype').firstChild;
 
-    form.addEventListener('submit', function (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-    });
-
     function submit() {
         if (input.value === "") {
             results.classList.remove("show");
