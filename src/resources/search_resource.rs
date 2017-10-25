@@ -11,30 +11,37 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
-const DEFAULT_LIMIT: i32 = 10;
-const DEFAULT_SNIPPET_SIZE: i32 = 8;
+const DEFAULT_LIMIT: u32 = 10;
+const DEFAULT_SNIPPET_SIZE: u32 = 8;
 
 type BoxResource = Box<Resource + Sync + Send>;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct QueryParameters {
     q: Option<String>,
-    offset: Option<i32>,
-    limit: Option<i32>,
-    snippet_size: Option<i32>,
+    offset: Option<u32>,
+    limit: Option<u32>,
+    snippet_size: Option<u32>,
 }
 
 impl QueryParameters {
-    pub fn offset(self, offset: i32) -> Self {
+    pub fn offset(self, offset: u32) -> Self {
         Self {
             offset: if offset != 0 { Some(offset) } else { None },
             ..self
         }
     }
 
-    pub fn limit(self, limit: i32) -> Self {
+    pub fn limit(self, limit: u32) -> Self {
         Self {
             limit: if limit != DEFAULT_LIMIT { Some(limit) } else { None },
+            ..self
+        }
+    }
+
+    pub fn snippet_size(self, snippet_size: u32) -> Self {
+        Self {
+            snippet_size: if snippet_size != DEFAULT_SNIPPET_SIZE { Some(snippet_size) } else { None },
             ..self
         }
     }
@@ -79,9 +86,9 @@ pub struct SearchResource {
     response_type: ResponseType,
 
     query: Option<String>,
-    limit: i32,
-    offset: i32,
-    snippet_size: i32,
+    limit: u32,
+    offset: u32,
+    snippet_size: u32,
 }
 
 // This is a complete hack, searching for a reasonable design:
@@ -91,8 +98,18 @@ pub enum ResponseType {
 }
 
 impl SearchResource {
-    pub fn new(state: State, query: Option<String>, limit: i32, offset: i32, snippet_size: i32) -> Self {
+    pub fn new(state: State, query: Option<String>, limit: u32, offset: u32, snippet_size: u32) -> Self {
         Self { state, response_type: ResponseType::Html, query, limit, offset, snippet_size }
+    }
+
+    fn query_args(&self) -> QueryParameters {
+        QueryParameters {
+            q: self.query.clone(),
+            ..QueryParameters::default()
+        }
+            .offset(self.offset)
+            .limit(self.limit)
+            .snippet_size(self.snippet_size)
     }
 }
 
@@ -132,6 +149,8 @@ impl Resource for SearchResource {
         struct JsonResponse<'a> {
             query: &'a str,
             hits: &'a [models::SearchResult],
+            prev: Option<String>,
+            next: Option<String>,
         }
 
         struct Hit<'a> {
@@ -156,21 +175,44 @@ impl Resource for SearchResource {
         struct Template<'a> {
             query: &'a str,
             hits: &'a [Hit<'a>],
+            prev: Option<String>,
+            next: Option<String>,
         }
 
         // TODO: Show a search "front page" when no query is given:
         let query = self.query.as_ref().map(|x| x.clone()).unwrap_or("".to_owned());
 
-        let data = self.state.search_query(query, self.limit, self.offset, self.snippet_size);
+        let data = self.state.search_query(query, (self.limit + 1) as i32, self.offset as i32, self.snippet_size as i32);
         let head = self.head();
 
         Box::new(data.join(head)
-            .and_then(move |(data, head)| {
+            .and_then(move |(mut data, head)| {
+                let prev = if self.offset > 0 {
+                    Some(self.query_args()
+                        .offset(self.offset.saturating_sub(self.limit))
+                        .into_link()
+                    )
+                } else {
+                    None
+                };
+
+                let next = if data.len() > self.limit as usize {
+                    data.pop();
+                    Some(self.query_args()
+                        .offset(self.offset + self.limit)
+                        .into_link()
+                    )
+                } else {
+                    None
+                };
+
                 match &self.response_type {
                     &ResponseType::Json => Ok(head
                         .with_body(serde_json::to_string(&JsonResponse {
                             query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
                             hits: &data,
+                            prev,
+                            next,
                         }).expect("Should never fail"))
                     ),
                     &ResponseType::Html => Ok(head
@@ -188,6 +230,8 @@ impl Resource for SearchResource {
                                         snippet: &result.snippet,
                                     })
                                     .collect::<Vec<_>>(),
+                                prev,
+                                next,
                             },
                         }.to_string())),
                 }

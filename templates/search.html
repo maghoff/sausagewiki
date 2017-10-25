@@ -7,12 +7,20 @@
 {{#hits?}}
 <p>Search results for the query <b>{{query}}</b>:</p>
 
+{{#prev}}<nav><ul class="dense"
+    ><li><a rel="prev" href="{{.}}">Previous page</a></li
+></ul></nav>{{/prev}}
+
 <ul class="search-results default-keyboard-focus-control">
     {{#hits}}
     <li class="search-result"><a data-focusindex="{{.index}}" class="link" href="{{.link()}}"><p class="title">{{.title}}</p><p class="snippet">{{.snippet}}</p></a></li>
     {{/hits}}
 </ul>
 {{/hits}}
+
+{{#next}}<nav><ul class="dense"
+    ><li><a rel="next" href="{{.}}">Next page</a></li
+></ul></nav>{{/next}}
 
 {{^hits?}}
 <p>Your search for <b>{{query}}</b> gave no results.</p>

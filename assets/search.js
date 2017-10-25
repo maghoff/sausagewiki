@@ -18,6 +18,7 @@ function debouncer(interval, callback) {
     const results = form.querySelector('.live-results');
     const resultPrototype = document.getElementById('search-result-prototype').firstChild;
 
+    let ongoing = false;
     function submit() {
         if (input.value === "") {
             results.classList.remove("show");
@@ -25,8 +26,12 @@ function debouncer(interval, callback) {
             return;
         }
 
+        if (ongoing) return;
+        ongoing = true;
+
+        const query = input.value;
         fetch(
-            "_search?snippet_size=4&limit=3&q=" + encodeURIComponent(input.value),
+            "_search?snippet_size=4&limit=4&q=" + encodeURIComponent(query),
             {
                 headers: {
                     "Accept": "application/json",
@@ -48,13 +53,27 @@ function debouncer(interval, callback) {
                 item.querySelector('.snippet').textContent = hit.snippet;
                 results.appendChild(item);
             })
+
+            if (result.next) {
+                const item = resultPrototype.cloneNode(true);
+                item.querySelector('.link').href = "_search?q=" + encodeURIComponent(query);
+                item.querySelector('.link').setAttribute("data-focusindex", result.hits.length + 1);
+                item.querySelector('.link').innerHTML = "See more results\u2026";
+                results.appendChild(item);
+            }
+
             results.classList.add("show");
+
+            if (input.value !== query) submitter();
+
+            ongoing = false;
         }).catch(err => {
+            ongoing = false;
             console.error(err);
-            alert(err);
+            alert(err); // TODO Better interactive error reporting
         });
     }
-    const submitter = debouncer(200, submit);
+    const submitter = debouncer(300, submit);
 
     input.addEventListener('input', submitter);
 
@@ -85,6 +104,10 @@ function debouncer(interval, callback) {
             ev.preventDefault();
             ev.stopPropagation();
             moveFocus(element, 1);
+        } else if (ev.key === 'Escape') {
+            ev.preventDefault();
+            ev.stopPropagation();
+            document.activeElement && document.activeElement.blur();
         }
     }
 

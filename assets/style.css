@@ -338,6 +338,7 @@ article ul.search-results {
     width: 100%;
     max-width: 300px;
     box-sizing: border-box;
+    text-overflow: ellipsis;
 }
 
 .search input:focus, .search.focus input {
