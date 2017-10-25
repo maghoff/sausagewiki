@@ -128,27 +128,34 @@ impl Resource for SearchResource {
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
-        #[derive(BartDisplay)]
-        #[template="templates/search.html"]
-        struct Template<'a> {
-            query: &'a str,
-            hits: Vec<models::SearchResult>,
-        }
-
         #[derive(Serialize)]
         struct JsonResponse<'a> {
             query: &'a str,
             hits: &'a [models::SearchResult],
         }
 
-        impl models::SearchResult {
-            fn link(&self) -> String {
+        struct Hit<'a> {
+            index: usize,
+            slug: &'a str,
+            title: &'a str,
+            snippet: &'a str,
+        }
+
+        impl<'a> Hit<'a> {
+            fn link(&self) -> &'a str {
                 if self.slug == "" {
-                    ".".to_owned()
+                    "."
                 } else {
-                    self.slug.clone()
+                    self.slug
                 }
             }
+        }
+
+        #[derive(BartDisplay)]
+        #[template="templates/search.html"]
+        struct Template<'a> {
+            query: &'a str,
+            hits: &'a [Hit<'a>],
         }
 
         // TODO: Show a search "front page" when no query is given:
@@ -172,7 +179,15 @@ impl Resource for SearchResource {
                             title: "Search",
                             body: &Template {
                                 query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
-                                hits: data,
+                                hits: &data.iter()
+                                    .enumerate()
+                                    .map(|(i, result)| Hit {
+                                        index: i,
+                                        slug: &result.slug,
+                                        title: &result.title,
+                                        snippet: &result.snippet,
+                                    })
+                                    .collect::<Vec<_>>(),
                             },
                         }.to_string())),
                 }

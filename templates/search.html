@@ -7,9 +7,9 @@
 {{#hits?}}
 <p>Search results for the query <b>{{query}}</b>:</p>
 
-<ul class="search-results">
+<ul class="search-results default-keyboard-focus-control">
     {{#hits}}
-    <li class="search-result"><a href="{{.link()}}">{{.title}}</a> &ndash; <span class="snippet">{{.snippet}}</span></li>
+    <li class="search-result"><a data-focusindex="{{.index}}" class="link" href="{{.link()}}"><p class="title">{{.title}}</p><p class="snippet">{{.snippet}}</p></a></li>
     {{/hits}}
 </ul>
 {{/hits}}

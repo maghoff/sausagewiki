@@ -68,25 +68,35 @@ function debouncer(interval, callback) {
         form.classList.remove("focus");
     });
 
-    function moveFocus(delta) {
+    function moveFocus(element, delta) {
         const focusIndexText = document.activeElement.getAttribute("data-focusindex");
-        if (!focusIndexText) return;
-        const currentIndex = parseInt(focusIndexText, 10);
-        const nextIndex = currentIndex + delta;
+        const nextIndex = focusIndexText ? parseInt(focusIndexText, 10) + delta : 0;
 
-        const candidate = form.querySelector("[data-focusindex=\"" + nextIndex + "\"]");
+        const candidate = element.querySelector("[data-focusindex=\"" + nextIndex + "\"]");
         if (candidate) candidate.focus();
     }
 
-    form.addEventListener('keydown', function (ev) {
+    function focusControl(element, ev) {
         if (ev.key === 'ArrowUp') {
             ev.preventDefault();
             ev.stopPropagation();
-            moveFocus(-1);
+            moveFocus(element, -1);
         } else if (ev.key === 'ArrowDown') {
             ev.preventDefault();
             ev.stopPropagation();
-            moveFocus(1);
+            moveFocus(element, 1);
         }
-    });
+    }
+
+    for (let element of document.querySelectorAll(".keyboard-focus-control")) {
+        const captureElement = element;
+        element.addEventListener('keydown', ev => focusControl(captureElement, ev));
+    }
+
+    const defaultKeyboardFocusControl = document.querySelector(".default-keyboard-focus-control");
+    if (defaultKeyboardFocusControl) {
+        document.addEventListener('keydown', ev => {
+            focusControl(defaultKeyboardFocusControl, ev);
+        });
+    }
 })();

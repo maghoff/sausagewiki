@@ -6,6 +6,10 @@
         url('amatic-sc-v9-latin-regular.woff') format('woff');
 }
 
+.prototype {
+    display: none;
+}
+
 html {
     font-family: "Apple Garamond", "Baskerville",
         "Times New Roman", "Droid Serif", "Times",
@@ -292,13 +296,29 @@ article ul.search-results {
 }
 .search-result {
     border: 1px solid #ccc;
-    padding: 8px 16px;
-    margin-bottom: 16px;
+    padding: 0;
+    margin-bottom: 8px;
+}
+.search-result .title {
+    font-weight: bold;
 }
 .snippet {
     white-space: pre-line;
 }
+.search-result p {
+    margin: 0;
+}
 
+.search-result a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    padding: 8px;
+}
+.search-result a:hover, .search-result a:focus {
+    background: #0074D9;
+    color: white;
+}
 
 .search {
     text-align: center;
@@ -347,31 +367,8 @@ article ul.search-results {
 }
 
 .live-results .search-result {
-    padding: 0;
     border-top: none;
     margin: 0;
-}
-
-.live-results .search-result li {
-    padding: 0;
-}
-.live-results .search-result a {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-    padding: 8px;
-}
-.live-results .search-result a:hover, .live-results .search-result a:focus {
-    background: #0074D9;
-    color: white;
-}
-
-.live-results .search-result .title {
-    font-weight: bold;
-}
-
-.prototype {
-    display: none;
 }
 
 @media (min-width: 630px) {
