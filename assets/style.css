@@ -330,7 +330,7 @@ article ul.search-results {
 
     box-sizing: border-box;
     width: 100%;
-    max-width: 268px;
+    max-width: 266px; /* 300px - padding - border */
 
     background: white;
     padding: 0;
