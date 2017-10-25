@@ -54,4 +54,9 @@ pub trait Resource {
             .with_header(header::ContentType(TEXT_PLAIN.clone()))
             .with_body("Method not allowed\n")
     }
+
+    fn hacky_inject_accept_header(&mut self, _: header::Accept) {
+        // This function is a complete hack, searching for the appropriate
+        // architecture.
+    }
 }

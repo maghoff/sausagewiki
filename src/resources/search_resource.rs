@@ -1,7 +1,8 @@
 use futures::{self, Future};
 use hyper;
-use hyper::header::ContentType;
+use hyper::header::{Accept, ContentType};
 use hyper::server::*;
+use serde_json;
 use serde_urlencoded;
 
 use assets::StyleCss;
@@ -76,6 +77,7 @@ impl SearchLookup {
 
 pub struct SearchResource {
     state: State,
+    response_type: ResponseType,
 
     query: Option<String>,
     limit: i32,
@@ -83,9 +85,15 @@ pub struct SearchResource {
     snippet_size: i32,
 }
 
+// This is a complete hack, searching for a reasonable design:
+pub enum ResponseType {
+    Html,
+    Json,
+}
+
 impl SearchResource {
     pub fn new(state: State, query: Option<String>, limit: i32, offset: i32, snippet_size: i32) -> Self {
-        Self { state, query, limit, offset, snippet_size }
+        Self { state, response_type: ResponseType::Html, query, limit, offset, snippet_size }
     }
 }
 
@@ -95,10 +103,28 @@ impl Resource for SearchResource {
         vec![Options, Head, Get]
     }
 
+    // This is a complete hack, searching for a reasonable design:
+    fn hacky_inject_accept_header(&mut self, accept: Accept) {
+        use hyper::header::QualityItem;
+        use hyper::mime;
+
+        self.response_type = match accept.first() {
+            Some(&QualityItem { item: ref mime, .. })
+                if mime.type_() == mime::APPLICATION && mime.subtype() == mime::JSON
+                => ResponseType::Json,
+            _ => ResponseType::Html,
+        };
+    }
+
     fn head(&self) -> ResponseFuture {
+        let content_type = match &self.response_type {
+            &ResponseType::Json => ContentType(APPLICATION_JSON.clone()),
+            &ResponseType::Html => ContentType(TEXT_HTML.clone()),
+        };
+
         Box::new(futures::finished(Response::new()
             .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+            .with_header(content_type)
         ))
     }
 
@@ -108,6 +134,12 @@ impl Resource for SearchResource {
         struct Template<'a> {
             query: &'a str,
             hits: Vec<models::SearchResult>,
+        }
+
+        #[derive(Serialize)]
+        struct JsonResponse<'a> {
+            query: &'a str,
+            hits: &'a [models::SearchResult],
         }
 
         impl models::SearchResult {
@@ -128,16 +160,24 @@ impl Resource for SearchResource {
 
         Box::new(data.join(head)
             .and_then(move |(data, head)| {
-                Ok(head
-                    .with_body(Layout {
-                        base: None, // Hmm, should perhaps accept `base` as argument
-                        title: "Search",
-                        body: &Template {
+                match &self.response_type {
+                    &ResponseType::Json => Ok(head
+                        .with_body(serde_json::to_string(&JsonResponse {
                             query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
-                            hits: data,
-                        },
-                        style_css_checksum: StyleCss::checksum(),
-                    }.to_string()))
+                            hits: &data,
+                        }).expect("Should never fail"))
+                    ),
+                    &ResponseType::Html => Ok(head
+                        .with_body(Layout {
+                            base: None, // Hmm, should perhaps accept `base` as argument
+                            title: "Search",
+                            body: &Template {
+                                query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
+                                hits: data,
+                            },
+                            style_css_checksum: StyleCss::checksum(),
+                        }.to_string())),
+                }
             }))
     }
 }

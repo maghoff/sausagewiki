@@ -4,7 +4,7 @@
 use std::fmt;
 
 use futures::{self, Future};
-use hyper::header::ContentType;
+use hyper::header::{Accept, ContentType};
 use hyper::mime;
 use hyper::server::*;
 use hyper;
@@ -99,13 +99,16 @@ impl Service for Site {
             false => None,
         };
 
+        let accept_header = headers.get().map(|x: &Accept| x.clone()).unwrap_or(Accept(vec![]));
+
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone
 
         Box::new(self.root.lookup(uri.path(), uri.query())
             .and_then(move |resource| match resource {
-                Some(resource) => {
+                Some(mut resource) => {
                     use hyper::Method::*;
+                    resource.hacky_inject_accept_header(accept_header);
                     match method {
                         Options => Box::new(futures::finished(resource.options())),
                         Head => resource.head(),
