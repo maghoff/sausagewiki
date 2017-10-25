@@ -9,11 +9,11 @@
 </head>
 <body>
 <form class=search action=_search method=GET>
-    <input type=search name=q placeholder=search autocomplete=off>
+    <input data-focusindex="0" type=search name=q placeholder=search autocomplete=off>
     <ul class="live-results search-results">
     </ul>
 </form>
-<ul id="search-result-prototype" class="prototype"><li class="search-result" tabindex="0"><a class="link" href=""><span class="title"></span> &ndash; <span class="snippet"></span></a></li></ul>
+<ul id="search-result-prototype" class="prototype"><li class="search-result"><a class="link" href=""><span class="title"></span> &ndash; <span class="snippet"></span></a></li></ul>
 <script src="_assets/search-{{search_js_checksum()}}.js" defer></script>
 {{{body}}}
 </body>

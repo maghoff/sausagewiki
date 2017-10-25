@@ -361,9 +361,13 @@ article ul.search-results {
     text-decoration: none;
     padding: 8px;
 }
-.live-results .search-result a:hover {
+.live-results .search-result a:hover, .live-results .search-result a:focus {
     background: #0074D9;
     color: white;
+}
+
+.live-results .search-result .title {
+    font-weight: bold;
 }
 
 .prototype {

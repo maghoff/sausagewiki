@@ -45,9 +45,10 @@ function debouncer(interval, callback) {
         }).then(result => {
             while (results.lastChild) results.removeChild(results.lastChild);
 
-            result.hits.forEach(hit => {
+            result.hits.forEach((hit, index) => {
                 const item = resultPrototype.cloneNode(true);
                 item.querySelector('.link').href = hit.slug || ".";
+                item.querySelector('.link').setAttribute("data-focusindex", index + 1);
                 item.querySelector('.title').textContent = hit.title;
                 item.querySelector('.snippet').textContent = hit.snippet;
                 results.appendChild(item);
@@ -70,5 +71,27 @@ function debouncer(interval, callback) {
 
         // We are now actually losing focus from the form:
         form.classList.remove("focus");
+    });
+
+    function moveFocus(delta) {
+        const focusIndexText = document.activeElement.getAttribute("data-focusindex");
+        if (!focusIndexText) return;
+        const currentIndex = parseInt(focusIndexText, 10);
+        const nextIndex = currentIndex + delta;
+
+        const candidate = form.querySelector("[data-focusindex=\"" + nextIndex + "\"]");
+        if (candidate) candidate.focus();
+    }
+
+    form.addEventListener('keydown', function (ev) {
+        if (ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            ev.stopPropagation();
+            moveFocus(-1);
+        } else if (ev.key === 'ArrowDown') {
+            ev.preventDefault();
+            ev.stopPropagation();
+            moveFocus(1);
+        }
     });
 })();
