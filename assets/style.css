@@ -333,18 +333,22 @@ input[type="search"]::-webkit-search-decoration {
 input[type="search"] {
     -webkit-appearance: textfield;
 
-    font-size: 18px;
-    font: inherit;
-    font-size: 18px;
-    line-height: 32px;
-    border-radius: 18px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 300px;
+    transition: max-width 200ms;
+
     padding: 0 16px;
     margin: 0;
     border: 1px solid #ccc;
-    transition: max-width 200ms;
-    width: 100%;
-    max-width: 300px;
-    box-sizing: border-box;
+
+    font: inherit;
+    font-size: 18px;
+
+    line-height: 32px;
+    height: 34px;
+
+    border-radius: 18px;
     text-overflow: ellipsis;
 }
 
