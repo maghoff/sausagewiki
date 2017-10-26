@@ -294,7 +294,6 @@ article ul.search-results {
     list-style: none;
 }
 .search-result {
-    border: 1px solid #ccc;
     padding: 0;
     margin-bottom: 8px;
 }
@@ -312,10 +311,12 @@ article ul.search-results {
     display: block;
     color: inherit;
     text-decoration: none;
+    border: 1px solid #ccc;
     padding: 8px;
 }
 .search-result a:hover, .search-result a:focus {
     background: #0074D9;
+    border-color: #0074D9;
     color: white;
 }
 
@@ -378,8 +379,10 @@ input[type="search"] {
 }
 
 .live-results .search-result {
-    border-top: none;
     margin: 0;
+}
+.live-results a {
+    border-top: none;
 }
 
 @media (min-width: 630px) {
