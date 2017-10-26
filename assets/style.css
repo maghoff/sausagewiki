@@ -326,13 +326,20 @@ article ul.search-results {
     position: relative;
 }
 
-.search input {
+input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+}
+
+input[type="search"] {
+    -webkit-appearance: textfield;
+
     font-size: 18px;
     font: inherit;
     font-size: 18px;
     line-height: 32px;
     border-radius: 18px;
     padding: 0 16px;
+    margin: 0;
     border: 1px solid #ccc;
     transition: max-width 200ms;
     width: 100%;
@@ -385,10 +392,10 @@ article ul.search-results {
         position: absolute;
         right: 8px;
         margin: 0 16px;
-        display: none;
+        max-height: 0px;
     }
 
     .search.focus .live-results {
-        display: block;
+        max-height: 500px;
     }
 }
