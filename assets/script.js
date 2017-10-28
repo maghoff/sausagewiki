@@ -13,6 +13,13 @@ function queryArgsFromForm(form) {
     return items.join('&');
 }
 
+function isEdited(form) {
+    for (const {name, value, defaultValue} of form.elements) {
+        if (name && (value !== defaultValue)) return true;
+    }
+    return false;
+}
+
 let hasBeenOpen = false;
 function openEditor() {
     const container = document.querySelector(".container");
@@ -91,8 +98,10 @@ function openEditor() {
         ev.preventDefault();
         ev.stopPropagation();
 
-        container.classList.remove('edit');
-        form.reset();
+        if (!isEdited(form) || confirm("Discard changes?")) {
+            container.classList.remove('edit');
+            form.reset();
+        }
     });
 }
 
