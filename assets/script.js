@@ -103,6 +103,13 @@ function openEditor() {
             form.reset();
         }
     });
+
+    window.addEventListener("beforeunload", function (ev) {
+        if (isEdited(form)) {
+            ev.preventDefault();
+            return ev.returnValue = "Discard changes?";
+        }
+    });
 }
 
 document
