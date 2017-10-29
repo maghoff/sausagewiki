@@ -9,6 +9,19 @@ the terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
+Features
+========
+Some features of Sausagewiki, in no particular order:
+
+ * Simple to [install and run](#install-and-run)
+    * No runtime dependencies
+ * Simple to backup, just copy the single database file whenever
+ * Snappy, light resource usage
+ * Markdown syntax
+    * Plus table-support
+    * Without embedded HTML
+ * Full text search
+
 Install and run
 ===============
 Sausagewiki aims to be simple to get up and running. It is distributed as a
