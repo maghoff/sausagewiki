@@ -21,6 +21,8 @@ Some features of Sausagewiki, in no particular order:
     * Plus table-support
     * Without embedded HTML
  * Full text search
+ * Responsive design: fits different screens
+ * Progressive enhancement: works with or without JavaScript
 
 Install and run
 ===============
