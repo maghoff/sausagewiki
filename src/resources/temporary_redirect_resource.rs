@@ -13,6 +13,17 @@ impl TemporaryRedirectResource {
     pub fn new(location: String) -> Self {
         Self { location }
     }
+
+    pub fn from_slug<S: AsRef<str>>(slug: S) -> Self {
+        Self {
+            location:
+                if slug.as_ref().is_empty() {
+                    "."
+                } else {
+                    slug.as_ref()
+                }.to_owned()
+        }
+    }
 }
 
 impl Resource for TemporaryRedirectResource {

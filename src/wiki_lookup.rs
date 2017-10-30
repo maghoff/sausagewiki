@@ -170,7 +170,7 @@ impl WikiLookup {
         let slugified_slug = slugify(&slug);
         if slugified_slug != slug {
             return Box::new(finished(Some(
-                Box::new(ArticleRedirectResource::new(slugified_slug)) as BoxResource
+                Box::new(TemporaryRedirectResource::from_slug(slugified_slug)) as BoxResource
             )));
         }
 
@@ -186,7 +186,7 @@ impl WikiLookup {
                 SlugLookup::Hit { article_id, revision } =>
                     Box::new(ArticleResource::new(state, article_id, revision, edit)) as BoxResource,
                 SlugLookup::Redirect(slug) =>
-                    Box::new(ArticleRedirectResource::new(slug)) as BoxResource,
+                    Box::new(TemporaryRedirectResource::from_slug(slug)) as BoxResource,
             })))
         )
     }
