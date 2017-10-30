@@ -204,6 +204,10 @@ impl State {
         let connection_pool = self.connection_pool.clone();
 
         self.cpu_pool.spawn_fn(move || {
+            if title.is_empty() {
+                Err("title cannot be empty")?;
+            }
+
             let conn = connection_pool.get()?;
 
             conn.transaction(|| {
@@ -263,6 +267,10 @@ impl State {
         let connection_pool = self.connection_pool.clone();
 
         self.cpu_pool.spawn_fn(move || {
+            if title.is_empty() {
+                Err("title cannot be empty")?;
+            }
+
             let conn = connection_pool.get()?;
 
             conn.transaction(|| {
