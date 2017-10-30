@@ -50,11 +50,12 @@ Command line arguments
         -V, --version           Prints version information
 
     OPTIONS:
-        -p, --port <port>    Sets the listening port
+        -a, --address <address>    Sets the TCP address to bind to. Defaults to 127.0.0.1
+        -p, --port <port>          Sets the listening port. Defaults to 8080
 
     ARGS:
         <DATABASE>    Sets the database file to use
 
 Sausagewiki will create an SQLite database file with the filename given in the
-`DATABASE` parameter and open an HTTP server bound to `127.0.0.1` and the given
-port number. The default port number is 8080.
+`DATABASE` parameter and open an HTTP server bound to the configured address,
+`<address>:<port>`.

@@ -22,7 +22,7 @@ extern crate serde_urlencoded;
 extern crate slug;
 extern crate titlecase;
 
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 
 mod assets;
 mod db;
@@ -38,6 +38,7 @@ mod wiki_lookup;
 
 const DATABASE: &str = "DATABASE";
 const TRUST_IDENTITY: &str = "trust-identity";
+const ADDRESS: &str = "address";
 const PORT: &str = "port";
 
 fn args<'a>() -> clap::ArgMatches<'a> {
@@ -49,12 +50,21 @@ fn args<'a>() -> clap::ArgMatches<'a> {
             .help("Sets the database file to use")
             .required(true))
         .arg(Arg::with_name(PORT)
-            .help("Sets the listening port")
+            .help("Sets the listening port. Defaults to 8080")
             .short("p")
             .long(PORT)
             .validator(|x| match x.parse::<u16>() {
                 Ok(_) => Ok(()),
-                Err(_) => Err("Must be an integer in the range [0, 65535]".to_owned())
+                Err(_) => Err("Must be an integer in the range [0, 65535]".into())
+            })
+            .takes_value(true))
+        .arg(Arg::with_name(ADDRESS)
+            .help("Sets the TCP address to bind to. Defaults to 127.0.0.1")
+            .short("a")
+            .long(ADDRESS)
+            .validator(|x| match x.parse::<IpAddr>() {
+                Ok(_) => Ok(()),
+                Err(_) => Err("Must be a valid IP address".into())
             })
             .takes_value(true))
         .arg(Arg::with_name(TRUST_IDENTITY)
@@ -69,7 +79,9 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
     let args = args();
 
     let db_file = args.value_of(DATABASE).expect("Guaranteed by clap").to_owned();
-    let bind_host = "127.0.0.1".parse().unwrap();
+    let bind_host = args.value_of(ADDRESS)
+        .map(|p| p.parse().expect("Guaranteed by validator"))
+        .unwrap_or_else(|| "127.0.0.1".parse().unwrap());
     let bind_port = args.value_of(PORT)
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
