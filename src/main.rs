@@ -10,6 +10,7 @@
 
 extern crate chrono;
 extern crate clap;
+extern crate diff;
 extern crate futures;
 extern crate futures_cpupool;
 extern crate percent_encoding;

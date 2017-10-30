@@ -47,6 +47,7 @@ lazy_static! {
 pub struct WikiLookup {
     state: State,
     changes_lookup: ChangesLookup,
+    diff_lookup: DiffLookup,
     search_lookup: SearchLookup,
 }
 
@@ -78,9 +79,10 @@ fn asset_lookup(path: &str) -> FutureResult<Option<BoxResource>, Box<::std::erro
 impl WikiLookup {
     pub fn new(state: State, show_authors: bool) -> WikiLookup {
         let changes_lookup = ChangesLookup::new(state.clone(), show_authors);
+        let diff_lookup = DiffLookup::new(state.clone());
         let search_lookup = SearchLookup::new(state.clone());
 
-        WikiLookup { state, changes_lookup, search_lookup }
+        WikiLookup { state, changes_lookup, diff_lookup, search_lookup }
     }
 
     fn revisions_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
@@ -143,6 +145,8 @@ impl WikiLookup {
                 self.by_id_lookup(tail, query),
             ("_changes", None) =>
                 Box::new(self.changes_lookup.lookup(query)),
+            ("_diff", None) =>
+                Box::new(self.diff_lookup.lookup(query)),
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
             ("_revisions", Some(tail)) =>

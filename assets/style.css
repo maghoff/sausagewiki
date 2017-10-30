@@ -405,3 +405,13 @@ input[type="search"] {
         max-height: 500px;
     }
 }
+
+.removed {
+    background: red;
+}
+.same {
+    background: white;
+}
+.added {
+    background: green;
+}

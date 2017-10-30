@@ -1,0 +1,14 @@
+<div class="container">
+<header>
+<h1>Diff</h1>
+</header>
+
+<article>
+<pre>{{#lines}}{{#.removed}}<div class="removed">{{.}}
+</div>{{/.removed}}{{#.same}}<div class="same">{{.}}
+</div>{{/.same}}{{#.added}}<div class="added">{{.}}
+</div>{{/.added}}{{/lines}}</pre>
+</article>
+</div>
+
+{{>footer/default.html}}

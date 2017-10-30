@@ -179,6 +179,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "diff"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "digest"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -574,6 +579,7 @@ dependencies = [
  "clap 2.26.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel_codegen 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "diff 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-cpupool 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -959,6 +965,7 @@ dependencies = [
 "checksum diesel 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)" = "304226fa7a3982b0405f6bb95dd9c10c3e2000709f194038a60ec2c277150951"
 "checksum diesel_codegen 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18a42ca5c9b660add51d58bc5a50a87123380e1e458069c5504528a851ed7384"
 "checksum diesel_infer_schema 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bf1957ff5cd3b04772e43c162c2f69c2aa918080ff9b020276792d236be8be52"
+"checksum diff 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "0a515461b6c8c08419850ced27bc29e86166dcdcde8fbe76f8b1f0589bb49472"
 "checksum digest 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e5b29bf156f3f4b3c4f610a25ff69370616ae6e0657d416de22645483e72af0a"
 "checksum dtoa 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "09c3753c3db574d215cba4ea76018483895d7bff25a31b49ba45db21c48e50ab"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
