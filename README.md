@@ -44,7 +44,7 @@ Command line arguments
 
     FLAGS:
         -h, --help              Prints help information
-            --trust_identity    Trust the value in the X-Identity header to be an authenticated username.
+            --trust-identity    Trust the value in the X-Identity header to be an authenticated username.
                                 This only makes sense when Sausagewiki runs behind a reverse proxy which
                                 sets this header.
         -V, --version           Prints version information

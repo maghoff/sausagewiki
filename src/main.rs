@@ -53,7 +53,7 @@ fn args<'a>() -> clap::ArgMatches<'a> {
                 Err(_) => Err("Must be an integer in the range [0, 65535]".to_owned())
             })
             .takes_value(true))
-        .arg(Arg::with_name("trust_identity")
+        .arg(Arg::with_name("trust-identity")
             .help("Trust the value in the X-Identity header to be an \
                 authenticated username. This only makes sense when Sausagewiki \
                 runs behind a reverse proxy which sets this header.")
