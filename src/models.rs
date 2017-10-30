@@ -1,5 +1,13 @@
 use chrono;
 
+fn slug_link(slug: &str) -> &str {
+    if slug.is_empty() {
+        "."
+    } else {
+        slug
+    }
+}
+
 #[derive(Debug, Queryable)]
 pub struct ArticleRevision {
     pub sequence_number: i32,
@@ -18,13 +26,7 @@ pub struct ArticleRevision {
 }
 
 impl ArticleRevision {
-    pub fn link(&self) -> &str {
-        if self.slug.is_empty() {
-            "."
-        } else {
-            &self.slug
-        }
-    }
+    pub fn link(&self) -> &str { slug_link(&self.slug) }
 }
 
 #[derive(Debug, Queryable)]
@@ -43,9 +45,17 @@ pub struct ArticleRevisionStub {
     pub author: Option<String>,
 }
 
+impl ArticleRevisionStub {
+    pub fn link(&self) -> &str { slug_link(&self.slug) }
+}
+
 #[derive(Debug, Queryable, Serialize)]
 pub struct SearchResult {
     pub title: String,
     pub snippet: String,
     pub slug: String,
+}
+
+impl SearchResult {
+    pub fn link(&self) -> &str { slug_link(&self.slug) }
 }

@@ -106,7 +106,7 @@ impl Resource for ArticleResource {
                                 data.author.as_ref().map(|x| &**x)
                             )),
                             edit: self.edit,
-                            cancel_url: Some(&data.slug),
+                            cancel_url: Some(data.link()),
                             title: &data.title,
                             raw: &data.body,
                             rendered: render_markdown(&data.body),

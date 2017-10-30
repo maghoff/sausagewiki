@@ -6,7 +6,7 @@ use serde_json;
 use serde_urlencoded;
 
 use mimes::*;
-use models;
+use models::SearchResult;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
@@ -148,33 +148,16 @@ impl Resource for SearchResource {
         #[derive(Serialize)]
         struct JsonResponse<'a> {
             query: &'a str,
-            hits: &'a [models::SearchResult],
+            hits: &'a [SearchResult],
             prev: Option<String>,
             next: Option<String>,
-        }
-
-        struct Hit<'a> {
-            index: usize,
-            slug: &'a str,
-            title: &'a str,
-            snippet: &'a str,
-        }
-
-        impl<'a> Hit<'a> {
-            fn link(&self) -> &'a str {
-                if self.slug == "" {
-                    "."
-                } else {
-                    self.slug
-                }
-            }
         }
 
         #[derive(BartDisplay)]
         #[template="templates/search.html"]
         struct Template<'a> {
             query: &'a str,
-            hits: &'a [Hit<'a>],
+            hits: &'a [(usize, &'a SearchResult)],
             prev: Option<String>,
             next: Option<String>,
         }
@@ -223,12 +206,6 @@ impl Resource for SearchResource {
                                 query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
                                 hits: &data.iter()
                                     .enumerate()
-                                    .map(|(i, result)| Hit {
-                                        index: i,
-                                        slug: &result.slug,
-                                        title: &result.title,
-                                        snippet: &result.snippet,
-                                    })
                                     .collect::<Vec<_>>(),
                                 prev,
                                 next,

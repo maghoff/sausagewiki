@@ -4,6 +4,7 @@ use hyper::header::ContentType;
 use hyper::server::*;
 
 use mimes::*;
+use models::ArticleRevisionStub;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
@@ -35,12 +36,7 @@ impl Resource for SitemapResource {
         #[derive(BartDisplay)]
         #[template="templates/sitemap.html"]
         struct Template<'a> {
-            articles: &'a [ArticleReference],
-        }
-
-        struct ArticleReference {
-            link: String,
-            title: String,
+            articles: &'a [ArticleRevisionStub],
         }
 
         let data = self.state.get_latest_article_revision_stubs();
@@ -48,20 +44,13 @@ impl Resource for SitemapResource {
 
         Box::new(data.join(head)
             .and_then(move |(articles, head)| {
-                use std::iter::Iterator;
-
-                let articles = &articles.into_iter().map(|x| {
-                    ArticleReference {
-                        link: if x.slug.is_empty() { ".".to_owned() } else { x.slug },
-                        title: x.title,
-                    }
-                }).collect::<Vec<_>>();
-
                 Ok(head
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Sitemap",
-                        body: &Template { articles },
+                        body: &Template {
+                            articles: &articles,
+                        },
                     }.to_string()))
             }))
     }
