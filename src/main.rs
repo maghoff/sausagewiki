@@ -36,41 +36,45 @@ mod state;
 mod web;
 mod wiki_lookup;
 
+const DATABASE: &str = "DATABASE";
+const TRUST_IDENTITY: &str = "trust-identity";
+const PORT: &str = "port";
+
 fn args<'a>() -> clap::ArgMatches<'a> {
     use clap::{App, Arg};
 
     App::new("sausagewiki")
         .about("A wiki engine")
-        .arg(Arg::with_name("DATABASE")
+        .arg(Arg::with_name(DATABASE)
             .help("Sets the database file to use")
             .required(true))
-        .arg(Arg::with_name("port")
+        .arg(Arg::with_name(PORT)
             .help("Sets the listening port")
             .short("p")
-            .long("port")
+            .long(PORT)
             .validator(|x| match x.parse::<u16>() {
                 Ok(_) => Ok(()),
                 Err(_) => Err("Must be an integer in the range [0, 65535]".to_owned())
             })
             .takes_value(true))
-        .arg(Arg::with_name("trust-identity")
+        .arg(Arg::with_name(TRUST_IDENTITY)
             .help("Trust the value in the X-Identity header to be an \
                 authenticated username. This only makes sense when Sausagewiki \
                 runs behind a reverse proxy which sets this header.")
-            .long("trust-identity"))
+            .long(TRUST_IDENTITY))
         .get_matches()
 }
 
 fn core_main() -> Result<(), Box<std::error::Error>> {
     let args = args();
 
-    let db_file = args.value_of("DATABASE").expect("Guaranteed by clap").to_owned();
+    let db_file = args.value_of(DATABASE).expect("Guaranteed by clap").to_owned();
     let bind_host = "127.0.0.1".parse().unwrap();
-    let bind_port = args.value_of("port")
+    let bind_port = args.value_of(PORT)
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
 
-    let trust_identity = args.is_present("trust-identity");
+    let trust_identity = args.is_present(TRUST_IDENTITY);
 
     let db_pool = db::create_pool(db_file)?;
     let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
