@@ -57,9 +57,11 @@ fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title
         }
     }
 
+    let base_slug = if base_slug.is_empty() { "article" } else { &base_slug };
+
     use schema::article_revisions;
 
-    let mut slug = base_slug.clone();
+    let mut slug = base_slug.to_owned();
     let mut disambiguator = 1;
 
     loop {

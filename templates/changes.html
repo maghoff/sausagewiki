@@ -5,7 +5,7 @@
 
 <article>
 <p>
-    These are the {{^newer}}most recent{{/newer}} changes that have been
+    These are the {{^newer}}most recent{{/newer}} changes
     made to{{{subject_clause()}}}{{#author()}} by {{.}}{{/author()}}.
 </p>
 
@@ -23,14 +23,14 @@
     <tr>
         <th>Article</th>
         <th>Updated</th>
-        <th>Author</th>
+        {{#show_authors?}}<th>Author</th>{{/show_authors}}
     </tr>
     {{/changes}}
     {{#changes}}
     <tr>
         <td><a href="_revisions/{{.article_id}}/{{.revision}}">{{.title}}</a></td>
         <td>{{.created}}</td>
-        <td>{{#.author}}<a href="{{..author_link()}}">{{.}}</a>{{/.author}}{{^.author}}<i>Anonymous</i>{{/.author}}</td>
+        {{#show_authors?}}<td>{{#..author}}<a href="{{...author_link()}}">{{.}}</a>{{/..author}}{{^..author}}<i>Anonymous</i>{{/..author}}</td>{{/show_authors}}
     </tr>
     {{/changes}}
 </table>

@@ -76,7 +76,7 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
     let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
 
     let state = state::State::new(db_pool, cpu_pool);
-    let lookup = wiki_lookup::WikiLookup::new(state);
+    let lookup = wiki_lookup::WikiLookup::new(state, trust_identity);
 
     let server =
         hyper::server::Http::new()

@@ -76,8 +76,8 @@ fn asset_lookup(path: &str) -> FutureResult<Option<BoxResource>, Box<::std::erro
 }
 
 impl WikiLookup {
-    pub fn new(state: State) -> WikiLookup {
-        let changes_lookup = ChangesLookup::new(state.clone());
+    pub fn new(state: State, show_authors: bool) -> WikiLookup {
+        let changes_lookup = ChangesLookup::new(state.clone(), show_authors);
         let search_lookup = SearchLookup::new(state.clone());
 
         WikiLookup { state, changes_lookup, search_lookup }

@@ -22,6 +22,7 @@ type BoxResource = Box<Resource + Sync + Send>;
 #[derive(Clone)]
 pub struct ChangesLookup {
     state: State,
+    show_authors: bool,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -91,14 +92,15 @@ fn apply_query_config<'a>(
 }
 
 impl ChangesLookup {
-    pub fn new(state: State) -> ChangesLookup {
-        Self { state }
+    pub fn new(state: State, show_authors: bool) -> ChangesLookup {
+        Self { state, show_authors }
     }
 
     pub fn lookup(&self, query: Option<&str>) -> Box<Future<Item=Option<BoxResource>, Error=::web::Error>> {
         use super::pagination;
 
         let state = self.state.clone();
+        let show_authors = self.show_authors;
 
         Box::new(
             done((|| {
@@ -153,8 +155,8 @@ impl ChangesLookup {
                         }))
                     })) as Box<Future<Item=Option<BoxResource>, Error=::web::Error>>
                 },
-                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, Some(x), article_id, author, limit)) as BoxResource))),
-                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, None, article_id, author, limit)) as BoxResource))),
+                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, show_authors, Some(x), article_id, author, limit)) as BoxResource))),
+                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, show_authors, None, article_id, author, limit)) as BoxResource))),
             })
         )
     }
@@ -162,6 +164,7 @@ impl ChangesLookup {
 
 pub struct ChangesResource {
     state: State,
+    show_authors: bool,
     before: Option<i32>,
     article_id: Option<i32>,
     author: Option<String>,
@@ -169,8 +172,8 @@ pub struct ChangesResource {
 }
 
 impl ChangesResource {
-    pub fn new(state: State, before: Option<i32>, article_id: Option<i32>, author: Option<String>, limit: i32) -> Self {
-        Self { state, before, article_id, author, limit }
+    pub fn new(state: State, show_authors: bool, before: Option<i32>, article_id: Option<i32>, author: Option<String>, limit: i32) -> Self {
+        Self { state, show_authors, before, article_id, author, limit }
     }
 
     fn query_args(&self) -> QueryParameters {
@@ -235,6 +238,7 @@ impl Resource for ChangesResource {
         struct Template<'a> {
             resource: &'a ChangesResource,
 
+            show_authors: bool,
             newer: Option<NavLinks>,
             older: Option<NavLinks>,
             changes: &'a [Row<'a>],
@@ -339,6 +343,7 @@ impl Resource for ChangesResource {
                         title: "Changes",
                         body: &Template {
                             resource: &self,
+                            show_authors: self.show_authors,
                             newer,
                             older,
                             changes
