@@ -57,7 +57,7 @@ fn args<'a>() -> clap::ArgMatches<'a> {
             .help("Trust the value in the X-Identity header to be an \
                 authenticated username. This only makes sense when Sausagewiki \
                 runs behind a reverse proxy which sets this header.")
-            .long("trust_identity"))
+            .long("trust-identity"))
         .get_matches()
 }
 
@@ -70,7 +70,7 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         .map(|p| p.parse().expect("Guaranteed by validator"))
         .unwrap_or(8080);
 
-    let trust_identity = args.is_present("trust_identity");
+    let trust_identity = args.is_present("trust-identity");
 
     let db_pool = db::create_pool(db_file)?;
     let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
