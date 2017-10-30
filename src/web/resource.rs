@@ -1,4 +1,5 @@
 use futures;
+use futures::{Future, Stream};
 use hyper::{self, header, mime, server};
 use hyper::server::Response;
 use std;
@@ -24,18 +25,18 @@ pub trait Resource {
     fn put(self: Box<Self>, body: hyper::Body, _identity: Option<String>) -> ResponseFuture
         where Self: 'static
     {
-        use futures::{Future, Stream};
-
-        // TODO Cleanup by moving to the built in never type, !, when it stabilizes
-        enum Never {};
-        impl std::convert::From<Never> for hyper::Error {
-            fn from(_: Never) -> hyper::Error {
-                panic!()
-            }
-        }
-
         Box::new(body
-            .fold((), |_, _| -> Result<(), Never> { Ok(()) })
+            .fold((), |_, _| -> Result<(), hyper::Error> { Ok(()) })
+            .map_err(Into::into)
+            .and_then(move |_| futures::finished(self.method_not_allowed()))
+        )
+    }
+
+    fn post(self: Box<Self>, body: hyper::Body, _identity: Option<String>) -> ResponseFuture
+        where Self: 'static
+    {
+        Box::new(body
+            .fold((), |_, _| -> Result<(), hyper::Error> { Ok(()) })
             .map_err(Into::into)
             .and_then(move |_| futures::finished(self.method_not_allowed()))
         )

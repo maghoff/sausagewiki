@@ -121,6 +121,7 @@ impl Service for Site {
                         Head => resource.head(),
                         Get => resource.get(),
                         Put => resource.put(body, identity),
+                        Post => resource.post(body, identity),
                         _ => Box::new(futures::finished(resource.method_not_allowed()))
                     }
                 },

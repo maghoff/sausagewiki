@@ -1,6 +1,6 @@
 use futures::{self, Future};
 use hyper;
-use hyper::header::ContentType;
+use hyper::header::{ContentType, Location};
 use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
@@ -27,6 +27,13 @@ fn title_from_slug(slug: &str) -> String {
 pub struct NewArticleResource {
     state: State,
     slug: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct CreateArticle {
+    base_revision: String,
+    title: String,
+    body: String,
 }
 
 impl NewArticleResource {
@@ -98,13 +105,6 @@ impl Resource for NewArticleResource {
         use chrono::{TimeZone, Local};
         use futures::Stream;
 
-        #[derive(Deserialize)]
-        struct CreateArticle {
-            base_revision: String,
-            title: String,
-            body: String,
-        }
-
         #[derive(BartDisplay)]
         #[template="templates/article_contents.html"]
         struct Template<'a> {
@@ -154,6 +154,36 @@ impl Resource for NewArticleResource {
                             updated.author.as_ref().map(|x| &**x)
                         ),
                     }).expect("Should never fail"))
+                )
+            })
+        )
+    }
+
+    fn post(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
+        // TODO Check incoming Content-Type
+        // TODO Refactor? Reduce duplication with ArticleResource::put?
+
+        use futures::Stream;
+
+        Box::new(body
+            .concat2()
+            .map_err(Into::into)
+            .and_then(|body| {
+                serde_urlencoded::from_bytes(&body)
+                    .map_err(Into::into)
+            })
+            .and_then(move |arg: CreateArticle| {
+                if arg.base_revision != NEW {
+                    unimplemented!("Version update conflict");
+                }
+                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity)
+            })
+            .and_then(|updated| {
+                futures::finished(Response::new()
+                    .with_status(hyper::StatusCode::SeeOther)
+                    .with_header(ContentType(TEXT_PLAIN.clone()))
+                    .with_header(Location::new(updated.link().to_owned()))
+                    .with_body("See other")
                 )
             })
         )

@@ -1,7 +1,7 @@
 use chrono::{TimeZone, DateTime, Local};
 use futures::{self, Future};
 use hyper;
-use hyper::header::ContentType;
+use hyper::header::{ContentType, Location};
 use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
@@ -20,6 +20,13 @@ pub struct ArticleResource {
     article_id: i32,
     revision: i32,
     edit: bool,
+}
+
+#[derive(Deserialize)]
+struct UpdateArticle {
+    base_revision: i32,
+    title: String,
+    body: String,
 }
 
 impl ArticleResource {
@@ -55,7 +62,7 @@ pub fn last_updated(article_id: i32, created: &DateTime<Local>, author: Option<&
 impl Resource for ArticleResource {
     fn allow(&self) -> Vec<hyper::Method> {
         use hyper::Method::*;
-        vec![Options, Head, Get, Put]
+        vec![Options, Head, Get, Put, Post]
     }
 
     fn head(&self) -> ResponseFuture {
@@ -114,13 +121,6 @@ impl Resource for ArticleResource {
 
         use futures::Stream;
 
-        #[derive(Deserialize)]
-        struct UpdateArticle {
-            base_revision: i32,
-            title: String,
-            body: String,
-        }
-
         #[derive(BartDisplay)]
         #[template="templates/article_contents.html"]
         struct Template<'a> {
@@ -165,6 +165,32 @@ impl Resource for ArticleResource {
                             updated.author.as_ref().map(|x| &**x)
                         ),
                     }).expect("Should never fail"))
+                )
+            })
+        )
+    }
+
+    fn post(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
+        // TODO Check incoming Content-Type
+
+        use futures::Stream;
+
+        Box::new(body
+            .concat2()
+            .map_err(Into::into)
+            .and_then(|body| {
+                serde_urlencoded::from_bytes(&body)
+                    .map_err(Into::into)
+            })
+            .and_then(move |update: UpdateArticle| {
+                self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
+            })
+            .and_then(|updated| {
+                futures::finished(Response::new()
+                    .with_status(hyper::StatusCode::SeeOther)
+                    .with_header(ContentType(TEXT_PLAIN.clone()))
+                    .with_header(Location::new(updated.link().to_owned()))
+                    .with_body("See other")
                 )
             })
         )

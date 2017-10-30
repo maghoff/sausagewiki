@@ -17,6 +17,16 @@ pub struct ArticleRevision {
     pub author: Option<String>,
 }
 
+impl ArticleRevision {
+    pub fn link(&self) -> &str {
+        if self.slug.is_empty() {
+            "."
+        } else {
+            &self.slug
+        }
+    }
+}
+
 #[derive(Debug, Queryable)]
 pub struct ArticleRevisionStub {
     pub sequence_number: i32,
