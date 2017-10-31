@@ -18,11 +18,17 @@ function debouncer(interval, callback) {
     const results = form.querySelector('.live-results');
     const resultPrototype = document.getElementById('search-result-prototype').firstChild;
 
+    function clearChildren(element) {
+        while (element.lastChild) {
+            element.removeChild(results.lastChild);
+        }
+    }
+
     let ongoing = false;
     function submit() {
         if (input.value === "") {
             results.classList.remove("show");
-            while (results.lastChild) results.removeChild(results.lastChild);
+            clearChildren(results);
             return;
         }
 
@@ -43,7 +49,7 @@ function debouncer(interval, callback) {
 
             return response.json();
         }).then(result => {
-            while (results.lastChild) results.removeChild(results.lastChild);
+            clearChildren(results);
 
             result.hits.forEach((hit, index) => {
                 const item = resultPrototype.cloneNode(true);
@@ -68,9 +74,18 @@ function debouncer(interval, callback) {
 
             ongoing = false;
         }).catch(err => {
-            ongoing = false;
             console.error(err);
-            alert(err); // TODO Better interactive error reporting
+
+            clearChildren(results);
+            results.classList.add("show");
+
+            const item = document.createElement("li");
+            item.classList.add("search-result");
+            item.classList.add("error");
+            item.textContent = "Live search unavailable";
+            results.appendChild(item);
+
+            ongoing = false;
         });
     }
     const submitter = debouncer(300, submit);

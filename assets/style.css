@@ -385,6 +385,13 @@ input[type="search"] {
     border-top: none;
 }
 
+.live-results .search-result.error {
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 8px;
+    color: #888;
+}
+
 @media (min-width: 630px) {
     .search {
         text-align: right;
