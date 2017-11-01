@@ -45,8 +45,9 @@ const PORT: &str = "port";
 fn args<'a>() -> clap::ArgMatches<'a> {
     use clap::{App, Arg};
 
-    App::new("sausagewiki")
-        .about("A wiki engine")
+    App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(Arg::with_name(DATABASE)
             .help("Sets the database file to use")
             .required(true))
