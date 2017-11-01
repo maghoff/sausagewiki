@@ -52,18 +52,20 @@ fn args<'a>() -> clap::ArgMatches<'a> {
             .help("Sets the database file to use")
             .required(true))
         .arg(Arg::with_name(PORT)
-            .help("Sets the listening port. Defaults to 8080")
+            .help("Sets the listening port")
             .short("p")
             .long(PORT)
+            .default_value("8080")
             .validator(|x| match x.parse::<u16>() {
                 Ok(_) => Ok(()),
                 Err(_) => Err("Must be an integer in the range [0, 65535]".into())
             })
             .takes_value(true))
         .arg(Arg::with_name(ADDRESS)
-            .help("Sets the TCP address to bind to. Defaults to 127.0.0.1")
+            .help("Sets the IP address to bind to")
             .short("a")
             .long(ADDRESS)
+            .default_value("127.0.0.1")
             .validator(|x| match x.parse::<IpAddr>() {
                 Ok(_) => Ok(()),
                 Err(_) => Err("Must be a valid IP address".into())
@@ -80,13 +82,11 @@ fn args<'a>() -> clap::ArgMatches<'a> {
 fn core_main() -> Result<(), Box<std::error::Error>> {
     let args = args();
 
-    let db_file = args.value_of(DATABASE).expect("Guaranteed by clap").to_owned();
-    let bind_host = args.value_of(ADDRESS)
-        .map(|p| p.parse().expect("Guaranteed by validator"))
-        .unwrap_or_else(|| "127.0.0.1".parse().unwrap());
-    let bind_port = args.value_of(PORT)
-        .map(|p| p.parse().expect("Guaranteed by validator"))
-        .unwrap_or(8080);
+    const CLAP: &str = "Guaranteed by clap";
+    const VALIDATOR: &str = "Guaranteed by clap validator";
+    let db_file = args.value_of(DATABASE).expect(CLAP).to_owned();
+    let bind_host = args.value_of(ADDRESS).expect(CLAP).parse().expect(VALIDATOR);
+    let bind_port = args.value_of(PORT).expect(CLAP).parse().expect(VALIDATOR);
 
     let trust_identity = args.is_present(TRUST_IDENTITY);
 
