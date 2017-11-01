@@ -31,7 +31,7 @@ article h1 {
     margin-bottom: 0;
 }
 
-h2, h3 {
+h2, h3, h4, h5, h6 {
     font-family: inherit;
     font-size: 18px;
     line-height: 32px;
@@ -49,11 +49,16 @@ h3 {
     font-style: italic;
 }
 
+h4, h5, h6 {
+    font-weight: normal;
+    font-style: normal;
+}
+
 article ul, article ol {
     padding-left: 32px;
 }
 
-h1+*, h2+*, h3+* {
+h1+*, h2+*, h3+*, h4+*, h5+*, h6+* {
     margin-top: 0;
 }
 
