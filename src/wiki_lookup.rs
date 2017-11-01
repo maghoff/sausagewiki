@@ -139,6 +139,8 @@ impl WikiLookup {
         };
 
         match (head.as_ref(), tail) {
+            ("_about", None) =>
+                Box::new(finished(Some(Box::new(AboutResource::new()) as BoxResource))),
             ("_assets", Some(asset)) =>
                 Box::new(asset_lookup(asset)),
             ("_by_id", Some(tail)) =>
