@@ -4,7 +4,7 @@
 use std::fmt;
 
 use futures::{self, Future};
-use hyper::header::{Accept, ContentType};
+use hyper::header::{Accept, ContentType, Server};
 use hyper::mime;
 use hyper::server::*;
 use hyper;
@@ -28,13 +28,11 @@ pub struct Layout<'a, T: 'a + fmt::Display> {
 }
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
-    pub fn style_css_checksum(&self) -> &str {
-        StyleCss::checksum()
-    }
+    pub fn style_css_checksum(&self) -> &str { StyleCss::checksum() }
+    pub fn search_js_checksum(&self) -> &str { SearchJs::checksum() }
 
-    pub fn search_js_checksum(&self) -> &str {
-        SearchJs::checksum()
-    }
+    pub fn pkg_name(&self) -> &str { env!("CARGO_PKG_NAME") }
+    pub fn pkg_version(&self) -> &str { env!("CARGO_PKG_VERSION") }
 }
 
 #[derive(BartDisplay)]
@@ -128,6 +126,13 @@ impl Service for Site {
                 None => Box::new(futures::finished(Self::not_found(base.as_ref().map(|x| &**x))))
             })
             .or_else(move |err| Ok(Self::internal_server_error(base2.as_ref().map(|x| &**x), err)))
+            .map(|response| response
+                .with_header(Server::new(concat!(
+                    env!("CARGO_PKG_NAME"),
+                    "/",
+                    env!("CARGO_PKG_VERSION")
+                )))
+            )
         )
     }
 }
