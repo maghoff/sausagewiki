@@ -148,6 +148,10 @@ impl WikiLookup {
                 };
 
                 match (head.as_ref(), tail) {
+                    ("bsd-3-clause", None) =>
+                        Box::new(finished(Some(Box::new(
+                            HtmlResource::new(Some("../"), "The 3-Clause BSD License", include_str!("licenses/bsd-3-clause.html"))
+                        ) as BoxResource))),
                     ("gpl3", None) =>
                         Box::new(finished(Some(Box::new(
                             HtmlResource::new(Some("../"), "GNU General Public License", include_str!("licenses/gpl3.html"))
