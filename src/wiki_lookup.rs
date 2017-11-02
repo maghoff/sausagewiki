@@ -16,30 +16,18 @@ type BoxResource = Box<Resource + Sync + Send>;
 type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
-    static ref ASSETS_MAP: HashMap<String, ResourceFn> = {
-        let mut map = HashMap::new();
+    static ref ASSETS_MAP: HashMap<String, ResourceFn> = hashmap!{
+        format!("style-{}.css", StyleCss::checksum()) =>
+            Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn,
 
-        map.insert(
-            format!("style-{}.css", StyleCss::checksum()),
-            Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn
-        );
+        format!("script-{}.js", ScriptJs::checksum()) =>
+            Box::new(|| Box::new(ScriptJs) as BoxResource) as ResourceFn,
 
-        map.insert(
-            format!("script-{}.js", ScriptJs::checksum()),
-            Box::new(|| Box::new(ScriptJs) as BoxResource) as ResourceFn
-        );
+        format!("search-{}.js", SearchJs::checksum()) =>
+            Box::new(|| Box::new(SearchJs) as BoxResource) as ResourceFn,
 
-        map.insert(
-            format!("search-{}.js", SearchJs::checksum()),
-            Box::new(|| Box::new(SearchJs) as BoxResource) as ResourceFn
-        );
-
-        map.insert(
-            format!("amatic-sc-v9-latin-regular.woff"),
-            Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn
-        );
-
-        map
+        format!("amatic-sc-v9-latin-regular.woff") =>
+            Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn,
     };
 }
 

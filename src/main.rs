@@ -5,6 +5,7 @@
 #[macro_use] extern crate diesel_codegen;
 #[macro_use] extern crate hyper;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate maplit;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate static_resource_derive;
 
