@@ -427,3 +427,45 @@ input[type="search"] {
 .added {
     background: green;
 }
+
+@media print {
+    @page {
+        margin: 25mm;
+    }
+
+    body {
+        display: block;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        /* This doesn't work at all, but it might start to! */
+        break-after: avoid;
+        page-break-after: avoid;
+    }
+
+    a, a:visited, a:hover, a:visited:hover {
+		text-decoration: none;
+		color: black !important;
+		font-weight: normal !important;
+	}
+
+    article {
+        margin: 0 auto;
+    }
+
+    article, h2, h3, h4, h5, h6, .notice {
+        font-size: 12pt;
+        line-height: 18pt;
+    }
+
+    article p {
+        text-align: justify;
+    }
+
+    .search {
+        display: none;
+    }
+    footer {
+        display: none;
+    }
+}

@@ -22,7 +22,7 @@ Some features of Sausagewiki, in no particular order:
     * Plus [GitHub style table-support](https://help.github.com/articles/organizing-information-with-tables/)
     * Without embedded HTML
  * Full text search
- * Responsive design: fits different screens
+ * Responsive design: fits different screens as well as print
  * Progressive enhancement: works with or without JavaScript
 
 Install and run
