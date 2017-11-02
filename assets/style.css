@@ -433,6 +433,10 @@ input[type="search"] {
         margin: 25mm;
     }
 
+    html, body {
+        height: unset;
+    }
+
     body {
         display: block;
     }
