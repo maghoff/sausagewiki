@@ -29,6 +29,21 @@ lazy_static! {
         format!("amatic-sc-v9-latin-regular.woff") =>
             Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn,
     };
+
+    static ref LICENSES_MAP: HashMap<String, ResourceFn> = hashmap!{
+        "bsd-3-clause".to_owned() => Box::new(|| Box::new(
+            HtmlResource::new(Some("../"), "The 3-Clause BSD License", include_str!("licenses/bsd-3-clause.html"))
+        ) as BoxResource) as ResourceFn,
+        "gpl3".to_owned() => Box::new(|| Box::new(
+            HtmlResource::new(Some("../"), "GNU General Public License", include_str!("licenses/gpl3.html"))
+        ) as BoxResource) as ResourceFn,
+        "mit".to_owned() => Box::new(|| Box::new(
+            HtmlResource::new(Some("../"), "The MIT License", include_str!("licenses/mit.html"))
+        ) as BoxResource) as ResourceFn,
+        "mpl2".to_owned() => Box::new(|| Box::new(
+            HtmlResource::new(Some("../"), "Mozilla Public License Version 2.0", include_str!("licenses/mpl2.html"))
+        ) as BoxResource) as ResourceFn,
+    };
 }
 
 #[derive(Clone)]
@@ -48,7 +63,9 @@ fn split_one(path: &str) -> Result<(Cow<str>, Option<&str>), Utf8Error> {
     Ok((head, tail))
 }
 
-fn asset_lookup(path: &str) -> FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>> {
+fn map_lookup(map: &HashMap<String, ResourceFn>, path: &str) ->
+    FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>>
+{
     let (head, tail) = match split_one(path) {
         Ok(x) => x,
         Err(x) => return failed(x.into()),
@@ -58,7 +75,7 @@ fn asset_lookup(path: &str) -> FutureResult<Option<BoxResource>, Box<::std::erro
         return finished(None);
     }
 
-    match ASSETS_MAP.get(head.as_ref()) {
+    match map.get(head.as_ref()) {
         Some(resource_fn) => finished(Some(resource_fn())),
         None => finished(None),
     }
@@ -129,34 +146,10 @@ impl WikiLookup {
         match (head.as_ref(), tail) {
             ("_about", None) =>
                 Box::new(finished(Some(Box::new(AboutResource::new()) as BoxResource))),
-            ("_about", Some(tail)) => {
-                let (head, tail) = match split_one(tail) {
-                    Ok(x) => x,
-                    Err(x) => return Box::new(failed(x.into())),
-                };
-
-                match (head.as_ref(), tail) {
-                    ("bsd-3-clause", None) =>
-                        Box::new(finished(Some(Box::new(
-                            HtmlResource::new(Some("../"), "The 3-Clause BSD License", include_str!("licenses/bsd-3-clause.html"))
-                        ) as BoxResource))),
-                    ("gpl3", None) =>
-                        Box::new(finished(Some(Box::new(
-                            HtmlResource::new(Some("../"), "GNU General Public License", include_str!("licenses/gpl3.html"))
-                        ) as BoxResource))),
-                    ("mit", None) =>
-                        Box::new(finished(Some(Box::new(
-                            HtmlResource::new(Some("../"), "The MIT License", include_str!("licenses/mit.html"))
-                        ) as BoxResource))),
-                    ("mpl2", None) =>
-                        Box::new(finished(Some(Box::new(
-                            HtmlResource::new(Some("../"), "Mozilla Public License Version 2.0", include_str!("licenses/mpl2.html"))
-                        ) as BoxResource))),
-                    _ => Box::new(finished(None)),
-                }
-            },
+            ("_about", Some(license)) =>
+                Box::new(map_lookup(&LICENSES_MAP, license)),
             ("_assets", Some(asset)) =>
-                Box::new(asset_lookup(asset)),
+                Box::new(map_lookup(&ASSETS_MAP, asset)),
             ("_by_id", Some(tail)) =>
                 self.by_id_lookup(tail, query),
             ("_changes", None) =>
