@@ -2,7 +2,7 @@ use std::fmt;
 
 use diff;
 use futures::{self, Future};
-use futures::future::{finished, done};
+use futures::future::done;
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
@@ -57,11 +57,11 @@ impl DiffLookup {
             let from = state.get_article_revision(article_id as i32, params.from as i32);
             let to = state.get_article_revision(article_id as i32, params.to as i32);
 
-            finished(state).join3(from, to)
-        }).and_then(move |(state, from, to)| {
+            from.join(to)
+        }).and_then(move |(from, to)| {
             match (from, to) {
                 (Some(from), Some(to)) =>
-                    Ok(Some(Box::new(DiffResource::new(state, from, to)) as BoxResource)),
+                    Ok(Some(Box::new(DiffResource::new(from, to)) as BoxResource)),
                 _ =>
                     Ok(None),
             }
@@ -70,15 +70,14 @@ impl DiffLookup {
 }
 
 pub struct DiffResource {
-    state: State,
     from: ArticleRevision,
     to: ArticleRevision,
 }
 
 impl DiffResource {
-    pub fn new(state: State, from: ArticleRevision, to: ArticleRevision) -> Self {
+    pub fn new(from: ArticleRevision, to: ArticleRevision) -> Self {
         assert_eq!(from.article_id, to.article_id);
-        Self { state, from, to }
+        Self { from, to }
     }
 }
 
