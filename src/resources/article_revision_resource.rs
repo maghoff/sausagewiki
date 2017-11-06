@@ -11,6 +11,7 @@ use site::Layout;
 use web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
+use super::diff_resource;
 use super::pagination::Pagination;
 
 pub struct ArticleRevisionResource {
@@ -79,6 +80,7 @@ impl Resource for ArticleRevisionResource {
         struct Template<'a> {
             link_current: &'a str,
             timestamp_and_author: &'a str,
+            diff_link: Option<String>,
 
             title: &'a str,
             rendered: String,
@@ -101,6 +103,18 @@ impl Resource for ArticleRevisionResource {
                                 &Local.from_utc_datetime(&data.created),
                                 data.author.as_ref().map(|x| &**x)
                             ),
+                            diff_link:
+                                if data.revision > 1 {
+                                    Some(format!("_diff/{}?{}",
+                                        data.article_id,
+                                        diff_resource::QueryParameters::new(
+                                            data.revision as u32 - 1,
+                                            data.revision as u32,
+                                        )
+                                    ))
+                                } else {
+                                    None
+                                },
                             title: &data.title,
                             rendered: render_markdown(&data.body),
                         },

@@ -5,6 +5,10 @@
         You are viewing an historical version of <a href="{{link_current}}">this article</a>,
         authored at {{{timestamp_and_author}}}.
     </p>
+    <p>
+        {{#diff_link}}See <a href="{{.}}">the changes</a> made for this revision.{{/diff_link}}
+        {{^diff_link}}This is the first revision of the article.{{/diff_link}}
+    </p>
 </div>
 
 <div class="rendered">
