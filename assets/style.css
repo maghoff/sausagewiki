@@ -418,14 +418,17 @@ input[type="search"] {
     }
 }
 
-.removed {
-    background: red;
+.diff {
+    background: none;
+    white-space: pre-wrap;
 }
-.same {
-    background: white;
+.removed {
+    color: #866;
+    background: #fdd;
+    text-decoration: line-through;
 }
 .added {
-    background: green;
+    background: #ceb;
 }
 
 @media print {
