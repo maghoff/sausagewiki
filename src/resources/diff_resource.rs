@@ -185,14 +185,15 @@ impl Resource for DiffResource {
         #[derive(BartDisplay)]
         #[template = "templates/diff.html"]
         struct Template<'a> {
-            lines: &'a [DiffLine<'a>],
+            title: &'a [Diff<char>],
+            lines: &'a [Diff<&'a str>],
         }
 
         #[derive(Default)]
-        struct DiffLine<'a> {
-            removed: Option<&'a str>,
-            same: Option<&'a str>,
-            added: Option<&'a str>,
+        struct Diff<T: fmt::Display> {
+            removed: Option<T>,
+            same: Option<T>,
+            added: Option<T>,
         }
 
         let from = self.get_article_revision(&self.from);
@@ -207,15 +208,26 @@ impl Resource for DiffResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Difference",
                         body: &Template {
+                            title: &diff::chars(
+                                from.as_ref().map(|x| &*x.title).unwrap_or(""),
+                                to.as_ref().map(|x| &*x.title).unwrap_or("")
+                            )
+                                .into_iter()
+                                .map(|x| match x {
+                                    diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
+                                    diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
+                                    diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
+                                })
+                                .collect::<Vec<_>>(),
                             lines: &diff::lines(
                                 from.as_ref().map(|x| &*x.body).unwrap_or(""),
                                 to.as_ref().map(|x| &*x.body).unwrap_or("")
                             )
                                 .into_iter()
                                 .map(|x| match x {
-                                    diff::Result::Left(x) => DiffLine { removed: Some(x), ..Default::default() },
-                                    diff::Result::Both(x, _) => DiffLine { same: Some(x), ..Default::default() },
-                                    diff::Result::Right(x) => DiffLine { added: Some(x), ..Default::default() },
+                                    diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
+                                    diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
+                                    diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
                                 })
                                 .collect::<Vec<_>>()
                         },
