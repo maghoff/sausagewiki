@@ -32,7 +32,7 @@
         <td><a href="_revisions/{{.article_id}}/{{.revision}}">{{.title}}</a></td>
         <td>{{.created}}</td>
         {{#show_authors?}}<td>{{#..author}}<a href="{{...author_link()}}">{{.}}</a>{{/..author}}{{^..author}}<i>Anonymous</i>{{/..author}}</td>{{/show_authors}}
-        <td><a href="{{.diff_link}}">change</a></td>
+        <td>{{#.diff_link}}<a href="{{.}}">change</a>{{/.diff_link}}{{^.diff_link}}new{{/.diff_link}}</td>
     </tr>
     {{/changes}}
 </table>

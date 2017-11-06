@@ -219,7 +219,7 @@ impl Resource for ChangesResource {
 
             _latest: bool,
 
-            diff_link: String,
+            diff_link: Option<String>,
         }
 
         impl<'a> Row<'a> {
@@ -337,13 +337,18 @@ impl Resource for ChangesResource {
                         _slug: x.slug,
                         title: x.title,
                         _latest: x.latest,
-                        diff_link: format!("_diff/{}?{}",
-                            x.article_id,
-                            diff_resource::QueryParameters::new(
-                                x.revision as u32 - 1,
-                                x.revision as u32,
-                            )
-                        ),
+                        diff_link:
+                            if x.revision > 1 {
+                                Some(format!("_diff/{}?{}",
+                                    x.article_id,
+                                    diff_resource::QueryParameters::new(
+                                        x.revision as u32 - 1,
+                                        x.revision as u32,
+                                    )
+                                ))
+                            } else {
+                                None
+                            },
                     }
                 }).collect::<Vec<_>>();
 
