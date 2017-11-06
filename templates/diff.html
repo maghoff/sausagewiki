@@ -1,7 +1,11 @@
 <div class="container">
-<header>
-<h1>Difference</h1>
-</header>
+
+<div class="notice">
+    <p>
+        You are viewing the difference between two {{#consecutive?}}consecutive{{/consecutive}}
+        revisions of <a href="_by_id/{{article_id}}">this article</a>.
+    </p>
+</div>
 
 <header>
 <h1>{{#title}}{{#.removed}}<span class="removed">{{.}}</span>{{/.removed}}{{#.same}}{{.}}{{/.same}}{{#.added}}<span class="added">{{.}}</span>{{/.added}}{{/title}}</h1>

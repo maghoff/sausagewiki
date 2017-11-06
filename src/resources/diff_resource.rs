@@ -1,20 +1,20 @@
-use std::{self, fmt};
+use std::fmt;
 
 use diff;
 use futures::{self, Future};
-use futures::future::done;
+use futures::future::{finished, done};
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 use serde_urlencoded;
 
 use mimes::*;
+use models::ArticleRevision;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
 type BoxResource = Box<Resource + Sync + Send>;
-type Error = Box<std::error::Error + Send + Sync>;
 
 #[derive(Clone)]
 pub struct DiffLookup {
@@ -47,31 +47,35 @@ impl DiffLookup {
     pub fn lookup(&self, article_id: u32, query: Option<&str>) -> Box<Future<Item=Option<BoxResource>, Error=::web::Error>> {
         let state = self.state.clone();
 
-        Box::new(done((|| -> Result<Option<BoxResource>, ::web::Error> {
-            let params: QueryParameters = serde_urlencoded::from_str(query.unwrap_or(""))?;
+        Box::new(done(
+            serde_urlencoded::from_str(query.unwrap_or(""))
+                .map_err(Into::into)
+        ).and_then(move |params: QueryParameters| {
+            let from = state.get_article_revision(article_id as i32, params.from as i32);
+            let to = state.get_article_revision(article_id as i32, params.to as i32);
 
-            Ok(Some(Box::new(DiffResource::new(state, article_id, params.from, params.to))))
-        }())))
+            finished(state).join3(from, to)
+        }).and_then(move |(state, from, to)| {
+            match (from, to) {
+                (Some(from), Some(to)) =>
+                    Ok(Some(Box::new(DiffResource::new(state, from, to)) as BoxResource)),
+                _ =>
+                    Ok(None),
+            }
+        }))
     }
 }
 
 pub struct DiffResource {
     state: State,
-    article_id: u32,
-    from: u32,
-    to: u32,
+    from: ArticleRevision,
+    to: ArticleRevision,
 }
 
 impl DiffResource {
-    pub fn new(state: State, article_id: u32, from: u32, to: u32) -> Self {
-        Self { state, article_id, from, to }
-    }
-
-    fn query_args(&self) -> QueryParameters {
-        QueryParameters {
-            from: self.from.clone(),
-            to: self.to.clone(),
-        }
+    pub fn new(state: State, from: ArticleRevision, to: ArticleRevision) -> Self {
+        assert_eq!(from.article_id, to.article_id);
+        Self { state, from, to }
     }
 }
 
@@ -92,6 +96,8 @@ impl Resource for DiffResource {
         #[derive(BartDisplay)]
         #[template = "templates/diff.html"]
         struct Template<'a> {
+            consecutive: bool,
+            article_id: u32,
             title: &'a [Diff<char>],
             lines: &'a [Diff<&'a str>],
         }
@@ -103,22 +109,18 @@ impl Resource for DiffResource {
             added: Option<T>,
         }
 
-        let from = self.state.get_article_revision(self.article_id as i32, self.from as i32);
-        let to = self.state.get_article_revision(self.article_id as i32, self.to as i32);
-
         let head = self.head();
 
-        Box::new(head.join3(from, to)
-            .and_then(move |(head, from, to)| {
+        Box::new(head
+            .and_then(move |head| {
                 Ok(head
                     .with_body(Layout {
                         base: Some("../"), // Hmm, should perhaps accept `base` as argument
                         title: "Difference",
                         body: &Template {
-                            title: &diff::chars(
-                                from.as_ref().map(|x| &*x.title).unwrap_or(""),
-                                to.as_ref().map(|x| &*x.title).unwrap_or("")
-                            )
+                            consecutive: self.to.revision - self.from.revision == 1,
+                            article_id: self.from.article_id as u32,
+                            title: &diff::chars(&self.from.title, &self.to.title)
                                 .into_iter()
                                 .map(|x| match x {
                                     diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
@@ -126,10 +128,7 @@ impl Resource for DiffResource {
                                     diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
                                 })
                                 .collect::<Vec<_>>(),
-                            lines: &diff::lines(
-                                from.as_ref().map(|x| &*x.body).unwrap_or(""),
-                                to.as_ref().map(|x| &*x.body).unwrap_or("")
-                            )
+                            lines: &diff::lines(&self.from.body, &self.to.body)
                                 .into_iter()
                                 .map(|x| match x {
                                     diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
