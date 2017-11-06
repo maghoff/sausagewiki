@@ -120,7 +120,7 @@ impl QueryParameters {
     }
 
     pub fn into_link(self) -> String {
-        serde_urlencoded::to_string(self).expect("Serializing to String cannot fail")
+        format!("_diff?{}", serde_urlencoded::to_string(self).expect("Serializing to String cannot fail"))
     }
 }
 

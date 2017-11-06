@@ -24,6 +24,7 @@
         <th>Article</th>
         <th>Updated</th>
         {{#show_authors?}}<th>Author</th>{{/show_authors}}
+        <th></th>
     </tr>
     {{/changes}}
     {{#changes}}
@@ -31,6 +32,7 @@
         <td><a href="_revisions/{{.article_id}}/{{.revision}}">{{.title}}</a></td>
         <td>{{.created}}</td>
         {{#show_authors?}}<td>{{#..author}}<a href="{{...author_link()}}">{{.}}</a>{{/..author}}{{^..author}}<i>Anonymous</i>{{/..author}}</td>{{/show_authors}}
+        <td><a href="{{.diff_link}}">change</a></td>
     </tr>
     {{/changes}}
 </table>

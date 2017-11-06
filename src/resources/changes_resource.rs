@@ -12,6 +12,7 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
+use super::diff_resource::{self, ArticleRevisionReference};
 use super::pagination::Pagination;
 use super::TemporaryRedirectResource;
 
@@ -217,6 +218,8 @@ impl Resource for ChangesResource {
             title: String,
 
             _latest: bool,
+
+            diff_link: String,
         }
 
         impl<'a> Row<'a> {
@@ -334,6 +337,10 @@ impl Resource for ChangesResource {
                         _slug: x.slug,
                         title: x.title,
                         _latest: x.latest,
+                        diff_link: diff_resource::QueryParameters::new(
+                            ArticleRevisionReference::Some { article_id: x.article_id as u32, revision: x.revision as u32 - 1 },
+                            ArticleRevisionReference::Some { article_id: x.article_id as u32, revision: x.revision as u32 },
+                        ).into_link()
                     }
                 }).collect::<Vec<_>>();
 
