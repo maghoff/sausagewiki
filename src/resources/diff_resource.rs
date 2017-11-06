@@ -102,6 +102,8 @@ impl Resource for DiffResource {
             consecutive: bool,
             article_id: u32,
             article_history_link: &'a str,
+            from_link: &'a str,
+            to_link: &'a str,
             title: &'a [Diff<char>],
             lines: &'a [Diff<&'a str>],
         }
@@ -130,6 +132,8 @@ impl Resource for DiffResource {
                                     .pagination(Pagination::After(self.from.revision))
                                     .into_link()
                             ),
+                            from_link: &format!("_revisions/{}/{}", self.from.article_id, self.from.revision),
+                            to_link: &format!("_revisions/{}/{}", self.to.article_id, self.to.revision),
                             title: &diff::chars(&self.from.title, &self.to.title)
                                 .into_iter()
                                 .map(|x| match x {
