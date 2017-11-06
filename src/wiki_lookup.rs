@@ -137,6 +137,22 @@ impl WikiLookup {
         )
     }
 
+    fn diff_lookup_f(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
+        let article_id: u32 = match (|| -> Result<_, <Self as Lookup>::Error> {
+            let (article_id, tail) = split_one(path)?;
+            if tail.is_some() {
+                return Err("Not found".into());
+            }
+
+            Ok(article_id.parse()?)
+        })() {
+            Ok(x) => x,
+            Err(_) => return Box::new(finished(None)),
+        };
+
+        Box::new(self.diff_lookup.lookup(article_id, query))
+    }
+
     fn reserved_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
         let (head, tail) = match split_one(path) {
             Ok(x) => x,
@@ -154,8 +170,8 @@ impl WikiLookup {
                 self.by_id_lookup(tail, query),
             ("_changes", None) =>
                 Box::new(self.changes_lookup.lookup(query)),
-            ("_diff", None) =>
-                Box::new(self.diff_lookup.lookup(query)),
+            ("_diff", Some(tail)) =>
+                self.diff_lookup_f(tail, query),
             ("_new", None) =>
                 Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
             ("_revisions", Some(tail)) =>
