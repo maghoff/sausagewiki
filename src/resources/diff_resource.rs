@@ -14,6 +14,9 @@ use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
 
+use super::changes_resource;
+use super::pagination::Pagination;
+
 type BoxResource = Box<Resource + Sync + Send>;
 
 #[derive(Clone)]
@@ -98,6 +101,7 @@ impl Resource for DiffResource {
         struct Template<'a> {
             consecutive: bool,
             article_id: u32,
+            article_history_link: &'a str,
             title: &'a [Diff<char>],
             lines: &'a [Diff<&'a str>],
         }
@@ -120,6 +124,12 @@ impl Resource for DiffResource {
                         body: &Template {
                             consecutive: self.to.revision - self.from.revision == 1,
                             article_id: self.from.article_id as u32,
+                            article_history_link: &format!("_changes{}",
+                                changes_resource::QueryParameters::default()
+                                    .article_id(Some(self.from.article_id))
+                                    .pagination(Pagination::After(self.from.revision))
+                                    .into_link()
+                            ),
                             title: &diff::chars(&self.from.title, &self.to.title)
                                 .into_iter()
                                 .map(|x| match x {
