@@ -43,6 +43,9 @@ lazy_static! {
         "mpl2".to_owned() => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "Mozilla Public License Version 2.0", include_str!("licenses/mpl2.html"))
         ) as BoxResource) as ResourceFn,
+        "sil-ofl-1.1".to_owned() => Box::new(|| Box::new(
+            HtmlResource::new(Some("../"), "SIL Open Font License", include_str!("licenses/sil-ofl-1.1.html"))
+        ) as BoxResource) as ResourceFn,
     };
 }
 
