@@ -4,9 +4,9 @@
 </header>
 
 <article>
-<p>This site is running version {{pkg_version()}} of Sausagewiki.</p>
-<p>Sausagewiki is a simple, self-contained wiki engine.</p>
-<p>Copyright &copy; 2017 Magnus Hovland Hoff</p>
+<p>This site is running version {{pkg_version()}} of Sausagewiki, a simple,
+self-contained wiki engine.</p>
+<p>Copyright &copy; 2017 Magnus Hovland Hoff.</p>
 <p>
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -14,11 +14,30 @@ Foundation, either version 3 of the License, or (at your option) any later
 version.
 </p>
 
-<p>See also <a href="_about/gpl3">the full license text</a>.</p>
+<p>
+See also <a href="_about/gpl3">the full license text</a> and the
+<a href="https://github.com/maghoff/sausagewiki">project home page</a>.
+</p>
 
 <p>
-<a href="https://github.com/maghoff/sausagewiki">Project home page</a>
+A huge thanks to <a href="https://www.rust-lang.org/en-US/">Rust</a> and
+<a href="https://www.sqlite.org/">SQLite</a>. Without these amazing projects,
+Sausagewiki would never have materialized.
 </p>
+
+<p>
+Sausagewiki builds on a number of projects, copyright by their respective
+copyright holders and distributed under various licenses:
+</p>
+
+<table>
+<thead><tr><th>Project</th><th>Copyright notice</th><th>License</th></tr></thead>
+<tbody>
+{{#deps}}
+<tr><td>{{.name}}</td><td>{{.copyright}}</td><td><a href="_about/{{.license.link()}}">{{.license.name()}}</a></td></tr>
+{{/deps}}
+</tbody>
+</table>
 </article>
 </div>
 
