@@ -34,7 +34,7 @@ copyright holders and distributed under various licenses:
 <thead><tr><th>Project</th><th>Copyright notice</th><th>License</th></tr></thead>
 <tbody>
 {{#deps}}
-<tr><td>{{.name}}</td><td>{{.copyright}}</td><td><a href="_about/{{.license.link()}}">{{.license.name()}}</a></td></tr>
+<tr><td>{{#.link}}<a href="{{.}}">{{..name}}</a>{{/.link}}{{^.link}}{{..name}}{{/.link}}</td><td>{{.copyright}}</td><td><a href="_about/{{.license.link()}}">{{.license.name()}}</a></td></tr>
 {{/deps}}
 </tbody>
 </table>

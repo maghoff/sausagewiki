@@ -1,0 +1,11 @@
+[
+  {
+    "package_name": "Amatic SC",
+    "conclusion": {
+      "Ok": {
+        "chosen_license": "Ofl11",
+        "copyright_notice": "Copyright 2015 The Amatic SC Project Authors (contact@sansoxygen.com)"
+      }
+    }
+  }
+]

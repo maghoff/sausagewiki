@@ -7,6 +7,7 @@ use mimes::*;
 use site::Layout;
 use web::{Resource, ResponseFuture};
 
+#[derive(Licenses)]
 pub struct AboutResource;
 
 impl AboutResource {
@@ -47,26 +48,17 @@ impl License {
     }
 }
 
-struct Dependency {
+struct LicenseInfo {
     name: &'static str,
+    link: Option<&'static str>,
     copyright: &'static str,
     license: License,
-}
-
-lazy_static! {
-    static ref DEPS: &'static [Dependency] = &[
-        Dependency {
-            name: "Amatic SC",
-            copyright: "Copyright 2015 The Amatic SC Project Authors (contact@sansoxygen.com)",
-            license: License::Ofl11,
-        },
-    ];
 }
 
 #[derive(BartDisplay)]
 #[template="templates/about.html"]
 struct Template<'a> {
-    deps: &'a [Dependency]
+    deps: &'a [LicenseInfo]
 }
 
 impl<'a> Template<'a> {
@@ -96,7 +88,7 @@ impl Resource for AboutResource {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "About Sausagewiki",
                         body: &Template {
-                            deps: &*DEPS
+                            deps: &*LICENSE_INFOS
                         },
                     }.to_string()))
             }))
