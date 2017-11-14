@@ -1,5 +1,5 @@
 [package]
-name = "static_resource_derive"
+name = "codegen"
 version = "0.1.0"
 authors = ["Magnus Hoff <maghoff@gmail.com>"]
 license = "GPL-3.0"

@@ -55,8 +55,8 @@ version = "0.1"
 version = "0.0.11"
 default-features = false
 
-[dependencies.static_resource_derive]
-path = "libs/static_resource_derive"
+[dependencies.codegen]
+path = "libs/codegen"
 
 [build-dependencies]
 quote = "0.3.10"

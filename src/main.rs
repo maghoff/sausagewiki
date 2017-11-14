@@ -1,26 +1,26 @@
 #![recursion_limit="128"] // for diesel's infer_schema!
 
 #[macro_use] extern crate bart_derive;
-#[macro_use] extern crate diesel;
+#[macro_use] extern crate codegen;
 #[macro_use] extern crate diesel_codegen;
+#[macro_use] extern crate diesel;
 #[macro_use] extern crate hyper;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate maplit;
 #[macro_use] extern crate serde_derive;
-#[macro_use] extern crate static_resource_derive;
 
 extern crate chrono;
 extern crate clap;
 extern crate diff;
-extern crate futures;
 extern crate futures_cpupool;
+extern crate futures;
 extern crate percent_encoding;
 extern crate pulldown_cmark;
-extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate serde;
+extern crate r2d2;
 extern crate serde_json;
 extern crate serde_urlencoded;
+extern crate serde;
 extern crate slug;
 extern crate titlecase;
 
