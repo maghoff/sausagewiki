@@ -15,6 +15,8 @@ use wiki_lookup::WikiLookup;
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
+    static ref SERVER: Server =
+        Server::new(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")));
 }
 
 header! { (XIdentity, "X-Identity") => [String] }
@@ -126,13 +128,7 @@ impl Service for Site {
                 None => Box::new(futures::finished(Self::not_found(base.as_ref().map(|x| &**x))))
             })
             .or_else(move |err| Ok(Self::internal_server_error(base2.as_ref().map(|x| &**x), err)))
-            .map(|response| response
-                .with_header(Server::new(concat!(
-                    env!("CARGO_PKG_NAME"),
-                    "/",
-                    env!("CARGO_PKG_VERSION")
-                )))
-            )
+            .map(|response| response.with_header(SERVER.clone()))
         )
     }
 }
