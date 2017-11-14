@@ -272,6 +272,13 @@
     }
   },
   {
+    "package_name": "codegen",
+    "version": "0.1.0",
+    "conclusion": {
+      "Err": "NoSource"
+    }
+  },
+  {
     "package_name": "conv",
     "version": "0.3.3",
     "conclusion": {
@@ -1388,13 +1395,6 @@
         },
         "link": "https://github.com/servo/rust-smallvec"
       }
-    }
-  },
-  {
-    "package_name": "static_resource_derive",
-    "version": "0.1.0",
-    "conclusion": {
-      "Err": "NoSource"
     }
   },
   {
