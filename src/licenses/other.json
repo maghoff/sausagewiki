@@ -35,5 +35,15 @@
         "link": "http://diesel.rs"
       }
     }
+  },
+  {
+    "package_name": "musl",
+    "conclusion": {
+      "Ok": {
+        "chosen_license": "Mit",
+        "copyright_notice": "Copyright © 2005-2014 Rich Felker, et al.",
+        "link": "https://www.musl-libc.org/"
+      }
+    }
   }
 ]
