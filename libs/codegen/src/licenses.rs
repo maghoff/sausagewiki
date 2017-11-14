@@ -18,6 +18,16 @@ pub enum LicenseId {
     Ofl11,
 }
 
+impl LicenseId {
+    fn include_notice(&self) -> bool {
+        use self::LicenseId::*;
+        match self {
+            &Mpl2 => false,
+            _ => true,
+        }
+    }
+}
+
 impl quote::ToTokens for LicenseId {
     fn to_tokens(&self, tokens: &mut quote::Tokens) {
         use self::LicenseId::*;
@@ -52,6 +62,11 @@ impl quote::ToTokens for LicenseReport {
         let link = match link {
             &Some(ref link) => quote! { Some(#link) },
             &None => quote! { None },
+        };
+
+        let copyright = match license.include_notice() {
+            true => copyright,
+            false => "",
         };
 
         tokens.append(quote! {
