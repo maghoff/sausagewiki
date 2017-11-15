@@ -18,7 +18,6 @@ impl AboutResource {
 
 enum License {
     Bsd3Clause,
-    Gpl3,
     Mit,
     Mpl2,
     Ofl11,
@@ -29,7 +28,6 @@ impl License {
         use self::License::*;
         match self {
             &Bsd3Clause => "bsd-3-clause",
-            &Gpl3 => "gpl3",
             &Mit => "mit",
             &Mpl2 => "mpl2",
             &Ofl11 => "sil-ofl-1.1",
@@ -40,7 +38,6 @@ impl License {
         use self::License::*;
         match self {
             &Bsd3Clause => "BSD-3-Clause",
-            &Gpl3 => "GPL3",
             &Mit => "MIT",
             &Mpl2 => "MPL2",
             &Ofl11 => "OFL-1.1",
