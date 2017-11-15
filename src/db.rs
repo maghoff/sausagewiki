@@ -30,3 +30,14 @@ pub fn create_pool<S: Into<String>>(connection_string: S) -> Result<Pool<Connect
 
     Ok(pool)
 }
+
+#[cfg(test)]
+pub fn test_connection() -> SqliteConnection {
+    let mut conn = SqliteConnection::establish(":memory:")
+        .expect("SQLite should be able to create an in-memory database");
+
+    SqliteInitializer.on_acquire(&mut conn).unwrap();
+    embedded_migrations::run(&conn).unwrap();
+
+    conn
+}

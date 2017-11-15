@@ -384,3 +384,17 @@ impl State {
         self.execute(move |state| state.search_query(query_string, limit, offset, snippet_size))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use db;
+
+    #[test]
+    fn get_article_slug() {
+        let db = db::test_connection();
+        let state = SyncState::new(&db);
+
+        assert_matches!(state.get_article_slug(0), Ok(None));
+    }
+}

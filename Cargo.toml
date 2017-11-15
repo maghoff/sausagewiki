@@ -8,6 +8,9 @@ license = "GPL-3.0"
 [profile.release]
 panic = "abort"
 
+[dev-dependencies]
+matches = "0.1"
+
 [dependencies]
 bart = "0.1.4"
 bart_derive = "0.1.4"
