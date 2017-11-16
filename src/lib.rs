@@ -29,6 +29,7 @@ use std::net::{IpAddr, SocketAddr};
 
 mod assets;
 mod db;
+mod merge;
 mod mimes;
 mod models;
 mod rendering;
