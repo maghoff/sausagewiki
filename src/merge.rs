@@ -4,40 +4,9 @@ use diff;
 use diff::Result::*;
 
 #[derive(Debug, PartialEq)]
-struct Chunk<'a, Item: 'a + Debug + PartialEq + Eq>(&'a [diff::Result<Item>], &'a [diff::Result<Item>]);
-
-#[derive(Debug, PartialEq)]
-enum ChunkKind {
-    Stable,
-    Unstable,
-}
-
-#[derive(Debug, PartialEq)]
-struct ChunkItem<'a, Item>
-where
-    Item: 'a + Debug + PartialEq + Eq
-{
-    kind: ChunkKind,
-    chunk: Chunk<'a, Item>,
-}
-
-impl<'a, Item> ChunkItem<'a, Item>
-where
-    Item: 'a + Debug + PartialEq + Eq
-{
-    fn stable(chunk: Chunk<'a, Item>) -> ChunkItem<'a, Item> {
-        ChunkItem {
-            kind: ChunkKind::Stable,
-            chunk: chunk,
-        }
-    }
-
-    fn unstable(chunk: Chunk<'a, Item>) -> ChunkItem<'a, Item> {
-        ChunkItem {
-            kind: ChunkKind::Unstable,
-            chunk: chunk,
-        }
-    }
+enum Chunk<'a, Item: 'a + Debug + PartialEq + Eq>{
+    Stable(&'a [diff::Result<Item>], &'a [diff::Result<Item>]),
+    Unstable(&'a [diff::Result<Item>], &'a [diff::Result<Item>]),
 }
 
 struct MergeIterator<'a, Item>
@@ -61,7 +30,7 @@ impl<'a, Item> Iterator for MergeIterator<'a, Item>
 where
     Item: 'a + Debug + PartialEq + Eq
 {
-    type Item = ChunkItem<'a, Item>;
+    type Item = Chunk<'a, Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut i = 0;
@@ -69,7 +38,7 @@ where
             i += 1;
         }
         if i > 0 {
-            let chunk = ChunkItem::stable(Chunk(&self.left[..i], &self.right[..i]));
+            let chunk = Chunk::Stable(&self.left[..i], &self.right[..i]);
             self.left = &self.left[i..];
             self.right = &self.right[i..];
             return Some(chunk);
@@ -94,14 +63,14 @@ where
                     ri += 1;
                 },
                 (Some(&Both(..)), Some(&Both(..))) => {
-                    let chunk = ChunkItem::unstable(Chunk(&self.left[..li], &self.right[..ri]));
+                    let chunk = Chunk::Unstable(&self.left[..li], &self.right[..ri]);
                     self.left = &self.left[li..];
                     self.right = &self.right[ri..];
                     return Some(chunk);
                 }
                 _ => {
                     if self.left.len() > 0 || self.right.len() > 0 {
-                        let chunk = ChunkItem::unstable(Chunk(self.left, self.right));
+                        let chunk = Chunk::Unstable(self.left, self.right);
                         self.left = &self.left[self.left.len()..];
                         self.right = &self.right[self.right.len()..];
                         return Some(chunk);
@@ -130,11 +99,11 @@ mod test {
         let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
 
         assert_eq!(vec![
-            ChunkItem::stable  (Chunk(&oa[0.. 3], &ob[0.. 3])),
-            ChunkItem::unstable(Chunk(&oa[3.. 6], &ob[3.. 3])),
-            ChunkItem::stable  (Chunk(&oa[6.. 9], &ob[3.. 6])),
-            ChunkItem::unstable(Chunk(&oa[9.. 9], &ob[6.. 9])),
-            ChunkItem::stable  (Chunk(&oa[9..12], &ob[9..12])),
+            Chunk::Stable  (&oa[0.. 3], &ob[0.. 3]),
+            Chunk::Unstable(&oa[3.. 6], &ob[3.. 3]),
+            Chunk::Stable  (&oa[6.. 9], &ob[3.. 6]),
+            Chunk::Unstable(&oa[9.. 9], &ob[6.. 9]),
+            Chunk::Stable  (&oa[9..12], &ob[9..12]),
         ], merge);
     }
 
@@ -149,9 +118,9 @@ mod test {
 
         let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
-            ChunkItem::stable  (Chunk(&oa[0.. 3], &ob[0.. 3])),
-            ChunkItem::unstable(Chunk(&oa[3.. 9], &ob[3.. 9])),
-            ChunkItem::stable  (Chunk(&oa[9..12], &ob[9..12])),
+            Chunk::Stable  (&oa[0.. 3], &ob[0.. 3]),
+            Chunk::Unstable(&oa[3.. 9], &ob[3.. 9]),
+            Chunk::Stable  (&oa[9..12], &ob[9..12]),
         ], merge);
     }
 
@@ -166,8 +135,8 @@ mod test {
 
         let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
-            ChunkItem::stable  (Chunk(&oa[0..9], &ob[0.. 9])),
-            ChunkItem::unstable(Chunk(&oa[9..9], &ob[9..12])),
+            Chunk::Stable  (&oa[0..9], &ob[0.. 9]),
+            Chunk::Unstable(&oa[9..9], &ob[9..12]),
         ], merge);
     }
 
@@ -182,8 +151,8 @@ mod test {
 
         let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
-            ChunkItem::stable  (Chunk(&oa[0..6], &ob[0.. 6])),
-            ChunkItem::unstable(Chunk(&oa[6..9], &ob[6..12])),
+            Chunk::Stable  (&oa[0..6], &ob[0.. 6]),
+            Chunk::Unstable(&oa[6..9], &ob[6..12]),
         ], merge);
     }
 
@@ -198,7 +167,7 @@ mod test {
 
         let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
-            ChunkItem::unstable(Chunk(&oa[0..6], &ob[0..6])),
+            Chunk::Unstable(&oa[0..6], &ob[0..6]),
         ], merge);
     }
 }
