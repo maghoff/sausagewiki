@@ -390,11 +390,53 @@ mod test {
     use super::*;
     use db;
 
+    macro_rules! init {
+        ($state:ident) => {
+            let db = db::test_connection();
+            let $state = SyncState::new(&db);
+        }
+    }
+
     #[test]
     fn get_article_slug() {
-        let db = db::test_connection();
-        let state = SyncState::new(&db);
-
+        init!(state);
         assert_matches!(state.get_article_slug(0), Ok(None));
+    }
+
+    #[test]
+    fn create_article() {
+        init!(state);
+        let article_revision = state.create_article(None, "Title".into(), "Body".into(), None).unwrap();
+        assert_eq!("title", article_revision.slug);
+        assert_eq!(true, article_revision.latest);
+    }
+
+    #[test]
+    fn create_article_when_empty_slug_then_empty_slug() {
+        // Front page gets to keep its empty slug
+        init!(state);
+        let article_revision = state.create_article(Some("".into()), "Title".into(), "Body".into(), None).unwrap();
+        assert_eq!("", article_revision.slug);
+    }
+
+    #[test]
+    fn update_article() {
+        init!(state);
+
+        let article = state.create_article(None, "Title".into(), "Body".into(), None).unwrap();
+
+        let new_revision = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None).unwrap();
+
+        assert_eq!(article.article_id, new_revision.article_id);
+
+        // Revision numbers must actually be sequential:
+        assert_eq!(article.revision + 1, new_revision.revision);
+
+        assert_eq!(article.title, new_revision.title);
+
+        // Slug must remain unchanged when the title is unchanged:
+        assert_eq!(article.slug, new_revision.slug);
+
+        assert_eq!("New body", new_revision.body);
     }
 }
