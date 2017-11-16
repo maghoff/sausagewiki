@@ -38,9 +38,8 @@ struct MergeIterator<Item> {
     left: Vec<diff::Result<Item>>,
     right: Vec<diff::Result<Item>>,
 
-    a: usize,
-    o: usize,
-    b: usize,
+    li: usize,
+    ri: usize,
 }
 
 impl<Item> MergeIterator<Item> {
@@ -48,9 +47,8 @@ impl<Item> MergeIterator<Item> {
         MergeIterator {
             left,
             right,
-            a: 0,
-            o: 0,
-            b: 0,
+            li: 0,
+            ri: 0,
         }
     }
 }
@@ -63,50 +61,45 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut i = 0;
-        while let (Some(&Both(..)), Some(&Both(..))) = (self.left.get(self.a+i), self.right.get(self.b+i)) {
+        while let (Some(&Both(..)), Some(&Both(..))) = (self.left.get(self.li+i), self.right.get(self.ri+i)) {
             i += 1;
         }
         if i > 0 {
-            let chunk = ChunkItem::stable(Chunk(self.a..self.a+i, self.b..self.b+i));
-            self.a += i;
-            self.o += i;
-            self.b += i;
+            let chunk = ChunkItem::stable(Chunk(self.li..self.li+i, self.ri..self.ri+i));
+            self.li += i;
+            self.ri += i;
             return Some(chunk);
         }
 
-        let mut a = self.a;
-        let mut o = self.o;
-        let mut b = self.b;
+        let mut li = self.li;
+        let mut ri = self.ri;
         loop {
-            match (self.left.get(a), self.right.get(b)) {
+            match (self.left.get(li), self.right.get(ri)) {
                 (Some(&Right(_)), _) => {
-                    a += 1;
+                    li += 1;
                 },
                 (_, Some(&Right(_))) => {
-                    b += 1;
+                    ri += 1;
                 },
                 (Some(&Left(_)), Some(_)) => {
-                    a += 1;
-                    o += 1;
-                    b += 1;
+                    li += 1;
+                    ri += 1;
                 },
                 (Some(_), Some(&Left(_))) => {
-                    a += 1;
-                    o += 1;
-                    b += 1;
+                    li += 1;
+                    ri += 1;
                 },
                 (Some(&Both(..)), Some(&Both(..))) => {
-                    let chunk = ChunkItem::unstable(Chunk(self.a..a, self.b..b));
-                    self.a = a;
-                    self.o = o;
-                    self.b = b;
+                    let chunk = ChunkItem::unstable(Chunk(self.li..li, self.ri..ri));
+                    self.li = li;
+                    self.ri = ri;
                     return Some(chunk);
                 }
                 _ => {
-                    if self.a < self.left.len() || self.b < self.right.len() {
-                        let chunk = ChunkItem::unstable(Chunk(self.a..self.left.len(), self.b..self.right.len()));
-                        self.a = self.left.len();
-                        self.b = self.right.len();
+                    if self.li < self.left.len() || self.ri < self.right.len() {
+                        let chunk = ChunkItem::unstable(Chunk(self.li..self.left.len(), self.ri..self.right.len()));
+                        self.li = self.left.len();
+                        self.ri = self.right.len();
                         return Some(chunk);
                     }
                     return None;
