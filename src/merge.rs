@@ -34,16 +34,19 @@ impl ChunkItem {
     }
 }
 
-struct MergeIterator<Item> {
-    left: Vec<diff::Result<Item>>,
-    right: Vec<diff::Result<Item>>,
+struct MergeIterator<'a, Item>
+where
+    Item: 'a
+{
+    left: &'a [diff::Result<Item>],
+    right: &'a [diff::Result<Item>],
 
     li: usize,
     ri: usize,
 }
 
-impl<Item> MergeIterator<Item> {
-    fn new(left: Vec<diff::Result<Item>>, right: Vec<diff::Result<Item>>) -> MergeIterator<Item> {
+impl<'a, Item> MergeIterator<'a, Item> {
+    fn new(left: &'a [diff::Result<Item>], right: &'a [diff::Result<Item>]) -> MergeIterator<'a, Item> {
         MergeIterator {
             left,
             right,
@@ -53,10 +56,7 @@ impl<Item> MergeIterator<Item> {
     }
 }
 
-impl<Item> Iterator for MergeIterator<Item>
-where
-    Item: ::std::fmt::Debug + PartialEq
-{
+impl<'a, Item> Iterator for MergeIterator<'a, Item> {
     type Item = ChunkItem;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -123,7 +123,7 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(oa, ob).collect::<Vec<_>>();
+        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             ChunkItem::stable(Chunk(0..3, 0..3)),
             ChunkItem::unstable(Chunk(3..6, 3..3)),
@@ -142,7 +142,7 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(oa, ob).collect::<Vec<_>>();
+        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             ChunkItem::stable(Chunk(0..3, 0..3)),
             ChunkItem::unstable(Chunk(3..9, 3..9)),
@@ -159,7 +159,7 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(oa, ob).collect::<Vec<_>>();
+        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             ChunkItem::stable(Chunk(0..9, 0..9)),
             ChunkItem::unstable(Chunk(9..9, 9..12)),
@@ -175,7 +175,7 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(oa, ob).collect::<Vec<_>>();
+        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             ChunkItem::stable(Chunk(0..6, 0..6)),
             ChunkItem::unstable(Chunk(6..9, 6..12)),
@@ -191,7 +191,7 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(oa, ob).collect::<Vec<_>>();
+        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             ChunkItem::unstable(Chunk(0..6, 0..6)),
         ], merge);
