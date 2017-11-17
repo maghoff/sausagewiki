@@ -439,4 +439,32 @@ mod test {
 
         assert_eq!("New body", new_revision.body);
     }
+
+    #[test]
+    fn update_article_when_sequential_edits_then_last_wins() {
+        init!(state);
+
+        let article = state.create_article(None, "Title".into(), "Body".into(), None).unwrap();
+
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None).unwrap();
+        let second_edit = state.update_article(article.article_id, first_edit.revision, article.title.clone(), "Newer body".into(), None).unwrap();
+
+        assert_eq!("Newer body", second_edit.body);
+    }
+
+    #[test]
+    #[ignore] // Support is unimplemented
+    fn update_article_when_edit_conflict_then_merge() {
+        init!(state);
+
+        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None).unwrap();
+
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None).unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None).unwrap();
+
+        assert!(article.revision < first_edit.revision);
+        assert!(first_edit.revision < second_edit.revision);
+
+        assert_eq!("a\nx\nb\ny\nc\n", second_edit.body);
+    }
 }
