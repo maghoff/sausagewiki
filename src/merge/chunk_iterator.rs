@@ -3,29 +3,28 @@ use std::fmt::Debug;
 use diff;
 use diff::Result::*;
 
-#[derive(Debug, PartialEq)]
-struct Chunk<'a, Item: 'a + Debug + PartialEq + Eq>(&'a [diff::Result<Item>], &'a [diff::Result<Item>]);
+use super::chunk::Chunk;
 
-struct MergeIterator<'a, Item>
+pub struct ChunkIterator<'a, Item>
 where
-    Item: 'a + Debug + PartialEq + Eq
+    Item: 'a + Debug + PartialEq
 {
     left: &'a [diff::Result<Item>],
     right: &'a [diff::Result<Item>],
 }
 
-impl<'a, Item> MergeIterator<'a, Item>
+impl<'a, Item> ChunkIterator<'a, Item>
 where
     Item: 'a + Debug + PartialEq + Eq
 {
-    fn new(left: &'a [diff::Result<Item>], right: &'a [diff::Result<Item>]) -> MergeIterator<'a, Item> {
-        MergeIterator { left, right }
+    pub fn new(left: &'a [diff::Result<Item>], right: &'a [diff::Result<Item>]) -> ChunkIterator<'a, Item> {
+        ChunkIterator { left, right }
     }
 }
 
-impl<'a, Item> Iterator for MergeIterator<'a, Item>
+impl<'a, Item> Iterator for ChunkIterator<'a, Item>
 where
-    Item: 'a + Debug + PartialEq + Eq
+    Item: 'a + Debug + PartialEq + Copy
 {
     type Item = Chunk<'a, Item>;
 
@@ -93,7 +92,7 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
+        let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
 
         assert_eq!(vec![
             Chunk(&oa[0.. 3], &ob[0.. 3]),
@@ -101,7 +100,7 @@ mod test {
             Chunk(&oa[6.. 9], &ob[3.. 6]),
             Chunk(&oa[9.. 9], &ob[6.. 9]),
             Chunk(&oa[9..12], &ob[9..12]),
-        ], merge);
+        ], chunks);
     }
 
     #[test]
@@ -113,12 +112,12 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
+        let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             Chunk(&oa[0.. 3], &ob[0.. 3]),
             Chunk(&oa[3.. 9], &ob[3.. 9]),
             Chunk(&oa[9..12], &ob[9..12]),
-        ], merge);
+        ], chunks);
     }
 
     #[test]
@@ -130,11 +129,11 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
+        let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             Chunk(&oa[0..9], &ob[0.. 9]),
             Chunk(&oa[9..9], &ob[9..12]),
-        ], merge);
+        ], chunks);
     }
 
     #[test]
@@ -146,11 +145,11 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
+        let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             Chunk(&oa[0..6], &ob[0.. 6]),
             Chunk(&oa[6..9], &ob[6..12]),
-        ], merge);
+        ], chunks);
     }
 
     #[test]
@@ -162,9 +161,9 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = MergeIterator::new(&oa, &ob).collect::<Vec<_>>();
+        let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
         assert_eq!(vec![
             Chunk(&oa[0..6], &ob[0..6]),
-        ], merge);
+        ], chunks);
     }
 }
