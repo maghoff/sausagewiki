@@ -2,9 +2,52 @@ mod chunk_iterator;
 mod chunk;
 mod output;
 
+use std::fmt::Debug;
+
+use diff;
+
+use self::chunk_iterator::ChunkIterator;
+use self::output::*;
+use self::output::Output::*;
+
+pub use self::output::Output;
+
+#[derive(Debug, PartialEq)]
+pub enum MergeResult<Item: Debug + PartialEq + Copy> {
+    Clean(String),
+    Conflicted(Vec<Output<Item>>),
+}
+
+pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a str> {
+    let oa = diff::lines(o, a);
+    let ob = diff::lines(o, b);
+
+    let chunks = ChunkIterator::new(&oa, &ob);
+    let hunks: Vec<_> = chunks.map(resolve).collect();
+
+    let clean = hunks.iter().all(|x| match x { &Resolved(..) => true, _ => false });
+
+    if clean {
+        MergeResult::Clean(
+            hunks
+                .into_iter()
+                .flat_map(|x| match x {
+                    Resolved(y) => y.into_iter(),
+                    _ => unreachable!()
+                })
+                .flat_map(|x| vec![x, "\n"].into_iter())
+                .collect()
+        )
+    } else {
+        MergeResult::Conflicted(hunks)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use diff;
+
+    use super::*;
     use super::output::*;
     use super::output::Output::*;
 
@@ -12,8 +55,8 @@ mod test {
         let oa = diff::chars(o, a);
         let ob = diff::chars(o, b);
 
-        let merge = super::chunk_iterator::ChunkIterator::new(&oa, &ob);
-        merge.map(|x| resolve(x)).collect()
+        let chunks = super::chunk_iterator::ChunkIterator::new(&oa, &ob);
+        chunks.map(resolve).collect()
     }
 
     #[test]
@@ -28,6 +71,47 @@ mod test {
             "aaaxxxbbbccc",
             "aaabbbccc",
             "aaabbbyyyccc",
+        ));
+    }
+
+    #[test]
+    fn clean_case() {
+        assert_eq!(MergeResult::Clean("\
+            aaa\n\
+            xxx\n\
+            bbb\n\
+            yyy\n\
+            ccc\n\
+        ".into()), merge_lines(
+            "aaa\nxxx\nbbb\nccc\n",
+            "aaa\nbbb\nccc\n",
+            "aaa\nbbb\nyyy\nccc\n",
+        ));
+    }
+
+    #[test]
+    fn false_conflict() {
+        assert_eq!(MergeResult::Clean("\
+            aaa\n\
+            xxx\n\
+            ccc\n\
+        ".into()), merge_lines(
+            "aaa\nxxx\nccc\n",
+            "aaa\nbbb\nccc\n",
+            "aaa\nxxx\nccc\n",
+        ));
+    }
+
+    #[test]
+    fn true_conflict() {
+        assert_eq!(MergeResult::Conflicted(vec![
+            Resolved(vec!["aaa"]),
+            Conflict(vec!["xxx"], vec![], vec!["yyy"]),
+            Resolved(vec!["bbb", "ccc"]),
+        ]), merge_lines(
+            "aaa\nxxx\nbbb\nccc\n",
+            "aaa\nbbb\nccc\n",
+            "aaa\nyyy\nbbb\nccc\n",
         ));
     }
 }
