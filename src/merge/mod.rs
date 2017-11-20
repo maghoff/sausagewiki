@@ -13,9 +13,20 @@ use self::output::Output::Resolved;
 pub use self::output::Output;
 
 #[derive(Debug, PartialEq)]
-pub enum MergeResult<Item: Debug + PartialEq + Copy> {
+pub enum MergeResult<Item: Debug + PartialEq> {
     Clean(String),
     Conflicted(Vec<Output<Item>>),
+}
+
+impl<'a> MergeResult<&'a str> {
+    pub fn to_strings(self) -> MergeResult<String> {
+        match self {
+            MergeResult::Clean(x) => MergeResult::Clean(x),
+            MergeResult::Conflicted(x) => MergeResult::Conflicted(
+                x.into_iter().map(Output::to_strings).collect()
+            )
+        }
+    }
 }
 
 pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a str> {

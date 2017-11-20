@@ -6,9 +6,22 @@ use diff::Result::*;
 use super::chunk::Chunk;
 
 #[derive(Debug, PartialEq)]
-pub enum Output<Item: Debug + PartialEq + Copy> {
+pub enum Output<Item: Debug + PartialEq> {
     Resolved(Vec<Item>),
     Conflict(Vec<Item>, Vec<Item>, Vec<Item>),
+}
+
+impl<'a> Output<&'a str> {
+    pub fn to_strings(self) -> Output<String> {
+        match self {
+            Output::Resolved(x) => Output::Resolved(x.into_iter().map(str::to_string).collect()),
+            Output::Conflict(a, o, b) => Output::Conflict(
+                a.into_iter().map(str::to_string).collect(),
+                o.into_iter().map(str::to_string).collect(),
+                b.into_iter().map(str::to_string).collect(),
+            ),
+        }
+    }
 }
 
 fn choose_left<Item: Copy>(operations: &[diff::Result<Item>]) -> Vec<Item> {

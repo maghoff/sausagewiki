@@ -40,6 +40,34 @@ struct NewRevision<'a> {
     latest: bool,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct RebaseConflict {
+    base_revision: i32,
+    title: merge::MergeResult<char>,
+    body: merge::MergeResult<String>,
+}
+
+#[derive(Debug, PartialEq)]
+enum RebaseResult {
+    Clean { title: String, body: String },
+    Conflict(RebaseConflict),
+}
+
+pub enum UpdateResult {
+    Success(models::ArticleRevision),
+    RebaseConflict(RebaseConflict),
+}
+
+impl UpdateResult {
+    // TODO Move to mod tests below
+    pub fn unwrap(self) -> models::ArticleRevision {
+        match self {
+            UpdateResult::Success(x) => x,
+            _ => panic!("Expected success")
+        }
+    }
+}
+
 fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: Option<&str>) -> Result<String, Error> {
     let base_slug = ::slug::slugify(title);
 
@@ -175,7 +203,7 @@ impl<'a> SyncState<'a> {
     }
 
     fn rebase_update(&self, article_id: i32, target_base_revision: i32, existing_base_revision: i32, title: String, body: String)
-        -> Result<(String, String), Error>
+        -> Result<RebaseResult, Error>
     {
         let mut title_a = title;
         let mut body_a = body;
@@ -195,22 +223,33 @@ impl<'a> SyncState<'a> {
             let (title_b, body_b) = stored.pop().expect("Application layer guarantee");
             let (title_o, body_o) = stored.pop().expect("Application layer guarantee");
 
-            title_a = match merge::merge_chars(&title_a, &title_o, &title_b) {
-                merge::MergeResult::Clean(merged) => merged,
-                _ => unimplemented!("Missing handling of merge conflicts"),
+            use merge::MergeResult::*;
+
+            let update = {
+                let title_merge = merge::merge_chars(&title_a, &title_o, &title_b);
+                let body_merge = merge::merge_lines(&body_a, &body_o, &body_b);
+
+                match (title_merge, body_merge) {
+                    (Clean(title), Clean(body)) => (title, body),
+                    (title_merge, body_merge) => {
+                        return Ok(RebaseResult::Conflict(RebaseConflict {
+                            base_revision: revision,
+                            title: title_merge,
+                            body: body_merge.to_strings(),
+                        }));
+                    },
+                }
             };
 
-            body_a = match merge::merge_lines(&body_a, &body_o, &body_b) {
-                merge::MergeResult::Clean(merged) => merged,
-                _ => unimplemented!("Missing handling of merge conflicts"),
-            };
+            title_a = update.0;
+            body_a = update.1;
         }
 
-        Ok((title_a, body_a))
+        Ok(RebaseResult::Clean { title: title_a, body: body_a })
     }
 
     pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>)
-        -> Result<models::ArticleRevision, Error>
+        -> Result<UpdateResult, Error>
     {
         if title.is_empty() {
             Err("title cannot be empty")?;
@@ -236,7 +275,12 @@ impl<'a> SyncState<'a> {
                 Err("This edit is based on a future version of the article")?;
             }
 
-            let (title, body) = self.rebase_update(article_id, latest_revision, base_revision, title, body)?;
+            let rebase_result = self.rebase_update(article_id, latest_revision, base_revision, title, body)?;
+
+            let (title, body) = match rebase_result {
+                RebaseResult::Clean { title, body } => (title, body),
+                RebaseResult::Conflict(x) => return Ok(UpdateResult::RebaseConflict(x)),
+            };
 
             let new_revision = latest_revision + 1;
 
@@ -262,11 +306,11 @@ impl<'a> SyncState<'a> {
                 .into(article_revisions::table)
                 .execute(self.db_connection)?;
 
-            Ok(article_revisions::table
+            Ok(UpdateResult::Success(article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .filter(article_revisions::revision.eq(new_revision))
                 .first::<models::ArticleRevision>(self.db_connection)?
-            )
+            ))
         })
     }
 
@@ -409,7 +453,7 @@ impl State {
     }
 
     pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>)
-        -> CpuFuture<models::ArticleRevision, Error>
+        -> CpuFuture<UpdateResult, Error>
     {
         self.execute(move |state| state.update_article(article_id, base_revision, title, body, author))
     }
@@ -465,7 +509,7 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "Body".into(), None).unwrap();
 
-        let new_revision = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None).unwrap();
+        let new_revision = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None).unwrap().unwrap();
 
         assert_eq!(article.article_id, new_revision.article_id);
 
@@ -486,8 +530,8 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "Body".into(), None).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None).unwrap();
-        let second_edit = state.update_article(article.article_id, first_edit.revision, article.title.clone(), "Newer body".into(), None).unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, first_edit.revision, article.title.clone(), "Newer body".into(), None).unwrap().unwrap();
 
         assert_eq!("Newer body", second_edit.body);
     }
@@ -498,8 +542,8 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None).unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None).unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None).unwrap().unwrap();
 
         assert!(article.revision < first_edit.revision);
         assert!(first_edit.revision < second_edit.revision);
@@ -513,11 +557,11 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None).unwrap();
 
-        let edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx1\nb\nc\n".into(), None).unwrap();
-        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nb\nc\n".into(), None).unwrap();
-        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nx3\nb\nc\n".into(), None).unwrap();
+        let edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx1\nb\nc\n".into(), None).unwrap().unwrap();
+        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nb\nc\n".into(), None).unwrap().unwrap();
+        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nx3\nb\nc\n".into(), None).unwrap().unwrap();
 
-        let rebase_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None).unwrap();
+        let rebase_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None).unwrap().unwrap();
 
         assert!(article.revision < edit.revision);
         assert!(edit.revision < rebase_edit.revision);
@@ -531,12 +575,33 @@ mod test {
 
         let article = state.create_article(None, "titlle".into(), "".into(), None).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, "Titlle".into(), article.body.clone(), None).unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, "title".into(), article.body.clone(), None).unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, "Titlle".into(), article.body.clone(), None).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, "title".into(), article.body.clone(), None).unwrap().unwrap();
 
         assert!(article.revision < first_edit.revision);
         assert!(first_edit.revision < second_edit.revision);
 
         assert_eq!("Title", second_edit.title);
+    }
+
+    #[test]
+    fn update_article_when_merge_conflict() {
+        init!(state);
+
+        let article = state.create_article(None, "Title".into(), "a".into(), None).unwrap();
+
+        state.update_article(article.article_id, article.revision, article.title.clone(), "b".into(), None).unwrap().unwrap();
+        let conflict_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "c".into(), None).unwrap();
+
+        match conflict_edit {
+            UpdateResult::Success(..) => panic!("Expected conflict"),
+            UpdateResult::RebaseConflict(RebaseConflict { base_revision, title, body }) => {
+                assert_eq!(article.revision, base_revision);
+                assert_eq!(title, merge::MergeResult::Clean(article.title.clone()));
+                assert_eq!(body, merge::MergeResult::Conflicted(vec![
+                    merge::Output::Conflict(vec!["c"], vec!["a"], vec!["b"]),
+                ]).to_strings());
+            }
+        };
     }
 }

@@ -148,6 +148,7 @@ impl Resource for ArticleResource {
                 self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
             })
             .and_then(|updated| {
+                let updated = updated.unwrap();
                 futures::finished(Response::new()
                     .with_status(hyper::StatusCode::Ok)
                     .with_header(ContentType(APPLICATION_JSON.clone()))
@@ -186,6 +187,7 @@ impl Resource for ArticleResource {
                 self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
             })
             .and_then(|updated| {
+                let updated = updated.unwrap();
                 futures::finished(Response::new()
                     .with_status(hyper::StatusCode::SeeOther)
                     .with_header(ContentType(TEXT_PLAIN.clone()))
