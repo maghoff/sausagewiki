@@ -8,7 +8,7 @@ use diff;
 
 use self::chunk_iterator::ChunkIterator;
 use self::output::*;
-use self::output::Output::*;
+use self::output::Output::Resolved;
 
 pub use self::output::Output;
 

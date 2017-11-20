@@ -7,6 +7,7 @@ use futures_cpupool::{self, CpuFuture};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 
+use merge;
 use models;
 use schema::*;
 
@@ -173,6 +174,34 @@ impl<'a> SyncState<'a> {
         })
     }
 
+    fn rebase_update(&self, article_id: i32, target_base_revision: i32, existing_base_revision: i32, _title: &str, body: String)
+        -> Result<String, Error>
+    {
+        // TODO Also rebase title
+
+        let mut a = body;
+
+        for revision in existing_base_revision..target_base_revision {
+            let mut stored = article_revisions::table
+                .filter(article_revisions::article_id.eq(article_id))
+                .filter(article_revisions::revision.ge(revision))
+                .filter(article_revisions::revision.le(revision+1))
+                .order(article_revisions::revision.asc())
+                .select((article_revisions::body))
+                .load::<(String)>(self.db_connection)?;
+
+            let b = stored.pop().expect("Application layer guarantee");
+            let o = stored.pop().expect("Application layer guarantee");
+
+            a = match merge::merge_lines(&a, &o, &b) {
+                merge::MergeResult::Clean(merged) => merged,
+                _ => unimplemented!("Missing handling of merge conflicts"),
+            }
+        }
+
+        Ok(a)
+    }
+
     pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>)
         -> Result<models::ArticleRevision, Error>
     {
@@ -193,19 +222,23 @@ impl<'a> SyncState<'a> {
                 ))
                 .first::<(i32, String, String)>(self.db_connection)?;
 
-            if latest_revision != base_revision {
-                // TODO: If it is the same edit repeated, just respond OK
-                // TODO: If there is a conflict, transform the edit to work seamlessly
-                unimplemented!("TODO Missing handling of revision conflicts");
+            // TODO: If this is an historic edit repeated, just respond OK
+            // This scheme would make POST idempotent.
+
+            if base_revision > latest_revision {
+                Err("This edit is based on a future version of the article")?;
             }
-            let new_revision = base_revision + 1;
+
+            let body = self.rebase_update(article_id, latest_revision, base_revision, &title, body)?;
+
+            let new_revision = latest_revision + 1;
 
             let slug = decide_slug(self.db_connection, article_id, &prev_title, &title, Some(&prev_slug))?;
 
             diesel::update(
                 article_revisions::table
                     .filter(article_revisions::article_id.eq(article_id))
-                    .filter(article_revisions::revision.eq(base_revision))
+                    .filter(article_revisions::revision.eq(latest_revision))
             )
                 .set(article_revisions::latest.eq(false))
                 .execute(self.db_connection)?;
@@ -453,7 +486,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // Support is unimplemented
     fn update_article_when_edit_conflict_then_merge() {
         init!(state);
 
