@@ -78,15 +78,27 @@ function openEditor() {
             // Update body:
             rendered.innerHTML = result.rendered;
 
+            if (result.conflict) {
+                form.elements.title.value = result.title;
+                form.elements.body.value = result.body;
+            }
+
             // Update form:
             form.elements.base_revision.value = result.revision;
             for (const element of form.elements) {
                 element.defaultValue = element.value;
             }
 
-            container.classList.remove('edit');
+            if (!result.conflict) {
+                container.classList.remove('edit');
+            }
 
             textarea.disabled = false;
+
+            if (result.conflict) {
+                alert("Your edit came into conflict with another change and has not been saved.\n" +
+                    "Please resolve the merge conflict and save again.");
+            }
         }).catch(err => {
             textarea.disabled = false;
             console.error(err);

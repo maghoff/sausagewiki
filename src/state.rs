@@ -58,16 +58,6 @@ pub enum UpdateResult {
     RebaseConflict(RebaseConflict),
 }
 
-impl UpdateResult {
-    // TODO Move to mod tests below
-    pub fn unwrap(self) -> models::ArticleRevision {
-        match self {
-            UpdateResult::Success(x) => x,
-            _ => panic!("Expected success")
-        }
-    }
-}
-
 fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: Option<&str>) -> Result<String, Error> {
     let base_slug = ::slug::slugify(title);
 
@@ -484,6 +474,15 @@ impl State {
 mod test {
     use super::*;
     use db;
+
+    impl UpdateResult {
+        pub fn unwrap(self) -> models::ArticleRevision {
+            match self {
+                UpdateResult::Success(x) => x,
+                _ => panic!("Expected success")
+            }
+        }
+    }
 
     macro_rules! init {
         ($state:ident) => {

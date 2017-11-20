@@ -133,9 +133,11 @@ impl Resource for ArticleResource {
 
         #[derive(Serialize)]
         struct PutResponse<'a> {
+            conflict: bool,
             slug: &'a str,
             revision: i32,
             title: &'a str,
+            body: Option<&'a str>,
             rendered: &'a str,
             last_updated: &'a str,
         }
@@ -150,26 +152,54 @@ impl Resource for ArticleResource {
             .and_then(move |update: UpdateArticle| {
                 self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
             })
-            .and_then(|updated| {
-                let updated = updated.unwrap();
-                futures::finished(Response::new()
-                    .with_status(hyper::StatusCode::Ok)
-                    .with_header(ContentType(APPLICATION_JSON.clone()))
-                    .with_body(serde_json::to_string(&PutResponse {
-                        slug: &updated.slug,
-                        revision: updated.revision,
-                        title: &updated.title,
-                        rendered: &Template {
+            .and_then(|updated| match updated {
+                UpdateResult::Success(updated) =>
+                    Ok(Response::new()
+                        .with_status(hyper::StatusCode::Ok)
+                        .with_header(ContentType(APPLICATION_JSON.clone()))
+                        .with_body(serde_json::to_string(&PutResponse {
+                            conflict: false,
+                            slug: &updated.slug,
+                            revision: updated.revision,
                             title: &updated.title,
-                            rendered: render_markdown(&updated.body),
-                        }.to_string(),
-                        last_updated: &last_updated(
-                            updated.article_id,
-                            &Local.from_utc_datetime(&updated.created),
-                            updated.author.as_ref().map(|x| &**x)
-                        ),
-                    }).expect("Should never fail"))
-                )
+                            body: None,
+                            rendered: &Template {
+                                title: &updated.title,
+                                rendered: render_markdown(&updated.body),
+                            }.to_string(),
+                            last_updated: &last_updated(
+                                updated.article_id,
+                                &Local.from_utc_datetime(&updated.created),
+                                updated.author.as_ref().map(|x| &**x)
+                            ),
+                        }).expect("Should never fail"))
+                    ),
+                UpdateResult::RebaseConflict(RebaseConflict {
+                    base_article, title, body
+                }) => {
+                    let title = title.flatten();
+                    let body = body.flatten();
+                    Ok(Response::new()
+                        .with_status(hyper::StatusCode::Ok)
+                        .with_header(ContentType(APPLICATION_JSON.clone()))
+                        .with_body(serde_json::to_string(&PutResponse {
+                            conflict: true,
+                            slug: &base_article.slug,
+                            revision: base_article.revision,
+                            title: &title,
+                            body: Some(&body),
+                            rendered: &Template {
+                                title: &title,
+                                rendered: render_markdown(&body),
+                            }.to_string(),
+                            last_updated: &last_updated(
+                                base_article.article_id,
+                                &Local.from_utc_datetime(&base_article.created),
+                                base_article.author.as_ref().map(|x| &**x)
+                            ),
+                        }).expect("Should never fail"))
+                    )
+                }
             })
         )
     }
