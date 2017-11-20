@@ -45,4 +45,13 @@ fn main() {
     for entry in WalkDir::new("migrations").into_iter().filter_map(|e| e.ok()) {
         println!("cargo:rerun-if-changed={}", entry.path().display());
     }
+
+    // For build_config.rs
+    for env_var in &[
+        "CONTINUOUS_INTEGRATION",
+        "TRAVIS_BRANCH",
+        "TRAVIS_COMMIT",
+    ] {
+        println!("cargo:rerun-if-env-changed={}", env_var);
+    }
 }

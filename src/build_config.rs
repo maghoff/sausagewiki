@@ -1,5 +1,8 @@
 #![allow(dead_code)]
 
+// The non-CARGO env variables used here must be listed
+// in build.rs to properly trigger rebuild on change
+
 pub const PROJECT_NAME: &str = env!("CARGO_PKG_NAME");
 
 lazy_static! {
