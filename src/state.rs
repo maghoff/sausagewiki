@@ -499,4 +499,22 @@ mod test {
 
         assert_eq!("a\nx\nb\ny\nc\n", second_edit.body);
     }
+
+    #[test]
+    fn update_article_when_edit_conflict_then_rebase_over_multiple_revisions() {
+        init!(state);
+
+        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None).unwrap();
+
+        let edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx1\nb\nc\n".into(), None).unwrap();
+        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nb\nc\n".into(), None).unwrap();
+        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nx3\nb\nc\n".into(), None).unwrap();
+
+        let rebase_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None).unwrap();
+
+        assert!(article.revision < edit.revision);
+        assert!(edit.revision < rebase_edit.revision);
+
+        assert_eq!("a\nx1\nx2\nx3\nb\ny\nc\n", rebase_edit.body);
+    }
 }
