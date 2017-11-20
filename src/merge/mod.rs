@@ -43,6 +43,30 @@ pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a st
     }
 }
 
+pub fn merge_chars<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<char> {
+    let oa = diff::chars(o, a);
+    let ob = diff::chars(o, b);
+
+    let chunks = ChunkIterator::new(&oa, &ob);
+    let hunks: Vec<_> = chunks.map(resolve).collect();
+
+    let clean = hunks.iter().all(|x| match x { &Resolved(..) => true, _ => false });
+
+    if clean {
+        MergeResult::Clean(
+            hunks
+                .into_iter()
+                .flat_map(|x| match x {
+                    Resolved(y) => y.into_iter(),
+                    _ => unreachable!()
+                })
+                .collect()
+        )
+    } else {
+        MergeResult::Conflicted(hunks)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use diff;
@@ -51,16 +75,16 @@ mod test {
     use super::output::*;
     use super::output::Output::*;
 
-    fn merge_chars(a: &str, o: &str, b: &str) -> Vec<Output<char>> {
-        let oa = diff::chars(o, a);
-        let ob = diff::chars(o, b);
-
-        let chunks = super::chunk_iterator::ChunkIterator::new(&oa, &ob);
-        chunks.map(resolve).collect()
-    }
-
     #[test]
     fn simple_case() {
+        fn merge_chars(a: &str, o: &str, b: &str) -> Vec<Output<char>> {
+            let oa = diff::chars(o, a);
+            let ob = diff::chars(o, b);
+
+            let chunks = super::chunk_iterator::ChunkIterator::new(&oa, &ob);
+            chunks.map(resolve).collect()
+        }
+
         assert_eq!(vec![
             Resolved("aaa".chars().collect()),
             Resolved("xxx".chars().collect()),
@@ -86,6 +110,15 @@ mod test {
             "aaa\nxxx\nbbb\nccc\n",
             "aaa\nbbb\nccc\n",
             "aaa\nbbb\nyyy\nccc\n",
+        ));
+    }
+
+    #[test]
+    fn clean_case_chars() {
+        assert_eq!(MergeResult::Clean("Title".into()), merge_chars(
+            "Titlle",
+            "titlle",
+            "title",
         ));
     }
 

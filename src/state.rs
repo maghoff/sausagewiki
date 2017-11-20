@@ -174,12 +174,11 @@ impl<'a> SyncState<'a> {
         })
     }
 
-    fn rebase_update(&self, article_id: i32, target_base_revision: i32, existing_base_revision: i32, _title: &str, body: String)
-        -> Result<String, Error>
+    fn rebase_update(&self, article_id: i32, target_base_revision: i32, existing_base_revision: i32, title: String, body: String)
+        -> Result<(String, String), Error>
     {
-        // TODO Also rebase title
-
-        let mut a = body;
+        let mut title_a = title;
+        let mut body_a = body;
 
         for revision in existing_base_revision..target_base_revision {
             let mut stored = article_revisions::table
@@ -187,19 +186,27 @@ impl<'a> SyncState<'a> {
                 .filter(article_revisions::revision.ge(revision))
                 .filter(article_revisions::revision.le(revision+1))
                 .order(article_revisions::revision.asc())
-                .select((article_revisions::body))
-                .load::<(String)>(self.db_connection)?;
+                .select((
+                    article_revisions::title,
+                    article_revisions::body,
+                ))
+                .load::<(String, String)>(self.db_connection)?;
 
-            let b = stored.pop().expect("Application layer guarantee");
-            let o = stored.pop().expect("Application layer guarantee");
+            let (title_b, body_b) = stored.pop().expect("Application layer guarantee");
+            let (title_o, body_o) = stored.pop().expect("Application layer guarantee");
 
-            a = match merge::merge_lines(&a, &o, &b) {
+            title_a = match merge::merge_chars(&title_a, &title_o, &title_b) {
                 merge::MergeResult::Clean(merged) => merged,
                 _ => unimplemented!("Missing handling of merge conflicts"),
-            }
+            };
+
+            body_a = match merge::merge_lines(&body_a, &body_o, &body_b) {
+                merge::MergeResult::Clean(merged) => merged,
+                _ => unimplemented!("Missing handling of merge conflicts"),
+            };
         }
 
-        Ok(a)
+        Ok((title_a, body_a))
     }
 
     pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>)
@@ -229,7 +236,7 @@ impl<'a> SyncState<'a> {
                 Err("This edit is based on a future version of the article")?;
             }
 
-            let body = self.rebase_update(article_id, latest_revision, base_revision, &title, body)?;
+            let (title, body) = self.rebase_update(article_id, latest_revision, base_revision, title, body)?;
 
             let new_revision = latest_revision + 1;
 
@@ -516,5 +523,20 @@ mod test {
         assert!(edit.revision < rebase_edit.revision);
 
         assert_eq!("a\nx1\nx2\nx3\nb\ny\nc\n", rebase_edit.body);
+    }
+
+    #[test]
+    fn update_article_when_title_edit_conflict_then_merge_title() {
+        init!(state);
+
+        let article = state.create_article(None, "titlle".into(), "".into(), None).unwrap();
+
+        let first_edit = state.update_article(article.article_id, article.revision, "Titlle".into(), article.body.clone(), None).unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, "title".into(), article.body.clone(), None).unwrap();
+
+        assert!(article.revision < first_edit.revision);
+        assert!(first_edit.revision < second_edit.revision);
+
+        assert_eq!("Title", second_edit.title);
     }
 }
