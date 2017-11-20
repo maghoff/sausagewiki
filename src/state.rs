@@ -42,9 +42,9 @@ struct NewRevision<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct RebaseConflict {
-    base_revision: i32,
-    title: merge::MergeResult<char>,
-    body: merge::MergeResult<String>,
+    pub base_article: models::ArticleRevisionStub,
+    pub title: merge::MergeResult<char>,
+    pub body: merge::MergeResult<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -164,6 +164,17 @@ impl<'a> SyncState<'a> {
         )
     }
 
+    fn get_article_revision_stub(&self, article_id: i32, revision: i32) -> Result<Option<models::ArticleRevisionStub>, Error> {
+        use schema::article_revisions;
+
+        Ok(self.query_article_revision_stubs(move |query| {
+            query
+                .filter(article_revisions::article_id.eq(article_id))
+                .filter(article_revisions::revision.eq(revision))
+                .limit(1)
+        })?.pop())
+    }
+
     pub fn lookup_slug(&self, slug: String) -> Result<SlugLookup, Error> {
         #[derive(Queryable)]
         struct ArticleRevisionStub {
@@ -233,7 +244,7 @@ impl<'a> SyncState<'a> {
                     (Clean(title), Clean(body)) => (title, body),
                     (title_merge, body_merge) => {
                         return Ok(RebaseResult::Conflict(RebaseConflict {
-                            base_revision: revision,
+                            base_article: self.get_article_revision_stub(article_id, revision+1)?.expect("Application layer guarantee"),
                             title: title_merge,
                             body: body_merge.to_strings(),
                         }));

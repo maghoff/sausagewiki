@@ -10,16 +10,28 @@ use assets::ScriptJs;
 use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
-use state::State;
+use state::{State, UpdateResult, RebaseConflict};
 use web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
 
-pub struct ArticleResource {
-    state: State,
-    article_id: i32,
+#[derive(BartDisplay)]
+#[template="templates/article.html"]
+struct Template<'a> {
     revision: i32,
+    last_updated: Option<&'a str>,
+
     edit: bool,
+    cancel_url: Option<&'a str>,
+    title: &'a str,
+    raw: &'a str,
+    rendered: String,
+}
+
+impl<'a> Template<'a> {
+    fn script_js_checksum(&self) -> &'static str {
+        ScriptJs::checksum()
+    }
 }
 
 #[derive(Deserialize)]
@@ -27,6 +39,13 @@ struct UpdateArticle {
     base_revision: i32,
     title: String,
     body: String,
+}
+
+pub struct ArticleResource {
+    state: State,
+    article_id: i32,
+    revision: i32,
+    edit: bool,
 }
 
 impl ArticleResource {
@@ -73,21 +92,6 @@ impl Resource for ArticleResource {
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
-        #[derive(BartDisplay)]
-        #[template="templates/article.html"]
-        struct Template<'a> {
-            revision: i32,
-            last_updated: Option<&'a str>,
-
-            edit: bool,
-            cancel_url: Option<&'a str>,
-            title: &'a str,
-            raw: &'a str,
-            rendered: String,
-
-            script_js_checksum: &'a str,
-        }
-
         let data = self.state.get_article_revision(self.article_id, self.revision)
             .map(|x| x.expect("Data model guarantees that this exists"));
         let head = self.head();
@@ -110,7 +114,6 @@ impl Resource for ArticleResource {
                             title: &data.title,
                             raw: &data.body,
                             rendered: render_markdown(&data.body),
-                            script_js_checksum: ScriptJs::checksum(),
                         },
                     }.to_string()))
             }))
@@ -187,13 +190,41 @@ impl Resource for ArticleResource {
                 self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
             })
             .and_then(|updated| {
-                let updated = updated.unwrap();
-                futures::finished(Response::new()
-                    .with_status(hyper::StatusCode::SeeOther)
-                    .with_header(ContentType(TEXT_PLAIN.clone()))
-                    .with_header(Location::new(updated.link().to_owned()))
-                    .with_body("See other")
-                )
+                match updated {
+                    UpdateResult::Success(updated) => Ok(Response::new()
+                        .with_status(hyper::StatusCode::SeeOther)
+                        .with_header(ContentType(TEXT_PLAIN.clone()))
+                        .with_header(Location::new(updated.link().to_owned()))
+                        .with_body("See other")
+                    ),
+                    UpdateResult::RebaseConflict(RebaseConflict {
+                        base_article, title, body
+                    }) => {
+                        let title = title.flatten();
+                        let body = body.flatten();
+                        Ok(Response::new()
+                            .with_status(hyper::StatusCode::Ok)
+                            .with_header(ContentType(TEXT_HTML.clone()))
+                            .with_body(Layout {
+                                base: None,
+                                title: &title,
+                                body: &Template {
+                                    revision: base_article.revision,
+                                    last_updated: Some(&last_updated(
+                                        base_article.article_id,
+                                        &Local.from_utc_datetime(&base_article.created),
+                                        base_article.author.as_ref().map(|x| &**x)
+                                    )),
+                                    edit: true,
+                                    cancel_url: Some(base_article.link()),
+                                    title: &title,
+                                    raw: &body,
+                                    rendered: render_markdown(&body),
+                                },
+                            }.to_string())
+                        )
+                    }
+                }
             })
         )
     }

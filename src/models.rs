@@ -29,7 +29,7 @@ impl ArticleRevision {
     pub fn link(&self) -> &str { slug_link(&self.slug) }
 }
 
-#[derive(Debug, Queryable)]
+#[derive(Debug, PartialEq, Queryable)]
 pub struct ArticleRevisionStub {
     pub sequence_number: i32,
 

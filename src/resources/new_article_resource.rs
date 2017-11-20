@@ -67,8 +67,11 @@ impl Resource for NewArticleResource {
             title: &'a str,
             raw: &'a str,
             rendered: &'a str,
-
-            script_js_checksum: &'a str,
+        }
+        impl<'a> Template<'a> {
+            fn script_js_checksum(&self) -> &'static str {
+                ScriptJs::checksum()
+            }
         }
 
         let title = self.slug.as_ref()
@@ -92,7 +95,6 @@ impl Resource for NewArticleResource {
                             title: &title,
                             raw: "",
                             rendered: EMPTY_ARTICLE_MESSAGE,
-                            script_js_checksum: ScriptJs::checksum(),
                         },
                     }.to_string()))
             }))

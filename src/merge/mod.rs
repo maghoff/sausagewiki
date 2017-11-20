@@ -29,6 +29,55 @@ impl<'a> MergeResult<&'a str> {
     }
 }
 
+impl MergeResult<String> {
+    pub fn flatten(self) -> String {
+        match self {
+            MergeResult::Clean(x) => x,
+            MergeResult::Conflicted(x) => {
+                x.into_iter()
+                    .flat_map(|out| match out {
+                        Output::Conflict(a, _o, b) => {
+                            let mut x: Vec<String> = vec![];
+                            x.push("<<<<<<< Your changes:\n".into());
+                            x.extend(a.into_iter().map(|x| format!("{}\n", x)));
+                            x.push("======= Their changes:\n".into());
+                            x.extend(b.into_iter().map(|x| format!("{}\n", x)));
+                            x.push(">>>>>>> Conflict ends here\n".into());
+                            x
+                        },
+                        Output::Resolved(x) =>
+                            x.into_iter().map(|x| format!("{}\n", x)).collect(),
+                    })
+                    .collect()
+            }
+        }
+    }
+}
+
+impl MergeResult<char> {
+    pub fn flatten(self) -> String {
+        match self {
+            MergeResult::Clean(x) => x,
+            MergeResult::Conflicted(x) => {
+                x.into_iter()
+                    .flat_map(|out| match out {
+                        Output::Conflict(a, _o, b) => {
+                            let mut x: Vec<char> = vec![];
+                            x.push('<');
+                            x.extend(a);
+                            x.push('|');
+                            x.extend(b);
+                            x.push('>');
+                            x
+                        },
+                        Output::Resolved(x) => x,
+                    })
+                    .collect()
+            }
+        }
+    }
+}
+
 pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a str> {
     let oa = diff::lines(o, a);
     let ob = diff::lines(o, b);

@@ -48,10 +48,10 @@ impl Resource for TemporaryRedirectResource {
     }
 
     fn put(self: Box<Self>, _body: hyper::Body, _identity: Option<String>) -> ResponseFuture {
-        Box::new(self.head()
-            .and_then(move |head| {
-                Ok(head
-                    .with_body(format!("Moved to {}", self.location)))
-            }))
+        self.get()
+    }
+
+    fn post(self: Box<Self>, _body: hyper::Body, _identity: Option<String>) -> ResponseFuture {
+        self.get()
     }
 }
