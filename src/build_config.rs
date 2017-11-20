@@ -7,7 +7,6 @@ pub const PROJECT_NAME: &str = env!("CARGO_PKG_NAME");
 
 lazy_static! {
     pub static ref VERSION: String = || -> String {
-        #[allow(unused_mut)]
         let mut components = Vec::<String>::new();
 
         #[cfg(debug_assertions)]
