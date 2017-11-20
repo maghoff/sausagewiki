@@ -600,13 +600,13 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a".into(), None).unwrap();
 
-        state.update_article(article.article_id, article.revision, article.title.clone(), "b".into(), None).unwrap().unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "b".into(), None).unwrap().unwrap();
         let conflict_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "c".into(), None).unwrap();
 
         match conflict_edit {
             UpdateResult::Success(..) => panic!("Expected conflict"),
-            UpdateResult::RebaseConflict(RebaseConflict { base_revision, title, body }) => {
-                assert_eq!(article.revision, base_revision);
+            UpdateResult::RebaseConflict(RebaseConflict { base_article, title, body }) => {
+                assert_eq!(first_edit.revision, base_article.revision);
                 assert_eq!(title, merge::MergeResult::Clean(article.title.clone()));
                 assert_eq!(body, merge::MergeResult::Conflicted(vec![
                     merge::Output::Conflict(vec!["c"], vec!["a"], vec!["b"]),
