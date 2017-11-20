@@ -28,6 +28,7 @@ extern crate titlecase;
 use std::net::{IpAddr, SocketAddr};
 
 mod assets;
+mod build_config;
 mod db;
 mod merge;
 mod mimes;

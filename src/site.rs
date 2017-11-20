@@ -10,13 +10,14 @@ use hyper::server::*;
 use hyper;
 
 use assets::{StyleCss, SearchJs};
+use build_config;
 use web::Lookup;
 use wiki_lookup::WikiLookup;
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
     static ref SERVER: Server =
-        Server::new(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")));
+        Server::new(build_config::HTTP_SERVER.as_str());
 }
 
 header! { (XIdentity, "X-Identity") => [String] }
@@ -33,8 +34,8 @@ impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
     pub fn style_css_checksum(&self) -> &str { StyleCss::checksum() }
     pub fn search_js_checksum(&self) -> &str { SearchJs::checksum() }
 
-    pub fn pkg_name(&self) -> &str { env!("CARGO_PKG_NAME") }
-    pub fn pkg_version(&self) -> &str { env!("CARGO_PKG_VERSION") }
+    pub fn project_name(&self) -> &str { build_config::PROJECT_NAME }
+    pub fn version(&self) -> &str { build_config::VERSION.as_str() }
 }
 
 #[derive(BartDisplay)]

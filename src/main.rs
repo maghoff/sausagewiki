@@ -1,7 +1,11 @@
+#[macro_use] extern crate lazy_static;
 extern crate clap;
 extern crate sausagewiki;
 
 use std::net::IpAddr;
+
+mod build_config;
+use build_config::*;
 
 const DATABASE: &str = "DATABASE";
 const TRUST_IDENTITY: &str = "trust-identity";
@@ -11,8 +15,8 @@ const PORT: &str = "port";
 fn args<'a>() -> clap::ArgMatches<'a> {
     use clap::{App, Arg};
 
-    App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
+    App::new(PROJECT_NAME)
+        .version(VERSION.as_str())
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(Arg::with_name(DATABASE)
             .help("Sets the database file to use")

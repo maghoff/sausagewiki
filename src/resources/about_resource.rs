@@ -3,6 +3,7 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
+use build_config;
 use mimes::*;
 use site::Layout;
 use web::{Resource, ResponseFuture};
@@ -59,7 +60,7 @@ struct Template<'a> {
 }
 
 impl<'a> Template<'a> {
-    fn pkg_version(&self) -> &str { env!("CARGO_PKG_VERSION") }
+    fn version(&self) -> &str { &build_config::VERSION }
 }
 
 impl Resource for AboutResource {

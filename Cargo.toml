@@ -1,6 +1,6 @@
 [package]
 name = "sausagewiki"
-version = "0.1.0"
+version = "0.1.0-dev"
 description = "A wiki engine"
 authors = ["Magnus Hoff <maghoff@gmail.com>"]
 license = "GPL-3.0"
