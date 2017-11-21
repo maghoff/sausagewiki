@@ -15,11 +15,11 @@ Some features of Sausagewiki, in no particular order:
 
  * Simple to [install and run](#install-and-run)
     * No runtime dependencies
- * Simple to back up, just copy the single database file whenever
+ * Reasonable to [back up](https://github.com/maghoff/sausagewiki/wiki/Backup), there is only one data file
  * Can be reverse proxied behind any path without configuration
  * Snappy, light resource usage
  * Markdown syntax
-    * Plus [GitHub style table-support](https://help.github.com/articles/organizing-information-with-tables/)
+    * Plus [table-support](https://help.github.com/articles/organizing-information-with-tables/)
     * Without embedded HTML
  * Full text search
  * Responsive design: fits different screens as well as print
