@@ -469,6 +469,11 @@ input[type="search"] {
         text-align: justify;
     }
 
+    pre {
+        overflow: visible;
+        white-space: pre-wrap;
+    }
+
     .search {
         display: none;
     }
