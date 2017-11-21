@@ -15,7 +15,7 @@ Some features of Sausagewiki, in no particular order:
 
  * Simple to [install and run](#install-and-run)
     * No runtime dependencies
- * Simple to backup, just copy the single database file whenever
+ * Simple to back up, just copy the single database file whenever
  * Can be reverse proxied behind any path without configuration
  * Snappy, light resource usage
  * Markdown syntax
@@ -35,8 +35,10 @@ single independent executable for Linux.
  3. Set execution permission: `chmod a+x sausagewiki`
  4. Run: `./sausagewiki wiki.db`
 
-For other platforms you will presently have to build it yourself. Sausagewiki
-is built like other Rust projects, with `cargo build`.
+For a more permanent installation, you could [install Sausagewiki as a systemd
+service](https://github.com/maghoff/sausagewiki/wiki/System-wide-installation-with-systemd).
+
+Alternatively, you could build it from source code with `cargo build`.
 
 Command line arguments
 ----------------------
