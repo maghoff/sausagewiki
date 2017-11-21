@@ -137,7 +137,7 @@ impl Resource for ArticleResource {
             slug: &'a str,
             revision: i32,
             title: &'a str,
-            body: Option<&'a str>,
+            body: &'a str,
             rendered: &'a str,
             last_updated: &'a str,
         }
@@ -162,7 +162,7 @@ impl Resource for ArticleResource {
                             slug: &updated.slug,
                             revision: updated.revision,
                             title: &updated.title,
-                            body: None,
+                            body: &updated.body,
                             rendered: &Template {
                                 title: &updated.title,
                                 rendered: render_markdown(&updated.body),
@@ -187,7 +187,7 @@ impl Resource for ArticleResource {
                             slug: &base_article.slug,
                             revision: base_article.revision,
                             title: &title,
-                            body: Some(&body),
+                            body: &body,
                             rendered: &Template {
                                 title: &title,
                                 rendered: render_markdown(&body),

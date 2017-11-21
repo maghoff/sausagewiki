@@ -120,6 +120,7 @@ impl Resource for NewArticleResource {
             article_id: i32,
             revision: i32,
             title: &'a str,
+            body: &'a str,
             rendered: &'a str,
             last_updated: &'a str,
         }
@@ -146,6 +147,7 @@ impl Resource for NewArticleResource {
                         article_id: updated.article_id,
                         revision: updated.revision,
                         title: &updated.title,
+                        body: &updated.body,
                         rendered: &Template {
                             title: &updated.title,
                             rendered: render_markdown(&updated.body),

@@ -78,10 +78,8 @@ function openEditor() {
             // Update body:
             rendered.innerHTML = result.rendered;
 
-            if (result.conflict) {
-                form.elements.title.value = result.title;
-                form.elements.body.value = result.body;
-            }
+            form.elements.title.value = result.title;
+            shadow.value = textarea.value = result.body;
 
             // Update form:
             form.elements.base_revision.value = result.revision;
@@ -94,6 +92,7 @@ function openEditor() {
             }
 
             textarea.disabled = false;
+            autosizeTextarea(textarea, shadow);
 
             if (result.conflict) {
                 alert("Your edit came into conflict with another change and has not been saved.\n" +
