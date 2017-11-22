@@ -53,8 +53,8 @@ Command line arguments
         -V, --version           Prints version information
 
     OPTIONS:
-        -a, --address <address>    Sets the TCP address to bind to. Defaults to 127.0.0.1
-        -p, --port <port>          Sets the listening port. Defaults to 8080
+        -a, --address <address>    Sets the IP address to bind to [default: 127.0.0.1]
+        -p, --port <port>          Sets the listening port [default: 8080]
 
     ARGS:
         <DATABASE>    Sets the database file to use
