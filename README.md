@@ -13,9 +13,9 @@ Features
 ========
 Some features of Sausagewiki, in no particular order:
 
- * Simple to [install and run](#install-and-run)
-    * No runtime dependencies
- * Reasonable to [back up](https://github.com/maghoff/sausagewiki/wiki/Backup), there is only one data file
+ * Simple to [install and run](#install-and-run), no runtime dependencies
+ * Reasonable to [back up](https://github.com/maghoff/sausagewiki/wiki/Backup),
+   there is only one data file
  * Can be reverse proxied behind any path without configuration
  * Snappy, light resource usage
  * Markdown syntax
