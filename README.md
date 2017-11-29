@@ -24,6 +24,7 @@ Some features of Sausagewiki, in no particular order:
  * Full text search
  * Responsive design: fits different screens as well as print
  * Progressive enhancement: works with or without JavaScript
+ * Works with [external authentication](https://github.com/maghoff/sausagewiki/wiki/Enabling-authentication)
 
 Install and run
 ===============
