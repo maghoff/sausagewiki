@@ -48,7 +48,7 @@ of [rust](https://www.rust-lang.org/en-US/).
 ~**Install with [Homebrew](https://brew.sh/)** on OS X/macOS:
 `brew install --HEAD https://raw.githubusercontent.com/maghoff/sausagewiki/master/deploy/sausagewiki.rb`~
 This brew fromula seems to be hitting [rust issue #39870](https://github.com/rust-lang/rust/issues/39870)
-which supposedly have been fixed.
+which supposedly has been fixed.
 
 Command line arguments
 ----------------------
