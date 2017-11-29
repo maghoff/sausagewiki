@@ -98,8 +98,12 @@ function openEditor() {
                 credentials: "same-origin",
             }
         ).then(response => {
-            if ((response.status === 401) && (response.headers.has("location"))) {
-                return loginDialog(response.headers.get("location"))
+            // I don't know how to more precisely determine that we hit a login redirect:
+            const probablyLoginRedirect = response.redirected &&
+                (response.headers.get("content-type") !== "application/json");
+
+            if (probablyLoginRedirect) {
+                return loginDialog(response.url)
                     .then(() => {
                         textarea.disabled = false;
                     });
