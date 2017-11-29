@@ -39,7 +39,13 @@ single independent executable for Linux.
 For a more permanent installation, you could [install Sausagewiki as a systemd
 service](https://github.com/maghoff/sausagewiki/wiki/System-wide-installation-with-systemd).
 
-Alternatively, you could build it from source code with `cargo build`.
+Alternative installation methods include the following:
+
+**Build from source** with `cargo build`. This requires you to have a working
+installation of [rust](https://www.rust-lang.org/en-US/).
+
+**Install with [Homebrew](https://brew.sh/)** on OS X/macOS:
+`brew install --HEAD https://raw.githubusercontent.com/maghoff/sausagewiki/master/deploy/sausagewiki.rb`
 
 Command line arguments
 ----------------------
