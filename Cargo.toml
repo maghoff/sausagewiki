@@ -55,7 +55,7 @@ default-features = false
 version = "0.1"
 
 [dependencies.pulldown-cmark]
-version = "0.0.11"
+git = "https://github.com/maghoff/pulldown-cmark.git"
 default-features = false
 
 [dependencies.codegen]
