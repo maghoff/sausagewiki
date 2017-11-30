@@ -31,10 +31,10 @@ Install and run
 Sausagewiki aims to be simple to get up and running. It is distributed as a
 single independent executable for Linux.
 
- 1. Download the latest build of `sausagewiki.xz` from <https://github.com/maghoff/sausagewiki/releases/latest>
- 2. Decompress: `xz -d sausagewiki.xz`
- 3. Set execution permission: `chmod a+x sausagewiki`
- 4. Run: `./sausagewiki wiki.db`
+ 1. Download the latest build of `sausagewiki.tar.xz` from <https://github.com/maghoff/sausagewiki/releases/latest>
+ 2. Decompress: `tar Jxf sausagewiki.tar.xz`, it decompresses to the single
+    executable `sausagewiki`
+ 3. Run: `./sausagewiki wiki.db`
 
 For a more permanent installation, you could [install Sausagewiki as a systemd
 service](https://github.com/maghoff/sausagewiki/wiki/System-wide-installation-with-systemd).
