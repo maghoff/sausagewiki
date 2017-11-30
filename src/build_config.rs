@@ -5,6 +5,8 @@
 
 pub const PROJECT_NAME: &str = env!("CARGO_PKG_NAME");
 
+const SOFT_HYPHEN: &str = "\u{00AD}";
+
 lazy_static! {
     pub static ref VERSION: String = || -> String {
         let mut components = Vec::<String>::new();
@@ -24,7 +26,17 @@ lazy_static! {
         }
 
         if let Some(commit) = option_env!("TRAVIS_COMMIT") {
-            components.push(format!("commit:{}", commit));
+            components.push(format!("commit:{}",
+                commit
+                    .as_bytes()
+                    .chunks(4)
+                    .map(|x|
+                        String::from_utf8(x.to_owned())
+                            .unwrap_or_else(|_| String::new())
+                    )
+                    .collect::<Vec<_>>()
+                    .join(SOFT_HYPHEN)
+            ));
         }
 
         if components.len() > 0 {
