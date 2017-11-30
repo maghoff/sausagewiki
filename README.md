@@ -29,11 +29,11 @@ Some features of Sausagewiki, in no particular order:
 Install and run
 ===============
 Sausagewiki aims to be simple to get up and running. It is distributed as a
-single independent executable for Linux.
+single independent executable for Linux:
 
  1. Download the latest build of `sausagewiki.tar.xz` from <https://github.com/maghoff/sausagewiki/releases/latest>
  2. Decompress: `tar Jxf sausagewiki.tar.xz`, it decompresses to the single
-    executable `sausagewiki`
+    Linux executable `sausagewiki`
  3. Run: `./sausagewiki wiki.db`
 
 For a more permanent installation, you could [install Sausagewiki as a systemd
