@@ -20,12 +20,22 @@ function isEdited(form) {
     return false;
 }
 
-function loginDialog(loginUrl) {
-    const loginDialogHtml = "<div class=popup><div class=message><p>Your changes could not be saved</p><p>Log in and try again</p></div><div class=btn-row><button>Never mind</button> <a href='' target=login>Open login page</a></div></div>";
+const dialogTemplate = {
+    login: "<div class=popup><div class=message><p>Your changes could not be saved</p><p>Log in and try again</p></div><div class=btn-row><button>Never mind</button> <a href='' target=login>Open login page</a></div></div>",
+    alert: "<div class=popup><div class=message></div><div class=btn-row><button>OK</button></div></div>",
+    confirm:"<div class=popup><div class=message></div><div class=btn-row><button name=no>No</button> <button name=yes>Yes</button></div></div>"
+};
 
+function createPopup(templateId) {
     const dialog = document.createElement("div");
     dialog.className = "modal-block";
-    dialog.innerHTML = loginDialogHtml;
+    dialog.innerHTML = dialogTemplate[templateId];
+    return dialog;
+}
+
+function loginDialog(loginUrl) {
+    const dialog = createPopup("login");
+    const remove = () => document.body.removeChild(dialog);
 
     const loginLink = dialog.querySelector("a");
     const dismiss = dialog.querySelector("button");
@@ -34,10 +44,6 @@ function loginDialog(loginUrl) {
 
     document.body.appendChild(dialog);
     loginLink.focus();
-
-    function remove() {
-        document.body.removeChild(dialog);
-    }
 
     return new Promise((resolve, reject) => {
         loginLink.addEventListener("click", () => {
@@ -53,11 +59,8 @@ function loginDialog(loginUrl) {
 }
 
 function alertAsync(message) {
-    const dialogHtml = "<div class=popup><div class=message></div><div class=btn-row><button>OK</button></div></div>";
-
-    const dialog = document.createElement("div");
-    dialog.className = "modal-block";
-    dialog.innerHTML = dialogHtml;
+    const dialog = createPopup("alert");
+    const remove = () => document.body.removeChild(dialog);
 
     const messageNode = dialog.querySelector(".message");
     const dismiss = dialog.querySelector("button");
@@ -66,10 +69,6 @@ function alertAsync(message) {
 
     document.body.appendChild(dialog);
     dismiss.focus();
-
-    function remove() {
-        document.body.removeChild(dialog);
-    }
 
     return new Promise((resolve, reject) => {
         dismiss.addEventListener("click", () => {
@@ -80,11 +79,8 @@ function alertAsync(message) {
 }
 
 function confirmAsync(message) {
-    const dialogHtml = "<div class=popup><div class=message></div><div class=btn-row><button name=no>No</button> <button name=yes>Yes</button></div></div>";
-
-    const dialog = document.createElement("div");
-    dialog.className = "modal-block";
-    dialog.innerHTML = dialogHtml;
+    const dialog = createPopup("confirm");
+    const remove = () => document.body.removeChild(dialog);
 
     const messageNode = dialog.querySelector(".message");
     const btnNo = dialog.querySelector('button[name="no"]');
@@ -94,10 +90,6 @@ function confirmAsync(message) {
 
     document.body.appendChild(dialog);
     btnNo.focus();
-
-    function remove() {
-        document.body.removeChild(dialog);
-    }
 
     return new Promise((resolve, reject) => {
         btnNo.addEventListener("click", () => {
