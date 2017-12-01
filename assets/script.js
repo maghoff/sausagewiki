@@ -79,6 +79,39 @@ function alertAsync(message) {
     });
 }
 
+function confirmAsync(message) {
+    const dialogHtml = "<div class=popup><div class=message></div><div class=btn-row><button name=no>No</button> <button name=yes>Yes</button></div></div>";
+
+    const dialog = document.createElement("div");
+    dialog.className = "modal-block";
+    dialog.innerHTML = dialogHtml;
+
+    const messageNode = dialog.querySelector(".message");
+    const btnNo = dialog.querySelector('button[name="no"]');
+    const btnYes = dialog.querySelector('button[name="yes"]');
+
+    messageNode.textContent = message;
+
+    document.body.appendChild(dialog);
+    btnNo.focus();
+
+    function remove() {
+        document.body.removeChild(dialog);
+    }
+
+    return new Promise((resolve, reject) => {
+        btnNo.addEventListener("click", () => {
+            remove();
+            resolve(false);
+        });
+
+        btnYes.addEventListener("click", () => {
+            remove();
+            resolve(true);
+        });
+    });
+}
+
 let hasBeenOpen = false;
 function openEditor() {
     const container = document.querySelector(".container");
@@ -182,10 +215,13 @@ function openEditor() {
         ev.preventDefault();
         ev.stopPropagation();
 
-        if (!isEdited(form) || confirm("Discard changes?")) {
-            container.classList.remove('edit');
-            form.reset();
-        }
+        Promise.resolve(!isEdited(form) || confirmAsync("Discard changes?"))
+            .then(doReset => {
+                if (doReset) {
+                    container.classList.remove('edit');
+                    form.reset();
+                }
+            });
     });
 
     window.addEventListener("beforeunload", function (ev) {
