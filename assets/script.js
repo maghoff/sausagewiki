@@ -52,6 +52,33 @@ function loginDialog(loginUrl) {
     });
 }
 
+function alertAsync(message) {
+    const dialogHtml = "<div class=popup><div class=message></div><div class=btn-row><button>OK</button></div></div>";
+
+    const dialog = document.createElement("div");
+    dialog.className = "modal-block";
+    dialog.innerHTML = dialogHtml;
+
+    const messageNode = dialog.querySelector(".message");
+    const dismiss = dialog.querySelector("button");
+
+    messageNode.textContent = message;
+
+    document.body.appendChild(dialog);
+    dismiss.focus();
+
+    function remove() {
+        document.body.removeChild(dialog);
+    }
+
+    return new Promise((resolve, reject) => {
+        dismiss.addEventListener("click", () => {
+            remove();
+            resolve();
+        });
+    });
+}
+
 let hasBeenOpen = false;
 function openEditor() {
     const container = document.querySelector(".container");
@@ -139,14 +166,15 @@ function openEditor() {
                     autosizeTextarea(textarea, shadow);
 
                     if (result.conflict) {
-                        alert("Your edit came into conflict with another change and has not been saved.\n" +
+                        return alertAsync("Your edit came into conflict with another change " +
+                            "and has not been saved.\n" +
                             "Please resolve the merge conflict and save again.");
                     }
                 });
         }).catch(err => {
             textarea.disabled = false;
             console.error(err);
-            alert(err);
+            return alertAsync(err.toString());
         });
     });
 
