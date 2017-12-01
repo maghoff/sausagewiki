@@ -438,20 +438,38 @@ input[type="search"] {
     top: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.6);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .popup {
-    position: fixed;
+    display: flex;
+    flex-direction: column;
 
-    width: 300px;
-    left: calc(50% - 150px);
-
-    height: 150px;
-    top: calc(50% - 75px);
+    height: 200px;
 
     text-align: center;
     background: #eee;
     box-shadow: 2px 2px 8px rgba(0,0,0, 0.25);
+}
+
+.popup>.message {
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    margin: 16px 32px;
+    max-width: 600px;
+}
+
+.popup>.btn-row {
+    padding: 16px;
+    background: #ccc;
 }
 
 @media print {

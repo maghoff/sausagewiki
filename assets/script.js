@@ -21,7 +21,7 @@ function isEdited(form) {
 }
 
 function loginDialog(loginUrl) {
-    const loginDialogHtml = "<div class=popup><p>Your changes could not be saved</p><p>Log in and try again</p><div><button>Never mind</button> <a href='' target=login>Open login page</a></div></div>";
+    const loginDialogHtml = "<div class=popup><div class=message><p>Your changes could not be saved</p><p>Log in and try again</p></div><div class=btn-row><button>Never mind</button> <a href='' target=login>Open login page</a></div></div>";
 
     const dialog = document.createElement("div");
     dialog.className = "modal-block";
