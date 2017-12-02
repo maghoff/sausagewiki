@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/maghoff/sausagewiki.svg?branch=master)](https://travis-ci.org/maghoff/sausagewiki)
 
+![](sausagewiki.png)
+
 Sausagewiki is a simple, self-contained wiki engine.
 
 Copyright (C) 2017 Magnus Hovland Hoff <maghoff@gmail.com>
