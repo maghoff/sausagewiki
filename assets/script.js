@@ -52,10 +52,8 @@ function alertAsync(message) {
     return popup(dialog);
 }
 
-function confirmAsync(message) {
-    const dialog = instantiate("confirm");
-    dialog.querySelector(".message").textContent = message;
-    return popup(dialog);
+function confirmDiscard() {
+    return popup(instantiate("confirm-discard"));
 }
 
 let hasBeenOpen = false;
@@ -161,7 +159,7 @@ function openEditor() {
         ev.preventDefault();
         ev.stopPropagation();
 
-        Promise.resolve(!isEdited(form) || confirmAsync("Discard changes?"))
+        Promise.resolve(!isEdited(form) || confirmDiscard())
             .then(doReset => {
                 if (doReset) {
                     container.classList.remove('edit');
