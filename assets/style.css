@@ -474,6 +474,7 @@ input[type="search"] {
     background: white;
     color: black;
     border: none;
+    border-radius: 0;
     flex: 1;
 
     font-family: inherit;
