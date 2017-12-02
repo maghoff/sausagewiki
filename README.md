@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/maghoff/sausagewiki.svg?branch=master)](https://travis-ci.org/maghoff/sausagewiki)
 
-![](sausagewiki.png)
 
 Sausagewiki is a simple, self-contained wiki engine.
 
@@ -10,6 +9,8 @@ This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
+
+![](sausagewiki.png)
 
 Features
 ========
