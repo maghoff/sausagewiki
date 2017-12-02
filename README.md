@@ -45,10 +45,10 @@ Alternative installation methods include the following:
 `target/release/sausagewiki`. This requires you to have a working installation
 of [rust](https://www.rust-lang.org/en-US/).
 
-~**Install with [Homebrew](https://brew.sh/)** on OS X/macOS:
-`brew install --HEAD https://raw.githubusercontent.com/maghoff/sausagewiki/master/deploy/sausagewiki.rb`~
-This brew fromula seems to be hitting [rust issue #39870](https://github.com/rust-lang/rust/issues/39870)
-which supposedly has been fixed.
+**Install with [Homebrew](https://brew.sh/)** on OS X/macOS:
+`brew install --HEAD https://raw.githubusercontent.com/maghoff/sausagewiki/master/deploy/sausagewiki.rb`
+(Some users are hitting [rust issue #39870](https://github.com/rust-lang/rust/issues/39870)
+with this brew formula, even though it is supposed to have been fixed)
 
 Command line arguments
 ----------------------
