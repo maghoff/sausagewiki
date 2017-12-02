@@ -459,8 +459,33 @@ input[type="search"] {
 }
 
 .popup>.btn-row {
-    padding: 16px;
-    background: #ccc;
+    display: flex;
+    flex-direction: row;
+
+    font-family: -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans",
+        "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+.btn-row>* {
+    padding: 8px 16px;
+    margin: 0;
+    background: white;
+    color: black;
+    border: none;
+    flex: 1;
+
+    font-family: inherit;
+    cursor: pointer;
+}
+.btn-row>*:hover {
+    text-decoration: underline;
+}
+
+.primary {
+    background: #337ab7;
+    color: white;
 }
 
 @media print {

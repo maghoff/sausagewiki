@@ -20,88 +20,42 @@ function isEdited(form) {
     return false;
 }
 
-const dialogTemplate = {
-    login: "<div class=popup><div class=message><p>Your changes could not be saved</p><p>Log in and try again</p></div><div class=btn-row><button>Never mind</button> <a href='' target=login>Open login page</a></div></div>",
-    alert: "<div class=popup><div class=message></div><div class=btn-row><button>OK</button></div></div>",
-    confirm:"<div class=popup><div class=message></div><div class=btn-row><button name=no>No</button> <button name=yes>Yes</button></div></div>"
-};
+function instantiate(templateId) {
+    return document.getElementById(templateId).firstElementChild.cloneNode(true);
+}
 
-function createPopup(templateId) {
-    const dialog = document.createElement("div");
-    dialog.className = "modal-block";
-    dialog.innerHTML = dialogTemplate[templateId];
-    return dialog;
+function popup(dialog) {
+    document.body.appendChild(dialog);
+    dialog.querySelector(".primary").focus();
+
+    return new Promise((resolve, reject) => {
+        function handler(ev) {
+            document.body.removeChild(dialog);
+            resolve(ev.target.getAttribute("data-value"));
+        }
+
+        const buttons = dialog.querySelectorAll('.btn-row>*');
+        for (let i = 0; i < buttons.length; ++i)
+            buttons[i].addEventListener("click", handler);
+    });
 }
 
 function loginDialog(loginUrl) {
-    const dialog = createPopup("login");
-    const remove = () => document.body.removeChild(dialog);
-
-    const loginLink = dialog.querySelector("a");
-    const dismiss = dialog.querySelector("button");
-
-    loginLink.setAttribute("href", loginUrl);
-
-    document.body.appendChild(dialog);
-    loginLink.focus();
-
-    return new Promise((resolve, reject) => {
-        loginLink.addEventListener("click", () => {
-            remove();
-            resolve();
-        });
-
-        dismiss.addEventListener("click", () => {
-            remove();
-            resolve();
-        });
-    });
+    const dialog = instantiate("login");
+    dialog.querySelector("a").setAttribute("href", loginUrl);
+    return popup(dialog);
 }
 
 function alertAsync(message) {
-    const dialog = createPopup("alert");
-    const remove = () => document.body.removeChild(dialog);
-
-    const messageNode = dialog.querySelector(".message");
-    const dismiss = dialog.querySelector("button");
-
-    messageNode.textContent = message;
-
-    document.body.appendChild(dialog);
-    dismiss.focus();
-
-    return new Promise((resolve, reject) => {
-        dismiss.addEventListener("click", () => {
-            remove();
-            resolve();
-        });
-    });
+    const dialog = instantiate("alert");
+    dialog.querySelector(".message").textContent = message;
+    return popup(dialog);
 }
 
 function confirmAsync(message) {
-    const dialog = createPopup("confirm");
-    const remove = () => document.body.removeChild(dialog);
-
-    const messageNode = dialog.querySelector(".message");
-    const btnNo = dialog.querySelector('button[name="no"]');
-    const btnYes = dialog.querySelector('button[name="yes"]');
-
-    messageNode.textContent = message;
-
-    document.body.appendChild(dialog);
-    btnNo.focus();
-
-    return new Promise((resolve, reject) => {
-        btnNo.addEventListener("click", () => {
-            remove();
-            resolve(false);
-        });
-
-        btnYes.addEventListener("click", () => {
-            remove();
-            resolve(true);
-        });
-    });
+    const dialog = instantiate("confirm");
+    dialog.querySelector(".message").textContent = message;
+    return popup(dialog);
 }
 
 let hasBeenOpen = false;
