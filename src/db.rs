@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use diesel::expression::sql_literal::sql;
 use diesel::types::*;
-use r2d2::{Config, CustomizeConnection, Pool};
+use r2d2::{CustomizeConnection, Pool};
 use r2d2_diesel::{self, ConnectionManager};
 
 embed_migrations!();
@@ -19,12 +19,10 @@ impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitial
 }
 
 pub fn create_pool<S: Into<String>>(connection_string: S) -> Result<Pool<ConnectionManager<SqliteConnection>>, Box<::std::error::Error>> {
-    let config = Config::builder()
-        .connection_customizer(Box::new(SqliteInitializer {}))
-        .build();
     let manager = ConnectionManager::<SqliteConnection>::new(connection_string);
-
-    let pool = Pool::new(config, manager)?;
+    let pool = Pool::builder()
+        .connection_customizer(Box::new(SqliteInitializer {}))
+        .build(manager)?;
 
     embedded_migrations::run(&*pool.get()?)?;
 

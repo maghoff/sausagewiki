@@ -1,4 +1,5 @@
 #[macro_use] extern crate quote;
+extern crate diesel_migrations;
 extern crate diesel;
 extern crate walkdir;
 
@@ -25,7 +26,7 @@ fn main() {
         .execute(&connection)
         .expect("Should be able to enable foreign keys");
 
-    diesel::migrations::run_pending_migrations(&connection).unwrap();
+    diesel_migrations::run_pending_migrations(&connection).unwrap();
 
     let infer_schema_path = Path::new(&out_dir).join("infer_schema.rs");
     let mut file = File::create(infer_schema_path).expect("Unable to open file for writing");

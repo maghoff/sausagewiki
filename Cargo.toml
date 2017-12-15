@@ -23,8 +23,8 @@ hyper = "0.11"
 lazy_static = "0.2"
 maplit = "1"
 percent-encoding = "1.0.0"
-r2d2 = "0.7"
-r2d2-diesel = "0.16"
+r2d2 = "0.8"
+r2d2-diesel = "0.99"
 regex = "0.2"
 serde = "1.0.0"
 serde_derive = "1.0.0"
@@ -38,17 +38,22 @@ tokio-service = "0.1"
 
 [dependencies.libsqlite3-sys]
 features = ["bundled"]
-version = "*"
+version = "0.8"
 
 [dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "0.16"
+version = "0.99"
 
-[dependencies.diesel_codegen]
+[dependencies.diesel_migrations]
 default-features = false
 features = ["sqlite"]
-version = "0.16"
+version = "0.99"
+
+[dependencies.diesel_infer_schema]
+default-features = false
+features = ["sqlite"]
+version = "0.99"
 
 [dependencies.num]
 default-features = false
@@ -68,6 +73,11 @@ walkdir = "1"
 [build-dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "0.16.0"
+version = "0.99"
+
+[build-dependencies.diesel_migrations]
+default-features = false
+features = ["sqlite"]
+version = "0.99"
 
 [workspace]
