@@ -295,7 +295,8 @@ impl<'a> SyncState<'a> {
                 .set(article_revisions::latest.eq(false))
                 .execute(self.db_connection)?;
 
-            diesel::insert(&NewRevision {
+            diesel::insert_into(article_revisions::table)
+                .values(&NewRevision {
                     article_id,
                     revision: new_revision,
                     slug: &slug,
@@ -304,7 +305,6 @@ impl<'a> SyncState<'a> {
                     author: author.as_ref().map(|x| &**x),
                     latest: true,
                 })
-                .into(article_revisions::table)
                 .execute(self.db_connection)?;
 
             Ok(UpdateResult::Success(article_revisions::table
@@ -343,7 +343,8 @@ impl<'a> SyncState<'a> {
 
             let new_revision = 1;
 
-            diesel::insert(&NewRevision {
+            diesel::insert_into(article_revisions::table)
+                .values(&NewRevision {
                     article_id,
                     revision: new_revision,
                     slug: &slug,
@@ -352,7 +353,6 @@ impl<'a> SyncState<'a> {
                     author: author.as_ref().map(|x| &**x),
                     latest: true,
                 })
-                .into(article_revisions::table)
                 .execute(self.db_connection)?;
 
             Ok(article_revisions::table
@@ -364,7 +364,7 @@ impl<'a> SyncState<'a> {
     }
 
     pub fn search_query(&self, query_string: String, limit: i32, offset: i32, snippet_size: i32) -> Result<Vec<models::SearchResult>, Error> {
-        use diesel::expression::sql_literal::sql;
+        use diesel::sql_query;
         use diesel::types::{Integer, Text};
 
         fn fts_quote(src: &str) -> String {
@@ -385,8 +385,8 @@ impl<'a> SyncState<'a> {
         };
 
         Ok(
-            sql::<(Text, Text, Text)>(
-                "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', ?), slug \
+            sql_query(
+                "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', ?) AS snippet, slug \
                     FROM article_search \
                     WHERE article_search MATCH ? \
                     ORDER BY rank \

@@ -49,10 +49,16 @@ impl ArticleRevisionStub {
     pub fn link(&self) -> &str { slug_link(&self.slug) }
 }
 
-#[derive(Debug, Queryable, Serialize)]
+use diesel::types::Text;
+#[derive(Debug, QueryableByName, Serialize)]
 pub struct SearchResult {
+    #[sql_type = "Text"]
     pub title: String,
+
+    #[sql_type = "Text"]
     pub snippet: String,
+
+    #[sql_type = "Text"]
     pub slug: String,
 }
 
