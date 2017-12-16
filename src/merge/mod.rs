@@ -1,12 +1,15 @@
+extern crate itertools;
+
 mod chunk_iterator;
 mod chunk;
 mod output;
 
 use std::fmt::Debug;
 
-use diff;
 
+use diff;
 use self::chunk_iterator::ChunkIterator;
+use self::itertools::Itertools;
 use self::output::*;
 use self::output::Output::Resolved;
 
@@ -95,7 +98,7 @@ pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a st
                     Resolved(y) => y.into_iter(),
                     _ => unreachable!()
                 })
-                .flat_map(|x| vec![x, "\n"].into_iter())
+                .intersperse("\n")
                 .collect()
         )
     } else {
@@ -160,16 +163,30 @@ mod test {
 
     #[test]
     fn clean_case() {
-        assert_eq!(MergeResult::Clean("\
-            aaa\n\
-            xxx\n\
-            bbb\n\
-            yyy\n\
-            ccc\n\
-        ".into()), merge_lines(
-            "aaa\nxxx\nbbb\nccc\n",
-            "aaa\nbbb\nccc\n",
-            "aaa\nbbb\nyyy\nccc\n",
+        assert_eq!(MergeResult::Clean(indoc!("
+            aaa
+            xxx
+            bbb
+            yyy
+            ccc
+        ").into()), merge_lines(
+            indoc!("
+                aaa
+                xxx
+                bbb
+                ccc
+            "), 
+            indoc!("
+                aaa
+                bbb
+                ccc
+            "),
+            indoc!("
+                aaa
+                bbb
+                yyy
+                ccc
+            "),
         ));
     }
 
@@ -184,14 +201,26 @@ mod test {
 
     #[test]
     fn false_conflict() {
-        assert_eq!(MergeResult::Clean("\
-            aaa\n\
-            xxx\n\
-            ccc\n\
-        ".into()), merge_lines(
-            "aaa\nxxx\nccc\n",
-            "aaa\nbbb\nccc\n",
-            "aaa\nxxx\nccc\n",
+        assert_eq!(MergeResult::Clean(indoc!("
+            aaa
+            xxx
+            ccc
+        ").into()), merge_lines(
+            indoc!("
+                aaa
+                xxx
+                ccc
+            "), 
+            indoc!("
+                aaa
+                bbb
+                ccc
+            "),
+            indoc!("
+                aaa
+                xxx
+                ccc
+            "),
         ));
     }
 
@@ -200,11 +229,25 @@ mod test {
         assert_eq!(MergeResult::Conflicted(vec![
             Resolved(vec!["aaa"]),
             Conflict(vec!["xxx"], vec![], vec!["yyy"]),
-            Resolved(vec!["bbb", "ccc"]),
+            Resolved(vec!["bbb", "ccc", ""]),
         ]), merge_lines(
-            "aaa\nxxx\nbbb\nccc\n",
-            "aaa\nbbb\nccc\n",
-            "aaa\nyyy\nbbb\nccc\n",
+            indoc!("
+                aaa
+                xxx
+                bbb
+                ccc
+            "), 
+            indoc!("
+                aaa
+                bbb
+                ccc
+            "),
+            indoc!("
+                aaa
+                yyy
+                bbb
+                ccc
+            "),
         ));
     }
 }
