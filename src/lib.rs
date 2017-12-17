@@ -1,6 +1,7 @@
 #![recursion_limit="128"] // for diesel's infer_schema!
 
 #[cfg(test)] #[macro_use] extern crate matches;
+#[cfg(test)] #[macro_use] extern crate indoc;
 
 #[macro_use] extern crate bart_derive;
 #[macro_use] extern crate codegen;

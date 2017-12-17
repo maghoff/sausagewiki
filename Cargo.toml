@@ -9,6 +9,7 @@ license = "GPL-3.0"
 panic = "abort"
 
 [dev-dependencies]
+indoc = "0.2"
 matches = "0.1"
 
 [dependencies]
