@@ -1,5 +1,3 @@
-extern crate itertools;
-
 mod chunk_iterator;
 mod chunk;
 mod output;
@@ -9,7 +7,6 @@ use std::fmt::Debug;
 use diff;
 
 use self::chunk_iterator::ChunkIterator;
-use self::itertools::Itertools;
 use self::output::*;
 use self::output::Output::Resolved;
 
@@ -98,8 +95,8 @@ pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a st
                     Resolved(y) => y.into_iter(),
                     _ => unreachable!()
                 })
-                .intersperse("\n")
-                .collect()
+                .collect::<Vec<_>>()
+                .join("\n")
         )
     } else {
         MergeResult::Conflicted(hunks)
