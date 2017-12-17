@@ -6,8 +6,8 @@ mod output;
 
 use std::fmt::Debug;
 
-
 use diff;
+
 use self::chunk_iterator::ChunkIterator;
 use self::itertools::Itertools;
 use self::output::*;
