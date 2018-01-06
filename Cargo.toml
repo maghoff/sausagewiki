@@ -25,7 +25,7 @@ lazy_static = "0.2"
 maplit = "1"
 percent-encoding = "1.0.0"
 r2d2 = "0.8"
-r2d2-diesel = "1.0.0-beta1"
+r2d2-diesel = "1.0.0"
 regex = "0.2"
 serde = "1.0.0"
 serde_derive = "1.0.0"
@@ -44,17 +44,17 @@ version = "0.8"
 [dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "1.0.0-beta1"
+version = "1.0.0"
 
 [dependencies.diesel_migrations]
 default-features = false
 features = ["sqlite"]
-version = "1.0.0-beta1"
+version = "1.0.0"
 
 [dependencies.diesel_infer_schema]
 default-features = false
 features = ["sqlite"]
-version = "1.0.0-beta1"
+version = "1.0.0"
 
 [dependencies.num]
 default-features = false
@@ -74,11 +74,11 @@ walkdir = "1"
 [build-dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "1.0.0-beta1"
+version = "1.0.0"
 
 [build-dependencies.diesel_migrations]
 default-features = false
 features = ["sqlite"]
-version = "1.0.0-beta1"
+version = "1.0.0"
 
 [workspace]
