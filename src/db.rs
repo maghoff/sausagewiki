@@ -9,12 +9,27 @@ embed_migrations!();
 #[derive(Debug)]
 struct SqliteInitializer;
 
+use std::ffi::CString;
+
+fn markdown_to_fts(ctx: &::diesel::sqlite::Context) -> CString {
+    use rendering;
+    CString::new(rendering::render_markdown_for_fts(&ctx.get::<String>(0))).unwrap()
+}
+
 impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitializer {
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), r2d2_diesel::Error> {
         sql::<(Integer)>("PRAGMA foreign_keys = ON")
             .execute(conn)
-            .and(Ok(()))
-            .map_err(|x| r2d2_diesel::Error::QueryError(x))
+            .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+
+        conn.create_scalar_function(
+            "markdown_to_fts",
+            1,
+            true,
+            markdown_to_fts,
+        ).map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+
+        Ok(())
     }
 }
 

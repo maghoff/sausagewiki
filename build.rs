@@ -11,6 +11,11 @@ use std::io::prelude::*;
 use std::path::Path;
 use walkdir::WalkDir;
 
+use std::ffi::CString;
+fn markdown_to_fts(_: &::diesel::sqlite::Context) -> CString {
+    panic!("Should never be called when running migrations on build.db")
+}
+
 fn main() {
     let out_dir = env::var("OUT_DIR").expect("cargo must set OUT_DIR");
     let db_path = Path::new(&out_dir).join("build.db");
@@ -18,13 +23,20 @@ fn main() {
 
     let _ignore_failure = std::fs::remove_file(db_path);
 
-    let connection = SqliteConnection::establish(db_path)
+    let mut connection = SqliteConnection::establish(db_path)
         .expect(&format!("Error esablishing a database connection to {}", db_path));
 
     // Integer is a dummy placeholder. Compiling fails when passing ().
-    diesel::expression::sql_literal::sql::<(diesel::types::Integer)>("PRAGMA foreign_keys = ON")
+    diesel::expression::sql_literal::sql::<(diesel::sql_types::Integer)>("PRAGMA foreign_keys = ON")
         .execute(&connection)
         .expect("Should be able to enable foreign keys");
+
+    connection.create_scalar_function(
+        "markdown_to_fts",
+        1,
+        true,
+        markdown_to_fts,
+    ).unwrap();
 
     diesel_migrations::run_pending_migrations(&connection).unwrap();
 

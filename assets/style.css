@@ -305,9 +305,6 @@ article ul.search-results {
 .search-result .title {
     font-weight: bold;
 }
-.snippet {
-    white-space: pre-line;
-}
 .search-result p {
     margin: 0;
 }

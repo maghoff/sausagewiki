@@ -37,7 +37,7 @@ function debouncer(interval, callback) {
 
         const query = input.value;
         fetch(
-            "_search?snippet_size=4&limit=4&q=" + encodeURIComponent(query),
+            "_search?snippet_size=10&limit=4&q=" + encodeURIComponent(query),
             {
                 headers: {
                     "Accept": "application/json",
@@ -56,7 +56,7 @@ function debouncer(interval, callback) {
                 item.querySelector('.link').href = hit.slug || ".";
                 item.querySelector('.link').setAttribute("data-focusindex", index + 1);
                 item.querySelector('.title').textContent = hit.title;
-                item.querySelector('.snippet').textContent = hit.snippet;
+                item.querySelector('.snippet').innerHTML = hit.snippet;
                 results.appendChild(item);
             })
 

@@ -12,7 +12,7 @@ use state::State;
 use web::{Resource, ResponseFuture};
 
 const DEFAULT_LIMIT: u32 = 10;
-const DEFAULT_SNIPPET_SIZE: u32 = 8;
+const DEFAULT_SNIPPET_SIZE: u32 = 25;
 
 type BoxResource = Box<Resource + Sync + Send>;
 

@@ -386,7 +386,7 @@ impl<'a> SyncState<'a> {
 
         Ok(
             sql_query(
-                "SELECT title, snippet(article_search, 1, '', '', '\u{2026}', ?) AS snippet, slug \
+                "SELECT title, snippet(article_search, 1, '<em>', '</em>', '\u{2026}', ?) AS snippet, slug \
                     FROM article_search \
                     WHERE article_search MATCH ? \
                     ORDER BY rank \
