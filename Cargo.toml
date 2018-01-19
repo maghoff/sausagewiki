@@ -39,7 +39,7 @@ tokio-service = "0.1"
 
 [dependencies.libsqlite3-sys]
 features = ["bundled"]
-version = "0.8"
+version = "0.9"
 
 [dependencies.diesel]
 default-features = false
@@ -82,3 +82,10 @@ features = ["sqlite"]
 version = "1.0.0"
 
 [workspace]
+
+[patch.crates-io]
+diesel = { git = 'https://github.com/maghoff/diesel', branch = 'sqlite_custom_function' }
+diesel_migrations = { git = 'https://github.com/maghoff/diesel', branch = 'sqlite_custom_function' }
+diesel_infer_schema = { git = 'https://github.com/maghoff/diesel', branch = 'sqlite_custom_function' }
+infer_schema_macros = { git = 'https://github.com/maghoff/diesel', branch = 'sqlite_custom_function' }
+migrations_internals = { git = 'https://github.com/maghoff/diesel', branch = 'sqlite_custom_function' }

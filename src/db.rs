@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use diesel::expression::sql_literal::sql;
-use diesel::types::*;
+use diesel::sql_types::*;
 use r2d2::{CustomizeConnection, Pool};
 use r2d2_diesel::{self, ConnectionManager};
 
