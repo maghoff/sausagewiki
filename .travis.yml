@@ -14,8 +14,8 @@ before_install:
 
 script:
 - rustup target add x86_64-unknown-linux-musl
+- cargo test --target=x86_64-unknown-linux-musl
 - cargo build --release --target=x86_64-unknown-linux-musl
-- cargo test --release --target=x86_64-unknown-linux-musl
 - strip -s target/x86_64-unknown-linux-musl/release/sausagewiki
 - XZ_OPT=-9 tar Jcf sausagewiki.tar.xz -C target/x86_64-unknown-linux-musl/release/ sausagewiki
 
