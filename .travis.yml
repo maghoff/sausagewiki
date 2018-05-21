@@ -30,6 +30,10 @@ deploy:
     branch: master
     rust: stable
 
+cache: cargo
+before_cache:
+- chmod -R a+r $HOME/.cargo
+
 branches:
   except:
   - "/^untagged-/"
