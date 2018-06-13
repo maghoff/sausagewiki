@@ -332,9 +332,9 @@ impl<'a> SyncState<'a> {
             let article_id = {
                 use diesel::expression::sql_literal::sql;
                 // Diesel and SQLite are a bit in disagreement for how this should look:
-                sql::<(diesel::types::Integer)>("INSERT INTO articles VALUES (null)")
+                sql::<(diesel::sql_types::Integer)>("INSERT INTO articles VALUES (null)")
                     .execute(self.db_connection)?;
-                sql::<(diesel::types::Integer)>("SELECT LAST_INSERT_ROWID()")
+                sql::<(diesel::sql_types::Integer)>("SELECT LAST_INSERT_ROWID()")
                     .load::<i32>(self.db_connection)?
                     .pop().expect("Statement must evaluate to an integer")
             };
@@ -365,7 +365,7 @@ impl<'a> SyncState<'a> {
 
     pub fn search_query(&self, query_string: String, limit: i32, offset: i32, snippet_size: i32) -> Result<Vec<models::SearchResult>, Error> {
         use diesel::sql_query;
-        use diesel::types::{Integer, Text};
+        use diesel::sql_types::{Integer, Text};
 
         fn fts_quote(src: &str) -> String {
             format!("\"{}\"", src.replace('\"', "\"\""))
