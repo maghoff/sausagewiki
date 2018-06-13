@@ -9,11 +9,10 @@ embed_migrations!();
 #[derive(Debug)]
 struct SqliteInitializer;
 
-use std::ffi::CString;
-
-fn markdown_to_fts(ctx: &::diesel::sqlite::Context) -> CString {
-    use rendering;
-    CString::new(rendering::render_markdown_for_fts(&ctx.get::<String>(0))).unwrap()
+#[allow(dead_code)]
+mod sqlfunc {
+    use diesel::sql_types::Text;
+    sql_function!(fn markdown_to_fts(text: Text) -> Text);
 }
 
 impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitializer {
@@ -22,11 +21,12 @@ impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitial
             .execute(conn)
             .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 
-        conn.create_scalar_function(
-            "markdown_to_fts",
-            1,
-            true,
-            markdown_to_fts,
+        sqlfunc::markdown_to_fts::register_impl(
+            conn,
+            |text: String| {
+                use rendering;
+                rendering::render_markdown_for_fts(&text)
+            }
         ).map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 
         Ok(())
