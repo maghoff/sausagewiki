@@ -4,6 +4,8 @@ use diesel::sql_types::*;
 use r2d2::{CustomizeConnection, Pool};
 use r2d2_diesel::{self, ConnectionManager};
 
+use rendering;
+
 embed_migrations!();
 
 #[derive(Debug)]
@@ -23,10 +25,7 @@ impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitial
 
         sqlfunc::markdown_to_fts::register_impl(
             conn,
-            |text: String| {
-                use rendering;
-                rendering::render_markdown_for_fts(&text)
-            }
+            |text: String| rendering::render_markdown_for_fts(&text)
         ).map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 
         Ok(())

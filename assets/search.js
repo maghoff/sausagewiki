@@ -37,7 +37,7 @@ function debouncer(interval, callback) {
 
         const query = input.value;
         fetch(
-            "_search?snippet_size=10&limit=4&q=" + encodeURIComponent(query),
+            "_search?snippet_size=14&limit=4&q=" + encodeURIComponent(query),
             {
                 headers: {
                     "Accept": "application/json",
