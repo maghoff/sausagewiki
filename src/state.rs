@@ -115,7 +115,7 @@ impl<'a> SyncState<'a> {
         Ok(article_revisions::table
             .filter(article_revisions::article_id.eq(article_id))
             .filter(article_revisions::latest.eq(true))
-            .select((article_revisions::slug))
+            .select(article_revisions::slug)
             .first::<String>(self.db_connection)
             .optional()?)
     }

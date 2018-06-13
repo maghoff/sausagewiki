@@ -49,7 +49,7 @@ fn args<'a>() -> clap::ArgMatches<'a> {
         .get_matches()
 }
 
-fn core_main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<std::error::Error>> {
     let args = args();
 
     const CLAP: &str = "Guaranteed by clap";
@@ -66,14 +66,4 @@ fn core_main() -> Result<(), Box<std::error::Error>> {
         bind_port,
         trust_identity,
     )
-}
-
-fn main() {
-    match core_main() {
-        Ok(()) => (),
-        Err(err) => {
-            eprintln!("{:#?}", err);
-            std::process::exit(1)
-        }
-    }
 }
