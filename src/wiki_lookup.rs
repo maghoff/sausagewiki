@@ -17,6 +17,10 @@ type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
     static ref ASSETS_MAP: HashMap<String, ResourceFn> = hashmap!{
+        // The CSS should be built to a single CSS file at compile time
+        "themes.css".into() =>
+            Box::new(|| Box::new(ThemesCss) as BoxResource) as ResourceFn,
+
         format!("style-{}.css", StyleCss::checksum()) =>
             Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn,
 

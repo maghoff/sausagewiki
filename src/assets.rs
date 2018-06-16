@@ -1,6 +1,12 @@
 use futures::Future;
 use web::{Resource, ResponseFuture};
 
+// The CSS should be built to a single CSS file at compile time
+#[derive(StaticResource)]
+#[filename = "assets/themes.css"]
+#[mime = "text/css"]
+pub struct ThemesCss;
+
 #[derive(StaticResource)]
 #[filename = "assets/style.css"]
 #[mime = "text/css"]

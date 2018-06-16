@@ -1,0 +1,132 @@
+.theme-red {
+    --theme-main: #F44336;
+    --theme-text: white;
+    --theme-input: #E57373;
+    --theme-link: #01579b;
+}
+
+.theme-pink {
+    --theme-main: #E91E63;
+    --theme-text: white;
+    --theme-input: #F06292;
+    --theme-link: #01579b;
+}
+
+.theme-purple {
+    --theme-main: #9C27B0;
+    --theme-text: white;
+    --theme-input: #BA68C8;
+    --theme-link: #01579b;
+}
+
+.theme-deep-purple {
+    --theme-main: #673AB7;
+    --theme-text: white;
+    --theme-input: #9575CD;
+    --theme-link: #01579b;
+}
+
+.theme-indigo {
+    --theme-main: #3F51B5;
+    --theme-text: white;
+    --theme-input: #7986CB;
+    --theme-link: #01579b;
+}
+
+.theme-blue {
+    --theme-main: #2196F3;
+    --theme-text: white;
+    --theme-input: #64B5F6;
+    --theme-link: #01579b;
+}
+
+.theme-light-blue {
+    --theme-main: #03A9F4;
+    --theme-text: white;
+    --theme-input: #4FC3F7;
+    --theme-link: #01579b;
+}
+
+.theme-cyan {
+    --theme-main: #00BCD4;
+    --theme-text: white;
+    --theme-input: #4DD0E1;
+    --theme-link: #01579b;
+}
+
+.theme-teal {
+    --theme-main: #009688;
+    --theme-text: white;
+    --theme-input: #4DB6AC;
+    --theme-link: #01579b;
+}
+
+.theme-green {
+    --theme-main: #4CAF50;
+    --theme-text: white;
+    --theme-input: #81C784;
+    --theme-link: #01579b;
+}
+
+.theme-light-green {
+    --theme-main: #8BC34A;
+    --theme-text: white;
+    --theme-input: #AED581;
+    --theme-link: #01579b;
+}
+
+.theme-lime {
+    --theme-main: #CDDC39;
+    --theme-text: white;
+    --theme-input: #DCE775;
+    --theme-link: #01579b;
+}
+
+.theme-yellow {
+    --theme-main: #FBC02D;
+    --theme-text: white;
+    --theme-input: #FFEB3B;
+    --theme-link: #01579b;
+}
+
+.theme-amber {
+    --theme-main: #FFC107;
+    --theme-text: white;
+    --theme-input: #FFD54F;
+    --theme-link: #01579b;
+}
+
+.theme-orange {
+    --theme-main: #FF9800;
+    --theme-text: white;
+    --theme-input: #FFB74D;
+    --theme-link: #01579b;
+}
+
+.theme-deep-orange {
+    --theme-main: #FF5722;
+    --theme-text: white;
+    --theme-input: #FF8A65;
+    --theme-link: #01579b;
+}
+
+.theme-brown {
+    --theme-main: #795548;
+    --theme-text: white;
+    --theme-input: #A1887F;
+    --theme-link: #01579b;
+}
+
+.theme-gray {
+    --theme-main: #616161;
+    --theme-text: white;
+    --theme-input: #9E9E9E;
+    --theme-link: #01579b;
+}
+
+.theme-blue-gray {
+    --theme-main: #607D8B;
+    --theme-text: white;
+    --theme-input: #90A4AE;
+    --theme-link: #01579b;
+}
