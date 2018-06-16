@@ -202,6 +202,7 @@ impl Resource for SearchResource {
                         .with_body(Layout {
                             base: None, // Hmm, should perhaps accept `base` as argument
                             title: "Search",
+                            theme: "blue-gray",
                             body: &Template {
                                 query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
                                 hits: &data.iter()

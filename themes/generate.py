@@ -23,6 +23,8 @@ def prep(x):
         "text": "white" if dark_main else "black",
     }
 
+themes = [prep(palette) for palette in palettes]
+
 print(
     "\n".join(
         "\
@@ -32,6 +34,8 @@ print(
     --theme-input: {input};\n\
     --theme-link: #01579b;\n\
 }}\n".format(**x)
-        for x in (prep(palette) for palette in palettes)
+        for x in themes
     )
 )
+
+print("[" + ', '.join('"'+x['name']+'"' for x in themes) + "]")

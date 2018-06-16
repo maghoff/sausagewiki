@@ -27,6 +27,7 @@ header! { (XIdentity, "X-Identity") => [String] }
 pub struct Layout<'a, T: 'a + fmt::Display> {
     pub base: Option<&'a str>,
     pub title: &'a str,
+    pub theme: &'a str,
     pub body: &'a T,
 }
 
@@ -62,6 +63,7 @@ impl Site {
             .with_body(Layout {
                 base: base,
                 title: "Not found",
+                theme: "blue-gray",
                 body: &NotFound,
             }.to_string())
             .with_status(hyper::StatusCode::NotFound)
@@ -75,6 +77,7 @@ impl Site {
             .with_body(Layout {
                 base,
                 title: "Internal server error",
+                theme: "blue-gray",
                 body: &InternalServerError,
             }.to_string())
             .with_status(hyper::StatusCode::InternalServerError)

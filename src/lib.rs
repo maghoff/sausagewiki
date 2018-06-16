@@ -19,6 +19,7 @@ extern crate futures_cpupool;
 extern crate futures;
 extern crate percent_encoding;
 extern crate pulldown_cmark;
+extern crate rand;
 extern crate r2d2_diesel;
 extern crate r2d2;
 extern crate serde_json;
