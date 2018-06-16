@@ -1,10 +1,4 @@
-@font-face {
-    font-family: 'Amatic SC';
-    font-style: normal;
-    font-weight: 400;
-    src: local('Amatic SC Regular'), local('AmaticSC-Regular'),
-        url('amatic-sc-v9-latin-regular.woff') format('woff');
-}
+@import "themes.css";
 
 .prototype {
     display: none;
@@ -17,8 +11,6 @@ html {
 }
 
 h1 {
-    font-family: 'Amatic SC', sans-serif;
-
     font-weight: normal;
     font-style: normal;
 
@@ -82,6 +74,22 @@ article>hr {
     margin: 30px auto;
 }
 
+.hero {
+    background: var(--theme-main);
+    color: var(--theme-text);
+
+    /* Hack to force containing the children instead of collapsing marigins */
+    border: 1px solid var(--theme-main);
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.search-container {
+    background: var(--theme-main);
+    color: var(--theme-text);
+    z-index: 1;
+}
+
 header, article>*, .search {
     box-sizing: border-box;
     max-width: 616px;
@@ -97,7 +105,7 @@ header {
 }
 
 article {
-    margin: 0 auto 120px auto;
+    margin: 50px auto 120px auto;
 
     font-size: 18px;
     line-height: 32px;
@@ -148,7 +156,7 @@ pre {
 }
 
 a {
-    color: #457796;
+    color: var(--theme-link);
     text-decoration: none;
 }
 
@@ -182,15 +190,17 @@ body {
 
 
 footer {
-    padding: 0 8px;
+    padding: 16px 8px 16px 8px;
 
-    background: #f8f8f8;
-    color: #444;
+    background: var(--theme-main);
+    color: var(--theme-text);
     text-align: center;
     font-family: -apple-system, BlinkMacSystemFont,
         "Segoe UI", "Roboto", "Oxygen",
         "Ubuntu", "Cantarell", "Fira Sans",
         "Droid Sans", "Helvetica Neue", sans-serif;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 }
 
 ul.dense {
@@ -248,6 +258,11 @@ h1>input {
     width: 100%;
 }
 
+.hero input {
+    background: var(--theme-input);
+    color: var(--theme-text);
+}
+
 .shadow-control {
     visibility: hidden;
     position: fixed;
@@ -277,7 +292,8 @@ h1>input {
     bottom: 0;
     left: 0;
 
-    background: #91A238;
+    background: var(--theme-main);
+    color: var(--theme-text);
     padding: 10px 20px;
 }
 
@@ -342,7 +358,8 @@ input[type="search"] {
 
     padding: 0 16px;
     margin: 0;
-    border: 1px solid #ccc;
+    border: none;
+    background: var(--theme-input);
 
     font: inherit;
     font-size: 18px;
@@ -350,7 +367,7 @@ input[type="search"] {
     line-height: 32px;
     height: 34px;
 
-    border-radius: 18px;
+    border-radius: 2px;
     text-overflow: ellipsis;
 }
 
