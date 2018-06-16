@@ -356,7 +356,6 @@ impl Resource for ChangesResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Changes",
-                        theme: "blue-gray",
                         body: &Template {
                             resource: &self,
                             show_authors: self.show_authors,

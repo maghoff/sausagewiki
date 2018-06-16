@@ -96,18 +96,12 @@ impl Resource for ArticleResource {
             .map(|x| x.expect("Data model guarantees that this exists"));
         let head = self.head();
 
-        use rand::{thread_rng, Rng};
-
-        const themes: [&str; 19] = ["red", "pink", "purple", "deep-purple", "indigo", "blue", "light-blue", "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange", "deep-orange", "brown", "gray", "blue-gray"];
-        let theme = thread_rng().choose(&themes).unwrap();
-
         Box::new(data.join(head)
             .and_then(move |(data, head)| {
                 Ok(head
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &data.title,
-                        theme,
                         body: &Template {
                             revision: data.revision,
                             last_updated: Some(&last_updated(
@@ -244,7 +238,6 @@ impl Resource for ArticleResource {
                             .with_body(Layout {
                                 base: None,
                                 title: &title,
-                                theme: "blue-gray",
                                 body: &Template {
                                     revision: base_article.revision,
                                     last_updated: Some(&last_updated(

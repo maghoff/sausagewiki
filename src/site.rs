@@ -14,6 +14,10 @@ use build_config;
 use web::Lookup;
 use wiki_lookup::WikiLookup;
 
+const THEMES: [&str; 19] = ["red", "pink", "purple", "deep-purple", "indigo",
+    "blue", "light-blue", "cyan", "teal", "green", "light-green", "lime",
+    "yellow", "amber", "orange", "deep-orange", "brown", "gray", "blue-gray"];
+
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
     static ref SERVER: Server =
@@ -27,11 +31,15 @@ header! { (XIdentity, "X-Identity") => [String] }
 pub struct Layout<'a, T: 'a + fmt::Display> {
     pub base: Option<&'a str>,
     pub title: &'a str,
-    pub theme: &'a str,
     pub body: &'a T,
 }
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
+    pub fn theme(&self) -> &str {
+        use rand::{thread_rng, Rng};
+        thread_rng().choose(&THEMES).unwrap()
+    }
+
     pub fn style_css_checksum(&self) -> &str { StyleCss::checksum() }
     pub fn search_js_checksum(&self) -> &str { SearchJs::checksum() }
 
@@ -63,7 +71,6 @@ impl Site {
             .with_body(Layout {
                 base: base,
                 title: "Not found",
-                theme: "blue-gray",
                 body: &NotFound,
             }.to_string())
             .with_status(hyper::StatusCode::NotFound)
@@ -77,7 +84,6 @@ impl Site {
             .with_body(Layout {
                 base,
                 title: "Internal server error",
-                theme: "blue-gray",
                 body: &InternalServerError,
             }.to_string())
             .with_status(hyper::StatusCode::InternalServerError)

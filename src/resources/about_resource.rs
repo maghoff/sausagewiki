@@ -85,7 +85,6 @@ impl Resource for AboutResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "About Sausagewiki",
-                        theme: "blue-gray",
                         body: &Template {
                             deps: &*LICENSE_INFOS
                         },

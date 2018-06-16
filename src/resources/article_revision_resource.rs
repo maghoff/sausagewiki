@@ -95,7 +95,6 @@ impl Resource for ArticleRevisionResource {
                     .with_body(Layout {
                         base: Some("../../"), // Hmm, should perhaps accept `base` as argument
                         title: &data.title,
-                        theme: "blue-gray",
                         body: &Template {
                             link_current: &format!("_by_id/{}", data.article_id),
                             timestamp_and_author: &timestamp_and_author(

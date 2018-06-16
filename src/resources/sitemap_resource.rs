@@ -48,7 +48,6 @@ impl Resource for SitemapResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: "Sitemap",
-                        theme: "blue-gray",
                         body: &Template {
                             articles: &articles,
                         },

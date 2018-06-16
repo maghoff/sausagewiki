@@ -48,7 +48,6 @@ impl Resource for HtmlResource {
                     .with_body(Layout {
                         base: self.base,
                         title: self.title,
-                        theme: "blue-gray",
                         body: &Template {
                             title: self.title,
                             html_body: self.html_body,
