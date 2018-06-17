@@ -7,7 +7,7 @@ use hyper::server::*;
 use mimes::*;
 use models;
 use rendering::render_markdown;
-use site::Layout;
+use site::system_page;
 use web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
@@ -81,8 +81,6 @@ impl Resource for ArticleRevisionResource {
             link_current: &'a str,
             timestamp_and_author: &'a str,
             diff_link: Option<String>,
-
-            title: &'a str,
             rendered: String,
         }
 
@@ -91,34 +89,32 @@ impl Resource for ArticleRevisionResource {
 
         Box::new(head
             .and_then(move |head|
-                Ok(head
-                    .with_body(Layout {
-                        base: Some("../../"), // Hmm, should perhaps accept `base` as argument
-                        title: &data.title,
-                        body: &Template {
-                            link_current: &format!("_by_id/{}", data.article_id),
-                            timestamp_and_author: &timestamp_and_author(
-                                data.sequence_number,
-                                data.article_id,
-                                &Local.from_utc_datetime(&data.created),
-                                data.author.as_ref().map(|x| &**x)
-                            ),
-                            diff_link:
-                                if data.revision > 1 {
-                                    Some(format!("_diff/{}?{}",
-                                        data.article_id,
-                                        diff_resource::QueryParameters::new(
-                                            data.revision as u32 - 1,
-                                            data.revision as u32,
-                                        )
-                                    ))
-                                } else {
-                                    None
-                                },
-                            title: &data.title,
-                            rendered: render_markdown(&data.body),
-                        },
-                    }.to_string()))
+                Ok(head.with_body(system_page(
+                    Some("../../"), // Hmm, should perhaps accept `base` as argument
+                    &data.title,
+                    &Template {
+                        link_current: &format!("_by_id/{}", data.article_id),
+                        timestamp_and_author: &timestamp_and_author(
+                            data.sequence_number,
+                            data.article_id,
+                            &Local.from_utc_datetime(&data.created),
+                            data.author.as_ref().map(|x| &**x)
+                        ),
+                        diff_link:
+                            if data.revision > 1 {
+                                Some(format!("_diff/{}?{}",
+                                    data.article_id,
+                                    diff_resource::QueryParameters::new(
+                                        data.revision as u32 - 1,
+                                        data.revision as u32,
+                                    )
+                                ))
+                            } else {
+                                None
+                            },
+                        rendered: render_markdown(&data.body),
+                    },
+                ).to_string()))
             ))
     }
 }

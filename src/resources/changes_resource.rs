@@ -8,7 +8,7 @@ use serde_urlencoded;
 
 use mimes::*;
 use schema::article_revisions;
-use site::Layout;
+use site::system_page;
 use state::State;
 use web::{Resource, ResponseFuture};
 
@@ -352,18 +352,17 @@ impl Resource for ChangesResource {
                     }
                 }).collect::<Vec<_>>();
 
-                Ok(head
-                    .with_body(Layout {
-                        base: None, // Hmm, should perhaps accept `base` as argument
-                        title: "Changes",
-                        body: &Template {
-                            resource: &self,
-                            show_authors: self.show_authors,
-                            newer,
-                            older,
-                            changes
-                        },
-                    }.to_string()))
+                Ok(head.with_body(system_page(
+                    None, // Hmm, should perhaps accept `base` as argument
+                    "Changes",
+                    Template {
+                        resource: &self,
+                        show_authors: self.show_authors,
+                        newer,
+                        older,
+                        changes
+                    }
+                ).to_string()))
             }))
     }
 }

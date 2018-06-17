@@ -1,15 +1,5 @@
-<div class="container">
-<header>
-<h1>Sitemap</h1>
-</header>
-
-<article>
 <ul class="dense"
     {{#articles}}
     ><li><a href="{{.link()}}">{{.title}}</a></li
     {{/articles}}
 ></ul>
-</article>
-</div>
-
-{{>footer/default.html}}

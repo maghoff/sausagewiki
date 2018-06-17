@@ -5,7 +5,7 @@ use hyper::server::*;
 
 use mimes::*;
 use models::ArticleRevisionStub;
-use site::Layout;
+use site::system_page;
 use state::State;
 use web::{Resource, ResponseFuture};
 
@@ -44,14 +44,13 @@ impl Resource for SitemapResource {
 
         Box::new(data.join(head)
             .and_then(move |(articles, head)| {
-                Ok(head
-                    .with_body(Layout {
-                        base: None, // Hmm, should perhaps accept `base` as argument
-                        title: "Sitemap",
-                        body: &Template {
-                            articles: &articles,
-                        },
-                    }.to_string()))
+                Ok(head.with_body(system_page(
+                    None, // Hmm, should perhaps accept `base` as argument
+                    "Sitemap",
+                    Template {
+                        articles: &articles,
+                    },
+                ).to_string()))
             }))
     }
 }

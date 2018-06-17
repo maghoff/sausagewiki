@@ -7,7 +7,7 @@ use serde_urlencoded;
 
 use mimes::*;
 use models::SearchResult;
-use site::Layout;
+use site::system_page;
 use state::State;
 use web::{Resource, ResponseFuture};
 
@@ -198,19 +198,18 @@ impl Resource for SearchResource {
                             next,
                         }).expect("Should never fail"))
                     ),
-                    &ResponseType::Html => Ok(head
-                        .with_body(Layout {
-                            base: None, // Hmm, should perhaps accept `base` as argument
-                            title: "Search",
-                            body: &Template {
-                                query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
-                                hits: &data.iter()
-                                    .enumerate()
-                                    .collect::<Vec<_>>(),
-                                prev,
-                                next,
-                            },
-                        }.to_string())),
+                    &ResponseType::Html => Ok(head.with_body(system_page(
+                        None, // Hmm, should perhaps accept `base` as argument
+                        "Search",
+                        &Template {
+                            query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
+                            hits: &data.iter()
+                                .enumerate()
+                                .collect::<Vec<_>>(),
+                            prev,
+                            next,
+                        },
+                    ).to_string())),
                 }
             }))
     }

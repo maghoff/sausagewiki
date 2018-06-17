@@ -1,9 +1,3 @@
-<div class="container">
-<header>
-<h1>Changes</h1>
-</header>
-
-<article>
 <p>
     These are the {{^newer}}most recent{{/newer}} changes
     made to{{{subject_clause()}}}{{#author()}} by {{.}}{{/author()}}.
@@ -44,7 +38,3 @@
     ><li><a rel="last" href="{{.end}}">First changes</a></li
 ></ul></nav>{{/older}}
 {{#changes?}}{{^older}}<p>There are no older changes.</p>{{/older}}{{/changes}}
-</article>
-</div>
-
-{{>footer/default.html}}

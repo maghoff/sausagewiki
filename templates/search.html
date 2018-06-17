@@ -1,9 +1,3 @@
-<div class="container">
-<header>
-<h1>Search</h1>
-</header>
-
-<article>
 {{#hits?}}
 <p>Search results for the query <b>{{query}}</b>:</p>
 
@@ -25,8 +19,3 @@
 {{^hits?}}
 <p>Your search for <b>{{query}}</b> gave no results.</p>
 {{/hits}}
-
-</article>
-</div>
-
-{{>footer/default.html}}

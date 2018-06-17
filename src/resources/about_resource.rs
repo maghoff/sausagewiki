@@ -5,7 +5,7 @@ use hyper::server::*;
 
 use build_config;
 use mimes::*;
-use site::Layout;
+use site::system_page;
 use web::{Resource, ResponseFuture};
 
 #[derive(Licenses)]
@@ -81,14 +81,13 @@ impl Resource for AboutResource {
 
         Box::new(head
             .and_then(move |head| {
-                Ok(head
-                    .with_body(Layout {
-                        base: None, // Hmm, should perhaps accept `base` as argument
-                        title: "About Sausagewiki",
-                        body: &Template {
-                            deps: &*LICENSE_INFOS
-                        },
-                    }.to_string()))
+                Ok(head.with_body(system_page(
+                    None, // Hmm, should perhaps accept `base` as argument
+                    "About Sausagewiki",
+                    Template {
+                        deps: &*LICENSE_INFOS
+                    },
+                ).to_string()))
             }))
     }
 }

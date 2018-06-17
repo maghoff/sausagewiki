@@ -31,7 +31,7 @@ header! { (XIdentity, "X-Identity") => [String] }
 pub struct Layout<'a, T: 'a + fmt::Display> {
     pub base: Option<&'a str>,
     pub title: &'a str,
-    pub body: &'a T,
+    pub body: T,
 }
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
@@ -45,6 +45,28 @@ impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
 
     pub fn project_name(&self) -> &str { build_config::PROJECT_NAME }
     pub fn version(&self) -> &str { build_config::VERSION.as_str() }
+}
+
+#[derive(BartDisplay)]
+#[template="templates/system_page_layout.html"]
+pub struct SystemPageLayout<'a, T: 'a + fmt::Display> {
+    title: &'a str,
+    html_body: T,
+}
+
+pub fn system_page<'a, T>(base: Option<&'a str>, title: &'a str, body: T)
+    -> Layout<'a, SystemPageLayout<'a, T>>
+where
+    T: 'a + fmt::Display
+{
+    Layout {
+        base,
+        title,
+        body: SystemPageLayout {
+            title,
+            html_body: body,
+        },
+    }
 }
 
 #[derive(BartDisplay)]
@@ -68,11 +90,11 @@ impl Site {
     fn not_found(base: Option<&str>) -> Response {
         Response::new()
             .with_header(ContentType(TEXT_HTML.clone()))
-            .with_body(Layout {
-                base: base,
-                title: "Not found",
-                body: &NotFound,
-            }.to_string())
+            .with_body(system_page(
+                base,
+                "Not found",
+                NotFound,
+            ).to_string())
             .with_status(hyper::StatusCode::NotFound)
     }
 
@@ -81,11 +103,11 @@ impl Site {
 
         Response::new()
             .with_header(ContentType(TEXT_HTML.clone()))
-            .with_body(Layout {
+            .with_body(system_page(
                 base,
-                title: "Internal server error",
-                body: &InternalServerError,
-            }.to_string())
+                "Internal server error",
+                InternalServerError,
+            ).to_string())
             .with_status(hyper::StatusCode::InternalServerError)
     }
 }

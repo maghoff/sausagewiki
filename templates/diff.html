@@ -1,5 +1,11 @@
 <div class="container">
 
+<div class="hero">
+<header>
+<h1>{{#title}}{{#.removed}}<span class="removed">{{.}}</span>{{/.removed}}{{#.same}}{{.}}{{/.same}}{{#.added}}<span class="added">{{.}}</span>{{/.added}}{{/title}}</h1>
+</header>
+</div>
+
 <div class="notice">
     <p>
         You are viewing the difference between two {{#consecutive?}}consecutive{{/consecutive}}
@@ -11,10 +17,6 @@
         or the article as it was <a href="{{from_link}}">before</a> and <a href="{{to_link}}">after</a> this change.
     </p>
 </div>
-
-<header>
-<h1>{{#title}}{{#.removed}}<span class="removed">{{.}}</span>{{/.removed}}{{#.same}}{{.}}{{/.same}}{{#.added}}<span class="added">{{.}}</span>{{/.added}}{{/title}}</h1>
-</header>
 
 <article>
 <pre class="diff">{{#lines}}{{#.removed}}<span class="removed">{{.}}

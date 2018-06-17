@@ -4,7 +4,7 @@ use hyper::header::ContentType;
 use hyper::server::*;
 
 use mimes::*;
-use site::Layout;
+use site::system_page;
 use web::{Resource, ResponseFuture};
 
 pub struct HtmlResource {
@@ -17,13 +17,6 @@ impl HtmlResource {
     pub fn new(base: Option<&'static str>, title: &'static str, html_body: &'static str) -> Self {
         HtmlResource { base, title, html_body }
     }
-}
-
-#[derive(BartDisplay)]
-#[template="templates/simple.html"]
-struct Template<'a> {
-    title: &'a str,
-    html_body: &'a str,
 }
 
 impl Resource for HtmlResource {
@@ -44,15 +37,11 @@ impl Resource for HtmlResource {
 
         Box::new(head
             .and_then(move |head| {
-                Ok(head
-                    .with_body(Layout {
-                        base: self.base,
-                        title: self.title,
-                        body: &Template {
-                            title: self.title,
-                            html_body: self.html_body,
-                        },
-                    }.to_string()))
+                Ok(head.with_body(system_page(
+                    self.base,
+                    self.title,
+                    self.html_body
+                ).to_string()))
             }))
     }
 }
