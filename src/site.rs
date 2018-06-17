@@ -36,8 +36,9 @@ pub struct Layout<'a, T: 'a + fmt::Display> {
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
     pub fn theme(&self) -> &str {
-        use rand::{thread_rng, Rng};
-        thread_rng().choose(&THEMES).unwrap()
+        let hash = ::seahash::hash(self.title.as_bytes()) as usize;
+        let choice = hash % THEMES.len();
+        THEMES[choice]
     }
 
     pub fn style_css_checksum(&self) -> &str { StyleCss::checksum() }
