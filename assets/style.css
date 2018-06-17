@@ -349,7 +349,8 @@ input[type="search"]::-webkit-search-decoration {
 }
 
 input[type="search"] {
-    -webkit-appearance: textfield;
+    -webkit-appearance: none;
+    border-radius: 0;
 
     box-sizing: border-box;
     width: 100%;
@@ -386,7 +387,6 @@ input[type="search"] {
 }
 
 .search-widget-container {
-    background: white;
     border-radius: 2px;
     overflow: hidden;
 
