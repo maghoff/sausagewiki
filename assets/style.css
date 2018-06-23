@@ -160,6 +160,13 @@ a {
     text-decoration: none;
 }
 
+a[href^="http"]::after {
+    padding: 0 0.1rem;
+    font-size: 75%;
+    content: "🔗";
+    line-height: 0;
+}
+
 a:hover {
     text-decoration: underline;
 }
