@@ -167,6 +167,11 @@ a[href^="http"]::after {
     line-height: 0;
 }
 
+a[href^="http"]:hover::after {
+    display: inline-block;
+    text-decoration: none;
+}
+
 a:hover {
     text-decoration: underline;
 }
