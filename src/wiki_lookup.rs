@@ -16,38 +16,35 @@ type BoxResource = Box<Resource + Sync + Send>;
 type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
-    static ref ASSETS_MAP: HashMap<String, ResourceFn> = hashmap!{
+    static ref ASSETS_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
         // The CSS should be built to a single CSS file at compile time
-        "themes.css".into() =>
+        ThemesCss::resource_name() =>
             Box::new(|| Box::new(ThemesCss) as BoxResource) as ResourceFn,
 
-        format!("style-{}.css", StyleCss::checksum()) =>
+        StyleCss::resource_name() =>
             Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn,
 
-        format!("script-{}.js", ScriptJs::checksum()) =>
+        ScriptJs::resource_name() =>
             Box::new(|| Box::new(ScriptJs) as BoxResource) as ResourceFn,
 
-        format!("search-{}.js", SearchJs::checksum()) =>
+        SearchJs::resource_name() =>
             Box::new(|| Box::new(SearchJs) as BoxResource) as ResourceFn,
-
-        format!("amatic-sc-v9-latin-regular.woff") =>
-            Box::new(|| Box::new(AmaticFont) as BoxResource) as ResourceFn,
     };
 
-    static ref LICENSES_MAP: HashMap<String, ResourceFn> = hashmap!{
-        "bsd-3-clause".to_owned() => Box::new(|| Box::new(
+    static ref LICENSES_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
+        "bsd-3-clause" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "The 3-Clause BSD License", include_str!("licenses/bsd-3-clause.html"))
         ) as BoxResource) as ResourceFn,
-        "gpl3".to_owned() => Box::new(|| Box::new(
+        "gpl3" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "GNU General Public License", include_str!("licenses/gpl3.html"))
         ) as BoxResource) as ResourceFn,
-        "mit".to_owned() => Box::new(|| Box::new(
+        "mit" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "The MIT License", include_str!("licenses/mit.html"))
         ) as BoxResource) as ResourceFn,
-        "mpl2".to_owned() => Box::new(|| Box::new(
+        "mpl2" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "Mozilla Public License Version 2.0", include_str!("licenses/mpl2.html"))
         ) as BoxResource) as ResourceFn,
-        "sil-ofl-1.1".to_owned() => Box::new(|| Box::new(
+        "sil-ofl-1.1" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "SIL Open Font License", include_str!("licenses/sil-ofl-1.1.html"))
         ) as BoxResource) as ResourceFn,
     };
@@ -70,7 +67,7 @@ fn split_one(path: &str) -> Result<(Cow<str>, Option<&str>), Utf8Error> {
     Ok((head, tail))
 }
 
-fn map_lookup(map: &HashMap<String, ResourceFn>, path: &str) ->
+fn map_lookup(map: &HashMap<&str, ResourceFn>, path: &str) ->
     FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>>
 {
     let (head, tail) = match split_one(path) {

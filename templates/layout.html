@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="utf-8">
 {{#base}}<base href="{{.}}">{{/base}}
-<link href="_assets/style-{{style_css_checksum()}}.css" rel="stylesheet">
+<link href="_assets/{{themes_css()}}" rel="stylesheet">
+<link href="_assets/{{style_css()}}" rel="stylesheet">
 <meta name="generator" content="{{project_name()}} {{version()}}" />
 </head>
 <body class="theme-{{theme()}}">

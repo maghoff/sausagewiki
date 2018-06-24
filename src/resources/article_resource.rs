@@ -29,8 +29,8 @@ struct Template<'a> {
 }
 
 impl<'a> Template<'a> {
-    fn script_js_checksum(&self) -> &'static str {
-        ScriptJs::checksum()
+    fn script_js(&self) -> &'static str {
+        ScriptJs::resource_name()
     }
 }
 

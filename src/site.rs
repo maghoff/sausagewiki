@@ -9,7 +9,7 @@ use hyper::mime;
 use hyper::server::*;
 use hyper;
 
-use assets::{StyleCss, SearchJs};
+use assets::{ThemesCss, StyleCss, SearchJs};
 use build_config;
 use web::Lookup;
 use wiki_lookup::WikiLookup;
@@ -41,8 +41,9 @@ impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
         THEMES[choice]
     }
 
-    pub fn style_css_checksum(&self) -> &str { StyleCss::checksum() }
-    pub fn search_js_checksum(&self) -> &str { SearchJs::checksum() }
+    pub fn themes_css(&self) -> &str { ThemesCss::resource_name() }
+    pub fn style_css(&self) -> &str { StyleCss::resource_name() }
+    pub fn search_js(&self) -> &str { SearchJs::resource_name() }
 
     pub fn project_name(&self) -> &str { build_config::PROJECT_NAME }
     pub fn version(&self) -> &str { build_config::VERSION.as_str() }

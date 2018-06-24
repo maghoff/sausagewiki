@@ -49,6 +49,14 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
 
     let checksum = calculate_checksum(&abs_filename);
 
+    let path: &Path = filename.as_ref();
+    let resource_name =
+        format!("{}-{}.{}",
+            path.file_stem().unwrap().to_str().unwrap(),
+            checksum,
+            path.extension().unwrap().to_str().unwrap()
+        );
+
     let mime = find_attr(&ast.attrs, "mime")
         .expect("The `mime` attribute must be specified");
 
@@ -90,12 +98,12 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
         }
 
         impl #impl_generics #name #ty_generics #where_clause {
-            pub fn checksum() -> &'static str {
-                #checksum
+            pub fn resource_name() -> &'static str {
+                #resource_name
             }
 
             pub fn etag() -> ::hyper::header::EntityTag {
-                ::hyper::header::EntityTag::new(false, Self::checksum().to_owned())
+                ::hyper::header::EntityTag::new(false, #checksum.to_owned())
             }
         }
     };
