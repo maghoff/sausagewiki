@@ -533,6 +533,15 @@ input[type="search"] {
         display: block;
     }
 
+    .hero {
+        background: none;
+        color: initial;
+
+        /* Disable hack to force containing the children instead of collapsing marigins */
+        border: none;
+        box-shadow: none;
+    }
+
     h1, h2, h3, h4, h5, h6 {
         /* This doesn't work at all, but it might start to! */
         break-after: avoid;
@@ -547,6 +556,11 @@ input[type="search"] {
 
     article {
         margin: 0 auto;
+    }
+
+    h1 {
+        font-size: 22pt;
+        line-height: 33pt;
     }
 
     article, h2, h3, h4, h5, h6, .notice {
