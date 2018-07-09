@@ -7,6 +7,9 @@ pub const PROJECT_NAME: &str = env!("CARGO_PKG_NAME");
 
 const SOFT_HYPHEN: &str = "\u{00AD}";
 
+#[cfg(all(not(debug_assertions), feature="dynamic-assets"))]
+compile_error!("dynamic-assets must not be used for production");
+
 lazy_static! {
     pub static ref VERSION: String = || -> String {
         let mut components = Vec::<String>::new();
@@ -16,6 +19,9 @@ lazy_static! {
 
         #[cfg(test)]
         components.push("test".into());
+
+        #[cfg(feature="dynamic-assets")]
+        components.push("dynamic-assets".into());
 
         if let None = option_env!("CONTINUOUS_INTEGRATION") {
             components.push("local-build".into());

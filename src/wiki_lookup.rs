@@ -8,29 +8,16 @@ use percent_encoding::percent_decode;
 use slug::slugify;
 
 use resources::*;
-use assets::*;
 use state::State;
 use web::{Lookup, Resource};
+
+#[allow(unused)]
+use assets::*;
 
 type BoxResource = Box<Resource + Sync + Send>;
 type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
-    static ref ASSETS_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
-        // The CSS should be built to a single CSS file at compile time
-        ThemesCss::resource_name() =>
-            Box::new(|| Box::new(ThemesCss) as BoxResource) as ResourceFn,
-
-        StyleCss::resource_name() =>
-            Box::new(|| Box::new(StyleCss) as BoxResource) as ResourceFn,
-
-        ScriptJs::resource_name() =>
-            Box::new(|| Box::new(ScriptJs) as BoxResource) as ResourceFn,
-
-        SearchJs::resource_name() =>
-            Box::new(|| Box::new(SearchJs) as BoxResource) as ResourceFn,
-    };
-
     static ref LICENSES_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
         "bsd-3-clause" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "The 3-Clause BSD License", include_str!("licenses/bsd-3-clause.html"))
@@ -83,6 +70,35 @@ fn map_lookup(map: &HashMap<&str, ResourceFn>, path: &str) ->
         Some(resource_fn) => finished(Some(resource_fn())),
         None => finished(None),
     }
+}
+
+#[allow(unused)]
+fn fs_lookup(root: &str, path: &str) ->
+    FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>>
+{
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let extension = path.rsplitn(2, ".").next();
+
+    let content_type = match extension {
+        Some("css") => "text/css",
+        Some("js") => "application/javascript",
+        Some("woff") => "application/font-woff",
+        _ => "application/binary",
+    }.parse().unwrap();
+
+    let mut filename = root.to_string();
+    filename.push_str(path);
+
+    let mut f = File::open(&filename)
+        .unwrap_or_else(|_| panic!(format!("Not found: {}", filename)));
+
+    let mut body = Vec::new();
+    f.read_to_end(&mut body)
+        .expect("Unable to read file");
+
+    finished(Some(Box::new(ReadOnlyResource { content_type, body })))
 }
 
 impl WikiLookup {
@@ -168,6 +184,10 @@ impl WikiLookup {
                 Box::new(finished(Some(Box::new(AboutResource::new()) as BoxResource))),
             ("_about", Some(license)) =>
                 Box::new(map_lookup(&LICENSES_MAP, license)),
+            #[cfg(feature="dynamic-assets")]
+            ("_assets", Some(asset)) =>
+                Box::new(fs_lookup(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/"), asset)),
+            #[cfg(not(feature="dynamic-assets"))]
             ("_assets", Some(asset)) =>
                 Box::new(map_lookup(&ASSETS_MAP, asset)),
             ("_by_id", Some(tail)) =>

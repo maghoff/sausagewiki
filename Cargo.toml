@@ -79,6 +79,9 @@ git = "https://github.com/maghoff/pulldown-cmark.git"
 indoc = "0.2"
 matches = "0.1"
 
+[features]
+dynamic-assets = []
+
 [profile]
 
 [profile.release]
