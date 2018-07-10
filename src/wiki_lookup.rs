@@ -82,6 +82,7 @@ fn fs_lookup(root: &str, path: &str) ->
     let extension = path.rsplitn(2, ".").next();
 
     let content_type = match extension {
+        Some("html") => "text/html",
         Some("css") => "text/css",
         Some("js") => "application/javascript",
         Some("woff") => "application/font-woff",

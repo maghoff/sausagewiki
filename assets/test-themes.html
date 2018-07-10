@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test themes &ndash; Sausagewiki</title>
+        <link href="themes.css" rel="stylesheet">
+        <style>
+            .themed {
+                padding: 10px;
+                background: var(--theme-main);
+                color: var(--theme-text);
+            }
+            .link {
+                color: var(--theme-link);
+            }
+            .proto {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="proto">
+            <div class="themed">The <span class="link">quick</span> brown <span class="link">dog</span> jumps over the lazy log</div>
+        </div>
+        <script>
+            const themes = ["red", "pink", "purple", "deep-purple", "indigo", "blue", "light-blue", "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange", "deep-orange", "brown", "gray", "blue-gray"];
+            const body = document.querySelector("body");
+            const proto = document.querySelector(".proto");
+            for (theme of themes) {
+                const block = proto.cloneNode(true);
+                block.className = `theme-${theme}`;
+                body.appendChild(block);
+            }
+        </script>
+    </body>
+</html>
