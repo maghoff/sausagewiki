@@ -63,8 +63,8 @@ function openEditor() {
     const editor = container.querySelector(".editor");
     const textarea = editor.querySelector('textarea[name="body"]');
     const shadow = editor.querySelector('textarea.shadow-control');
-    const form = editor.querySelector("form");
-    const cancel = editor.querySelector('.cancel');
+    const form = document.getElementById('article-editor');
+    const cancel = form.querySelector('.cancel');
 
     const footer = document.querySelector("footer");
     const lastUpdated = footer.querySelector(".last-updated");

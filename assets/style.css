@@ -78,14 +78,11 @@ article>hr {
 
     /* Hack to force containing the children instead of collapsing marigins */
     border: 1px solid var(--theme-main);
-
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 }
 
 .search-container {
     background: var(--theme-main);
     color: var(--theme-text);
-    z-index: 1;
 }
 
 header, article>*, .search {
@@ -209,8 +206,6 @@ footer {
         "Segoe UI", "Roboto", "Oxygen",
         "Ubuntu", "Cantarell", "Fira Sans",
         "Droid Sans", "Helvetica Neue", sans-serif;
-
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 }
 
 footer a {
@@ -306,19 +301,41 @@ h1>input {
     bottom: 0;
     left: 0;
 
+    box-shadow: 0px 5px 20px rgba(0,0,0, 0.2);
+
     background: var(--theme-main);
     color: var(--theme-text);
     padding: 10px 20px;
+
+    transform: translate(0, 65px);
+    transition: transform 100ms;
+    transition-timing-function: linear;
+}
+
+.edit .editor-controls {
+    transform: translate(0, 0);
+    transition-timing-function: cubic-bezier(.17,.84,.44,1);
 }
 
 @media (min-width: 630px) {
     .editor-controls {
         position: fixed;
-        left: auto;
-        right: 20px;
-        bottom: 20px;
+        left: calc(50vw + 320px);
+        width: 120px;
+        top: calc(50vh - 40px);
+        height: 80px;
 
-        box-shadow: 2px 2px 8px rgba(0,0,0, 0.25);
+        transform: translate(20px, 0);
+        opacity: 0;
+
+        transition: transform 100ms, opacity 100ms;
+        transition-timing-function: linear;
+    }
+
+    .edit .editor-controls {
+        transform: translate(0, 0);
+        transition-timing-function: cubic-bezier(.17,.84,.44,1);
+        opacity: 1;
     }
 }
 
@@ -484,7 +501,7 @@ input[type="search"] {
 
     text-align: center;
     background: #eee;
-    box-shadow: 2px 2px 8px rgba(0,0,0, 0.25);
+    box-shadow: 0px 5px 20px rgba(0,0,0, 0.2);
 }
 
 .popup>.message {
@@ -542,7 +559,6 @@ input[type="search"] {
 
         /* Disable hack to force containing the children instead of collapsing marigins */
         border: none;
-        box-shadow: none;
     }
 
     h1, h2, h3, h4, h5, h6 {

@@ -5,10 +5,10 @@
 {{>article_contents.html}}
 </div>
 
-<div class="editor">
-<form action="" method="POST">
+<form id="article-editor" action="" method="POST">
 
-<div class="hero" style="z-index: -1">
+<div class="editor">
+<div class="hero">
 <header>
 <h1><input autocomplete=off type=text name=title value="{{title}}" placeholder="Title" required></h1>
 </header>
@@ -22,15 +22,16 @@
 </p>
 </article>
 
+</div>
+
 <div class="editor-controls">
 {{#cancel_url}}
     <a class="cancel" href="{{.}}">Cancel</a>
 {{/cancel_url}}
     <button type=submit>Save</button>
 </div>
-
 </form>
-</div>
+
 </div>
 
 <footer>
