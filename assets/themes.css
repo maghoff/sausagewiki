@@ -86,14 +86,14 @@
     --theme-main: #FBC02D;
     --theme-text: black;
     --theme-input: #FFEB3B;
-    --theme-link: #1E88E5;
+    --theme-link: #1976D2;
 }
 
 .theme-amber {
     --theme-main: #FFC107;
     --theme-text: black;
     --theme-input: #FFD54F;
-    --theme-link: #1E88E5;
+    --theme-link: #1976D2;
 }
 
 .theme-orange {

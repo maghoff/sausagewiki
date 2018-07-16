@@ -34,7 +34,7 @@ def prep(x):
         "main": cols[main_index],
         "input": x['colors'][3 if main_index == 0 else 5],
         "text": "white" if dark_main else "black",
-        "link": blues[2] if dark_main else blues[6],
+        "link": blues[2] if dark_main else blues[7],
     }
 
 blues = [x for x in palettes if x['shade'] == "Blue"][0]["colors"]
