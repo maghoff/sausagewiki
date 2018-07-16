@@ -154,7 +154,7 @@ pre {
 }
 
 a {
-    color: var(--theme-link);
+    color: #1E88E5;
     text-decoration: none;
 }
 
@@ -211,6 +211,10 @@ footer {
         "Droid Sans", "Helvetica Neue", sans-serif;
 
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+footer a {
+    color: var(--theme-link);
 }
 
 ul.dense {
@@ -370,6 +374,7 @@ input[type="search"] {
     margin: 0;
     border: none;
     background: var(--theme-input);
+    color: var(--theme-text);
 
     font: inherit;
     font-size: 18px;
