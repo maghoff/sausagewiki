@@ -573,6 +573,10 @@ input[type="search"] {
 		font-weight: normal !important;
 	}
 
+    a[href^="http"]::after {
+        display: none;
+    }
+
     article {
         margin: 0 auto;
     }
