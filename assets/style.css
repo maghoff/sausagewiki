@@ -402,6 +402,11 @@ input[type="search"] {
     text-overflow: ellipsis;
 }
 
+input[type="search"]::placeholder {
+    color: var(--theme-text);
+    opacity: 0.5;
+}
+
 .search .live-results {
     text-align: left;
 
