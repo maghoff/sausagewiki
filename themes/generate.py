@@ -22,17 +22,25 @@ def luma(rgb):
     return (0.2126*r + 0.7152*g + 0.0722*b)
 
 def prep(x):
-    cols = [x['colors'][5], x['colors'][7]]
+    cols = x['colors']
     rgb = [hex_to_rgb(c[1:]) for c in cols]
     brightness = [luma(c) for c in rgb]
 
-    main_index = 0 if brightness[0] < 0.6 else 1
-    dark_main = brightness[main_index] < 0.5
+    dark_main = True
+    main_index = 5
+    if brightness[main_index] >= 0.4:
+        main_index = 7
+
+    if brightness[main_index] >= 0.4:
+        dark_main = False
+        main_index = 4
+        if brightness[main_index] < 0.6:
+            main_index = 3
 
     return {
         "name": x['shade'].lower().replace(' ', '-'),
         "main": cols[main_index],
-        "input": x['colors'][3 if main_index == 0 else 5],
+        "input": x['colors'][main_index - 2],
         "text": "white" if dark_main else "black",
         "link": blues[2] if dark_main else blues[7],
     }
@@ -53,5 +61,7 @@ print(
         for x in themes
     )
 )
+
+print()
 
 # print("[" + ', '.join('"'+x['name']+'"' for x in themes) + "]")

@@ -48,9 +48,9 @@
 }
 
 .theme-cyan {
-    --theme-main: #00BCD4;
+    --theme-main: #0097A7;
     --theme-text: white;
-    --theme-input: #4DD0E1;
+    --theme-input: #00BCD4;
     --theme-link: #90CAF9;
 }
 
@@ -69,37 +69,37 @@
 }
 
 .theme-light-green {
-    --theme-main: #8BC34A;
+    --theme-main: #689F38;
     --theme-text: white;
-    --theme-input: #AED581;
+    --theme-input: #8BC34A;
     --theme-link: #90CAF9;
 }
 
 .theme-lime {
-    --theme-main: #AFB42B;
-    --theme-text: white;
-    --theme-input: #CDDC39;
-    --theme-link: #90CAF9;
+    --theme-main: #D4E157;
+    --theme-text: black;
+    --theme-input: #E6EE9C;
+    --theme-link: #1976D2;
 }
 
 .theme-yellow {
-    --theme-main: #FBC02D;
+    --theme-main: #FFEE58;
     --theme-text: black;
-    --theme-input: #FFEB3B;
+    --theme-input: #FFF59D;
     --theme-link: #1976D2;
 }
 
 .theme-amber {
-    --theme-main: #FFC107;
+    --theme-main: #FFCA28;
     --theme-text: black;
-    --theme-input: #FFD54F;
+    --theme-input: #FFE082;
     --theme-link: #1976D2;
 }
 
 .theme-orange {
-    --theme-main: #FF9800;
+    --theme-main: #F57C00;
     --theme-text: white;
-    --theme-input: #FFB74D;
+    --theme-input: #FF9800;
     --theme-link: #90CAF9;
 }
 
@@ -130,4 +130,5 @@
     --theme-input: #90A4AE;
     --theme-link: #90CAF9;
 }
+
 
