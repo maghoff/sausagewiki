@@ -156,6 +156,7 @@ a {
 }
 
 a[href^="http"]::after {
+    display: inline-block;
     padding: 0 0.1rem;
     font-size: 75%;
     content: "🔗";
@@ -163,7 +164,6 @@ a[href^="http"]::after {
 }
 
 a[href^="http"]:hover::after {
-    display: inline-block;
     text-decoration: none;
 }
 
