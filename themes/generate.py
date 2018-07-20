@@ -26,22 +26,19 @@ def prep(x):
     rgb = [hex_to_rgb(c[1:]) for c in cols]
     brightness = [luma(c) for c in rgb]
 
-    dark_main = True
     main_index = 5
     if brightness[main_index] >= 0.4:
-        main_index = 7
+        main_index = 6
 
-    if brightness[main_index] >= 0.4:
-        dark_main = False
-        main_index = 4
-        if brightness[main_index] < 0.6:
-            main_index = 3
+    dark_main = brightness[main_index] < 0.5
+
+    input_index = main_index + (-2 if dark_main else 1)
 
     return {
         "name": x['shade'].lower().replace(' ', '-'),
         "main": cols[main_index],
-        "input": x['colors'][main_index - 2],
-        "text": "white" if dark_main else "black",
+        "input": cols[input_index],
+        "text": "white",
         "link": blues[2] if dark_main else blues[7],
     }
 
