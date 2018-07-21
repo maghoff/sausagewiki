@@ -25,6 +25,8 @@ def prep(x):
     cols = x['colors']
     rgb = [hex_to_rgb(c[1:]) for c in cols]
     brightness = [luma(c) for c in rgb]
+    hue = [colorsys.rgb_to_hsv(*c)[0] * 360 for c in rgb]
+    sat = [colorsys.rgb_to_hsv(*c)[1] for c in rgb]
 
     main_index = 5
     if brightness[main_index] >= 0.4:
@@ -34,15 +36,23 @@ def prep(x):
 
     input_index = main_index + (-2 if dark_main else 1)
 
+    h = hue[main_index]
+    s = sat[main_index]
+
+    alt = blues
+    if s > 0.3 and (h < 40 or h >= 300):
+        alt = yellows
+
     return {
         "name": x['shade'].lower().replace(' ', '-'),
         "main": cols[main_index],
         "input": cols[input_index],
         "text": "white",
-        "link": blues[2] if dark_main else blues[7],
+        "link": alt[2 if dark_main else 7],
     }
 
 blues = [x for x in palettes if x['shade'] == "Blue"][0]["colors"]
+yellows = [x for x in palettes if x['shade'] == "Yellow"][0]["colors"]
 
 themes = [prep(palette) for palette in palettes]
 
