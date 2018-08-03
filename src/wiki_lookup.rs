@@ -8,8 +8,9 @@ use percent_encoding::percent_decode;
 use slug::slugify;
 
 use resources::*;
+use components::*;
 use state::State;
-use web::{Lookup, Resource};
+use web::{Scope, Resource};
 
 #[allow(unused)]
 use assets::*;
@@ -40,7 +41,7 @@ lazy_static! {
 #[derive(Clone)]
 pub struct WikiLookup {
     state: State,
-    changes_lookup: ChangesLookup,
+    changes_lookup: changes::Scope,
     diff_lookup: DiffLookup,
     search_lookup: SearchLookup,
 }
@@ -104,15 +105,15 @@ fn fs_lookup(root: &str, path: &str) ->
 
 impl WikiLookup {
     pub fn new(state: State, show_authors: bool) -> WikiLookup {
-        let changes_lookup = ChangesLookup::new(state.clone(), show_authors);
+        let changes_lookup = changes::Scope::new(state.clone(), show_authors);
         let diff_lookup = DiffLookup::new(state.clone());
         let search_lookup = SearchLookup::new(state.clone());
 
         WikiLookup { state, changes_lookup, diff_lookup, search_lookup }
     }
 
-    fn revisions_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
-        let (article_id, revision): (i32, i32) = match (|| -> Result<_, <Self as Lookup>::Error> {
+    fn revisions_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Scope>::Future {
+        let (article_id, revision): (i32, i32) = match (|| -> Result<_, <Self as Scope>::Error> {
             let (article_id, tail) = split_one(path)?;
             let (revision, tail) = split_one(tail.ok_or("Not found")?)?;
             if tail.is_some() {
@@ -135,8 +136,8 @@ impl WikiLookup {
         )
     }
 
-    fn by_id_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
-        let article_id: i32 = match (|| -> Result<_, <Self as Lookup>::Error> {
+    fn by_id_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Scope>::Future {
+        let article_id: i32 = match (|| -> Result<_, <Self as Scope>::Error> {
             let (article_id, tail) = split_one(path)?;
             if tail.is_some() {
                 return Err("Not found".into());
@@ -158,8 +159,8 @@ impl WikiLookup {
         )
     }
 
-    fn diff_lookup_f(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
-        let article_id: u32 = match (|| -> Result<_, <Self as Lookup>::Error> {
+    fn diff_lookup_f(&self, path: &str, query: Option<&str>) -> <Self as Scope>::Future {
+        let article_id: u32 = match (|| -> Result<_, <Self as Scope>::Error> {
             let (article_id, tail) = split_one(path)?;
             if tail.is_some() {
                 return Err("Not found".into());
@@ -174,7 +175,7 @@ impl WikiLookup {
         Box::new(self.diff_lookup.lookup(article_id, query))
     }
 
-    fn reserved_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
+    fn reserved_lookup(&self, path: &str, query: Option<&str>) -> <Self as Scope>::Future {
         let (head, tail) = match split_one(path) {
             Ok(x) => x,
             Err(x) => return Box::new(failed(x.into())),
@@ -209,7 +210,7 @@ impl WikiLookup {
         }
     }
 
-    fn article_lookup(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
+    fn article_lookup(&self, path: &str, query: Option<&str>) -> <Self as Scope>::Future {
         let (slug, tail) = match split_one(path) {
             Ok(x) => x,
             Err(x) => return Box::new(failed(x.into())),
@@ -246,12 +247,12 @@ impl WikiLookup {
     }
 }
 
-impl Lookup for WikiLookup {
+impl Scope for WikiLookup {
     type Resource = BoxResource;
     type Error = Box<::std::error::Error + Send + Sync>;
     type Future = Box<Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
-    fn lookup(&self, path: &str, query: Option<&str>) -> Self::Future {
+    fn scope_lookup(&self, path: &str, query: Option<&str>) -> Self::Future {
         assert!(path.starts_with("/"));
         let path = &path[1..];
 

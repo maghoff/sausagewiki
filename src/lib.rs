@@ -32,10 +32,12 @@ use std::net::{IpAddr, SocketAddr};
 
 mod assets;
 mod build_config;
+mod components;
 mod db;
 mod merge;
 mod mimes;
 mod models;
+mod pagination;
 mod rendering;
 mod resources;
 mod schema;

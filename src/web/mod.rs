@@ -1,5 +1,5 @@
 mod resource;
-mod lookup;
+mod scope;
 
 pub use self::resource::*;
-pub use self::lookup::*;
+pub use self::scope::*;

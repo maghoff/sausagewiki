@@ -4,15 +4,15 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
+use components::changes::QueryParameters;
 use mimes::*;
 use models;
+use pagination::Pagination;
 use rendering::render_markdown;
 use site::system_page;
 use web::{Resource, ResponseFuture};
 
-use super::changes_resource::QueryParameters;
 use super::diff_resource;
-use super::pagination::Pagination;
 
 pub struct ArticleRevisionResource {
     data: models::ArticleRevision,

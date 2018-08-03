@@ -13,7 +13,7 @@ use site::Layout;
 use state::{State, UpdateResult, RebaseConflict};
 use web::{Resource, ResponseFuture};
 
-use super::changes_resource::QueryParameters;
+use components::changes::QueryParameters;
 
 #[derive(BartDisplay)]
 #[template="templates/article.html"]

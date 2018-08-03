@@ -11,7 +11,7 @@ use hyper;
 
 use assets::{ThemesCss, StyleCss, SearchJs};
 use build_config;
-use web::Lookup;
+use web::Scope;
 use wiki_lookup::WikiLookup;
 
 const THEMES: [&str; 19] = ["red", "pink", "purple", "deep-purple", "indigo",
@@ -115,12 +115,14 @@ impl Site {
 }
 
 fn root_base_from_request_uri(path: &str) -> Option<String> {
+    use std::iter::repeat;
+
     assert!(path.starts_with("/"));
     let slashes = path[1..].matches('/').count();
 
     match slashes {
         0 => None,
-        n => Some(::std::iter::repeat("../").take(n).collect())
+        n => Some(repeat("../").take(n).collect())
     }
 }
 
@@ -145,7 +147,7 @@ impl Service for Site {
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone
 
-        Box::new(self.root.lookup(uri.path(), uri.query())
+        Box::new(self.root.scope_lookup(uri.path(), uri.query())
             .and_then(move |resource| match resource {
                 Some(mut resource) => {
                     use hyper::Method::*;

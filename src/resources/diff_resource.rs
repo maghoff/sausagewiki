@@ -8,14 +8,13 @@ use hyper::header::ContentType;
 use hyper::server::*;
 use serde_urlencoded;
 
+use components::changes;
 use mimes::*;
 use models::ArticleRevision;
+use pagination::Pagination;
 use site::Layout;
 use state::State;
 use web::{Resource, ResponseFuture};
-
-use super::changes_resource;
-use super::pagination::Pagination;
 
 type BoxResource = Box<Resource + Sync + Send>;
 
@@ -126,7 +125,7 @@ impl Resource for DiffResource {
                             consecutive: self.to.revision - self.from.revision == 1,
                             article_id: self.from.article_id as u32,
                             article_history_link: &format!("_changes{}",
-                                changes_resource::QueryParameters::default()
+                                changes::QueryParameters::default()
                                     .article_id(Some(self.from.article_id))
                                     .pagination(Pagination::After(self.from.revision))
                                     .into_link()
