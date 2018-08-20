@@ -54,9 +54,8 @@ h1+*, h2+*, h3+*, h4+*, h5+*, h6+* {
 
 article>hr {
     border: none;
-    border-top: 1px solid black;
-    max-width: 400px;
-    width: 70%;
+    border-top: 6px solid var(--theme-main);
+    width: 40px;
     margin: 20px auto;
 }
 
@@ -584,6 +583,10 @@ input[type="search"]::placeholder {
 
     article {
         margin: 0 auto;
+    }
+
+    article>hr {
+        border-color: black;
     }
 
     h1 {
