@@ -403,7 +403,7 @@ input[type="search"] {
 
 input[type="search"]::placeholder {
     color: var(--theme-text);
-    opacity: 0.5;
+    opacity: 0.8;
 }
 
 .search .live-results {
