@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="theme-{{theme()}}">
+<html>
 <head>
 <title>{{title}}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +9,7 @@
 <link href="_assets/{{style_css()}}" rel="stylesheet">
 <meta name="generator" content="{{project_name()}} {{version()}}" />
 </head>
-<body>
+<body class="theme-{{theme()}}">
 {{>search_input.html}}
 {{{body}}}
 </body>
