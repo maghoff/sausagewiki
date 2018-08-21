@@ -8,6 +8,14 @@ html {
         "Source Serif Pro", serif;
 }
 
+/* For overscroll in Apple browsers */
+html {
+    background: var(--theme-main);
+}
+body {
+    background: white;
+}
+
 h1 {
     font-weight: normal;
     font-style: normal;
@@ -187,11 +195,11 @@ nav {
 
 /* Sticky footer */
 html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
 }
 body {
+    min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
