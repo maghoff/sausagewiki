@@ -365,7 +365,16 @@ h1>input {
     background: var(--theme-input);
 }
 
-@media (min-width: 630px) {
+@media (min-width: 960px) {
+    /* min-width is calculated like this:
+
+    body-width = width of the main text column
+    controls-width = width of .editor-controls element, including drop-shadow
+
+    min-width = body-width + 2*controls-width = 600 + 2 * 180 = 960
+
+    */
+
     .editor-controls {
         border-radius: 2px;
 
@@ -387,6 +396,11 @@ h1>input {
         transform: translate(0, 0);
         transition-timing-function: cubic-bezier(.17,.84,.44,1);
         opacity: 1;
+    }
+
+    .button {
+        margin: 0;
+        margin-bottom: 10px;
     }
 }
 
@@ -522,11 +536,6 @@ input[type="search"]::placeholder {
 
     .search.focus .live-results {
         max-height: 500px;
-    }
-
-    .button {
-        margin: 0;
-        margin-bottom: 10px;
     }
 }
 
