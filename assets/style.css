@@ -311,7 +311,7 @@ h1>input {
 
     box-shadow: 0px 5px 20px rgba(0,0,0, 0.2);
 
-    background: var(--theme-main);
+    background: white;
     color: var(--theme-text);
     padding: 10px 10px;
 
@@ -326,7 +326,6 @@ h1>input {
 }
 
 .button {
-    box-shadow: 0px 2px 5px rgba(0,0,0, 0.2);
     border-radius: 2px;
 
     display: inline-block;
@@ -354,7 +353,7 @@ h1>input {
     background: white;
     color: var(--theme-main);
 }
-.button-cancel:hover {
+.button-cancel:hover, .button-cancel:active {
     background: #f0f0f0;
 }
 
@@ -362,15 +361,20 @@ h1>input {
     background: var(--theme-main);
     color: var(--theme-text);
 }
+.button-default:hover, .button-default:active {
+    background: var(--theme-input);
+}
 
 @media (min-width: 630px) {
     .editor-controls {
+        border-radius: 2px;
+
         position: fixed;
         left: calc(50vw + 320px);
-        width: 160px;
-        top: calc(50vh - 65px);
-        height: 130px;
-        padding: 20px;
+        width: 140px;
+        top: calc(50vh - 55px);
+        height: 110px;
+        padding: 10px;
 
         transform: translate(20px, 0);
         opacity: 0;
