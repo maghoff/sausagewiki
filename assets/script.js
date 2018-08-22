@@ -1,3 +1,5 @@
+"use strict";
+
 function autosizeTextarea(textarea, shadow) {
     shadow.style.width = textarea.clientWidth + "px";
     shadow.value = textarea.value;
@@ -83,10 +85,7 @@ function openEditor() {
     textarea.addEventListener('input', () => autosizeTextarea(textarea, shadow));
     window.addEventListener('resize', () => autosizeTextarea(textarea, shadow));
 
-    form.addEventListener("submit", function (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
+    function doSave() {
         const body = queryArgsFromForm(form);
         textarea.disabled = true;
         // TODO Disable other interaction as well: title editor, cancel and OK buttons
@@ -153,12 +152,9 @@ function openEditor() {
             console.error(err);
             return alertAsync(err.toString());
         });
-    });
+    }
 
-    cancel.addEventListener('click', function (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
+    function doCancel() {
         Promise.resolve(!isEdited(form) || confirmDiscard())
             .then(doReset => {
                 if (doReset) {
@@ -166,12 +162,37 @@ function openEditor() {
                     form.reset();
                 }
             });
+    }
+
+    form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        doSave();
+    });
+
+    cancel.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        doCancel();
     });
 
     window.addEventListener("beforeunload", function (ev) {
         if (isEdited(form)) {
             ev.preventDefault();
             return ev.returnValue = "Discard changes?";
+        }
+    });
+
+    document.addEventListener("keypress", function (ev) {
+        const accel = ev.ctrlKey || ev.metaKey; // Imprecise, but works cross platform
+        if (ev.key === "Enter" && accel) {
+            //TODO Disable when in the process of saving
+            //TODO Disable when not editing
+
+            ev.stopPropagation();
+            ev.preventDefault();
+
+            doSave();
         }
     });
 }
