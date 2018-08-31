@@ -16,9 +16,18 @@
             .proto {
                 display: none;
             }
+            #bar {
+                display: flex;
+                width: 100%;
+            }
+            #bar>div {
+                height: 30px;
+                flex-grow: 1;
+            }
         </style>
     </head>
     <body>
+        <div id="bar"></div>
         <div class="proto">
             <div class="themed">The <span class="link">quick</span> brown <span class="link">dog</span> jumps over the lazy log <span class="theme-name"></span></div>
             <div class="themed"><input type=search placeholder=placeholder> <input type=search value="Bacon"></div>
@@ -32,6 +41,13 @@
                 block.className = `theme-${theme}`;
                 block.querySelector(".theme-name").textContent = theme;
                 body.appendChild(block);
+            }
+
+            const bar = document.querySelector("#bar");
+            for (theme of themes) {
+                const block = document.createElement("div");
+                block.className = `theme-${theme} themed`;
+                bar.appendChild(block);
             }
         </script>
     </body>
