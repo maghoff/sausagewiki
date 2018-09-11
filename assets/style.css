@@ -2,6 +2,10 @@
     display: none;
 }
 
+input {
+    margin: 0; /* reset for Safari */
+}
+
 html {
     font-family: "Apple Garamond", "Baskerville",
         "Times New Roman", "Droid Serif", "Times",
