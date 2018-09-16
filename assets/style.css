@@ -383,9 +383,9 @@ h1>input {
         border-radius: 2px;
 
         position: fixed;
-        left: calc(50vw + 320px);
+        left: calc(50% + 320px);
         width: 140px;
-        top: calc(50vh - 55px);
+        top: calc(50% - 55px);
         height: 110px;
         padding: 10px;
 
