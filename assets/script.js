@@ -187,8 +187,8 @@ function openEditor() {
     document.addEventListener("keypress", function (ev) {
         const accel = ev.ctrlKey || ev.metaKey; // Imprecise, but works cross platform
         if (ev.key === "Enter" && accel) {
-            //TODO Disable when in the process of saving
-            //TODO Disable when not editing
+            const isEditing = container.classList.contains('edit');
+            if (!isEditing) return;
 
             ev.stopPropagation();
             ev.preventDefault();
