@@ -77,6 +77,7 @@ function openEditor() {
 
     autosizeTextarea(textarea, shadow);
 
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     textarea.focus();
 
     if (hasBeenOpen) return;
