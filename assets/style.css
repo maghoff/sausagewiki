@@ -349,24 +349,26 @@ h1>input {
     padding: 10px 0px;
     margin-left: 10px;
 }
+.button[disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
 .button:hover {
     text-decoration: none;
+}
+.button:not([disabled]):hover, .button:not([disabled]):active {
+    background: var(--button-alt);
 }
 
 .button-cancel {
     background: white;
     color: var(--theme-main);
+    --button-alt: #f0f0f0;
 }
-.button-cancel:hover, .button-cancel:active {
-    background: #f0f0f0;
-}
-
 .button-default {
     background: var(--theme-main);
     color: var(--theme-text);
-}
-.button-default:hover, .button-default:active {
-    background: var(--theme-input);
+    --button-alt: var(--theme-input);
 }
 
 @media (min-width: 960px) {
