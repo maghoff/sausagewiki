@@ -44,6 +44,7 @@ titlecase = "0.10"
 tokio-io = "0.1"
 tokio-proto = "0.1"
 tokio-service = "0.1"
+serde_plain = "0.3.0"
 
 [dependencies.codegen]
 path = "libs/codegen"
