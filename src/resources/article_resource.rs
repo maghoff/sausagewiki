@@ -11,6 +11,7 @@ use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
 use state::{State, UpdateResult, RebaseConflict};
+use theme;
 use web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
@@ -102,6 +103,7 @@ impl Resource for ArticleResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &data.title,
+                        theme: theme::theme_from_str(&data.title),
                         body: &Template {
                             revision: data.revision,
                             last_updated: Some(&last_updated(
@@ -238,6 +240,7 @@ impl Resource for ArticleResource {
                             .with_body(Layout {
                                 base: None,
                                 title: &title,
+                                theme: theme::theme_from_str(&title),
                                 body: &Template {
                                     revision: base_article.revision,
                                     last_updated: Some(&last_updated(

@@ -28,12 +28,11 @@ header! { (XIdentity, "X-Identity") => [String] }
 pub struct Layout<'a, T: 'a + fmt::Display> {
     pub base: Option<&'a str>,
     pub title: &'a str,
+    pub theme: theme::Theme,
     pub body: T,
 }
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
-    pub fn theme(&self) -> theme::Theme { theme::theme_from_str(self.title) }
-
     pub fn themes_css(&self) -> &str { ThemesCss::resource_name() }
     pub fn style_css(&self) -> &str { StyleCss::resource_name() }
     pub fn search_js(&self) -> &str { SearchJs::resource_name() }
@@ -57,6 +56,7 @@ where
     Layout {
         base,
         title,
+        theme: theme::theme_from_str(title),
         body: SystemPageLayout {
             title,
             html_body: body,

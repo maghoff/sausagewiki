@@ -10,6 +10,7 @@ use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
 use state::State;
+use theme;
 use web::{Resource, ResponseFuture};
 
 const NEW: &str = "NEW";
@@ -83,6 +84,7 @@ impl Resource for NewArticleResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
+                        theme: theme::theme_from_str(&title),
                         body: &Template {
                             revision: NEW,
                             last_updated: None,
