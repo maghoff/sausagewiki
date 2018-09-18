@@ -38,6 +38,22 @@ pub fn theme_from_str(x: &str) -> Theme {
     THEMES[choice]
 }
 
+pub struct CssClass(Theme);
+
+impl Theme {
+    pub fn css_class(self) -> CssClass {
+        CssClass(self)
+    }
+}
+
+use std::fmt::{self, Display, Formatter};
+
+impl Display for CssClass {
+    fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
+        write!(fmt, "theme-{}", self.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -73,5 +89,10 @@ mod test {
     #[test]
     fn from_str() {
         assert_eq!(theme_from_str("Bartefjes"), Theme::Orange);
+    }
+
+    #[test]
+    fn css_class_display() {
+        assert_eq!(&Theme::Red.css_class().to_string(), "theme-red");
     }
 }
