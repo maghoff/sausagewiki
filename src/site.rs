@@ -11,12 +11,9 @@ use hyper;
 
 use assets::{ThemesCss, StyleCss, SearchJs};
 use build_config;
+use theme;
 use web::Lookup;
 use wiki_lookup::WikiLookup;
-
-const THEMES: [&str; 19] = ["red", "pink", "purple", "deep-purple", "indigo",
-    "blue", "light-blue", "cyan", "teal", "green", "light-green", "lime",
-    "yellow", "amber", "orange", "deep-orange", "brown", "gray", "blue-gray"];
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
@@ -35,11 +32,7 @@ pub struct Layout<'a, T: 'a + fmt::Display> {
 }
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
-    pub fn theme(&self) -> &str {
-        let hash = ::seahash::hash(self.title.as_bytes()) as usize;
-        let choice = hash % THEMES.len();
-        THEMES[choice]
-    }
+    pub fn theme(&self) -> theme::Theme { theme::theme_from_str(self.title) }
 
     pub fn themes_css(&self) -> &str { ThemesCss::resource_name() }
     pub fn style_css(&self) -> &str { StyleCss::resource_name() }

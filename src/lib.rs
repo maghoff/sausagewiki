@@ -12,6 +12,7 @@
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate maplit;
 #[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_plain;
 
 extern crate chrono;
 extern crate diff;
@@ -41,6 +42,7 @@ mod resources;
 mod schema;
 mod site;
 mod state;
+mod theme;
 mod web;
 mod wiki_lookup;
 
