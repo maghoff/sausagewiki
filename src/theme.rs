@@ -32,7 +32,7 @@ pub const THEMES: [Theme; 19] = [Red, Pink, Purple, DeepPurple, Indigo, Blue,
     LightBlue, Cyan, Teal, Green, LightGreen, Lime, Yellow, Amber, Orange,
     DeepOrange, Brown, Gray, BlueGray];
 
-pub fn theme_from_str(x: &str) -> Theme {
+pub fn theme_from_str_hash(x: &str) -> Theme {
     let hash = seahash::hash(x.as_bytes()) as usize;
     let choice = hash % THEMES.len();
     THEMES[choice]
@@ -88,7 +88,7 @@ mod test {
 
     #[test]
     fn from_str() {
-        assert_eq!(theme_from_str("Bartefjes"), Theme::Orange);
+        assert_eq!(theme_from_str_hash("Bartefjes"), Theme::Orange);
     }
 
     #[test]

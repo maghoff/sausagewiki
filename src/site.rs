@@ -56,7 +56,7 @@ where
     Layout {
         base,
         title,
-        theme: theme::theme_from_str(title),
+        theme: theme::theme_from_str_hash(title),
         body: SystemPageLayout {
             title,
             html_body: body,

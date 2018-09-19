@@ -123,7 +123,7 @@ impl Resource for DiffResource {
                     .with_body(Layout {
                         base: Some("../"), // Hmm, should perhaps accept `base` as argument
                         title: "Difference",
-                        theme: theme::theme_from_str("Difference"),
+                        theme: theme::theme_from_str_hash("Difference"),
                         body: &Template {
                             consecutive: self.to.revision - self.from.revision == 1,
                             article_id: self.from.article_id as u32,

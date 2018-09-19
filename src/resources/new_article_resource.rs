@@ -84,7 +84,7 @@ impl Resource for NewArticleResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
-                        theme: theme::theme_from_str(&title),
+                        theme: theme::theme_from_str_hash(&title),
                         body: &Template {
                             revision: NEW,
                             last_updated: None,
