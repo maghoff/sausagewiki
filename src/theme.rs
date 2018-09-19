@@ -1,6 +1,15 @@
+use std::io::Write;
+
+use diesel::backend::Backend;
+use diesel::deserialize::{self, FromSql};
+use diesel::serialize::{self, Output, ToSql};
+use diesel::sql_types::Text;
+use diesel::sqlite::Sqlite;
 use seahash;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize)] // Serde
+#[derive(AsExpression, FromSqlRow)] // Diesel
 #[serde(rename_all="kebab-case")]
 pub enum Theme {
     Red,
@@ -24,9 +33,10 @@ pub enum Theme {
     BlueGray,
 }
 
-forward_display_to_serde!(Theme);
-
 use self::Theme::*;
+
+forward_display_to_serde!(Theme);
+forward_from_str_to_serde!(Theme);
 
 pub const THEMES: [Theme; 19] = [Red, Pink, Purple, DeepPurple, Indigo, Blue,
     LightBlue, Cyan, Teal, Green, LightGreen, Lime, Yellow, Amber, Orange,
@@ -37,6 +47,21 @@ pub fn theme_from_str_hash(x: &str) -> Theme {
     let choice = hash % THEMES.len();
     THEMES[choice]
 }
+
+impl ToSql<Text, Sqlite> for Theme {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Sqlite>) -> serialize::Result {
+        ToSql::<Text, Sqlite>::to_sql(&self.to_string(), out)
+    }
+}
+
+impl FromSql<Text, Sqlite> for Theme {
+    fn from_sql(value: Option<&<Sqlite as Backend>::RawValue>) -> deserialize::Result<Self> {
+        let text_ptr = <*const str as FromSql<Text, Sqlite>>::from_sql(value)?;
+        let text = unsafe { &*text_ptr };
+        text.parse().map_err(Into::into)
+    }
+}
+
 
 pub struct CssClass(Theme);
 
@@ -53,6 +78,7 @@ impl Display for CssClass {
         write!(fmt, "theme-{}", self.0)
     }
 }
+
 
 #[cfg(test)]
 mod test {
@@ -80,6 +106,12 @@ mod test {
     }
 
     #[test]
+    fn basic_from_str() {
+        let indigo: Theme = "indigo".parse().unwrap();
+        assert_eq!(indigo, Theme::Indigo);
+    }
+
+    #[test]
     fn to_number() {
         assert_eq!(Theme::Red as i32, 0);
         assert_eq!(Theme::LightGreen as i32, 10);
@@ -87,12 +119,31 @@ mod test {
     }
 
     #[test]
-    fn from_str() {
+    fn from_str_hash() {
         assert_eq!(theme_from_str_hash("Bartefjes"), Theme::Orange);
     }
 
     #[test]
     fn css_class_display() {
         assert_eq!(&Theme::Red.css_class().to_string(), "theme-red");
+    }
+
+    #[test]
+    fn basic_db_roundtrip() {
+        use diesel::prelude::*;
+        use diesel::sql_query;
+        use diesel::sql_types::Text;
+
+        let conn = SqliteConnection::establish(":memory:").unwrap();
+
+        #[derive(QueryableByName, PartialEq, Eq, Debug)]
+        struct Row { #[sql_type = "Text"] theme: Theme }
+
+        let res: Vec<Row> = sql_query("SELECT ? as theme")
+            .bind::<Text, _>(DeepPurple)
+            .load(&conn)
+            .unwrap();
+
+        assert_eq!(&[ Row { theme: DeepPurple } ], res.as_slice());
     }
 }
