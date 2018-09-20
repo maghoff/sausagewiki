@@ -56,6 +56,9 @@ impl ToSql<Text, Sqlite> for Theme {
 
 impl FromSql<Text, Sqlite> for Theme {
     fn from_sql(value: Option<&<Sqlite as Backend>::RawValue>) -> deserialize::Result<Self> {
+        // See Diesel's documentation on how to implement FromSql for Sqlite,
+        // especially with regards to the unsafe conversion below.
+        // http://docs.diesel.rs/diesel/deserialize/trait.FromSql.html
         let text_ptr = <*const str as FromSql<Text, Sqlite>>::from_sql(value)?;
         let text = unsafe { &*text_ptr };
         text.parse().map_err(Into::into)
@@ -82,8 +85,14 @@ impl Display for CssClass {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use std::error::Error;
+
+    use diesel::prelude::*;
+    use diesel::sql_query;
+    use diesel::sql_types::Text;
     use serde_plain;
+
+    use super::*;
 
     #[test]
     fn basic_serialize() {
@@ -129,21 +138,36 @@ mod test {
     }
 
     #[test]
-    fn basic_db_roundtrip() {
-        use diesel::prelude::*;
-        use diesel::sql_query;
-        use diesel::sql_types::Text;
-
-        let conn = SqliteConnection::establish(":memory:").unwrap();
+    fn basic_db_roundtrip() -> Result<(), Box<Error>> {
+        let conn = SqliteConnection::establish(":memory:")?;
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]
         struct Row { #[sql_type = "Text"] theme: Theme }
 
-        let res: Vec<Row> = sql_query("SELECT ? as theme")
+        let res = sql_query("SELECT ? as theme")
             .bind::<Text, _>(DeepPurple)
-            .load(&conn)
-            .unwrap();
+            .load::<Row>(&conn)?;
 
         assert_eq!(&[ Row { theme: DeepPurple } ], res.as_slice());
+
+        Ok(())
+    }
+
+    #[test]
+    fn db_invalid_value_gives_error() -> Result<(), Box<Error>> {
+        let conn = SqliteConnection::establish(":memory:")?;
+
+        #[derive(QueryableByName, PartialEq, Eq, Debug)]
+        struct Row { #[sql_type = "Text"] theme: Theme }
+
+        let res = sql_query("SELECT 'green' as theme")
+            .load::<Row>(&conn);
+        assert!(res.is_ok());
+
+        let res = sql_query("SELECT 'blueish-yellow' as theme")
+            .load::<Row>(&conn);
+        assert!(res.is_err());
+
+        Ok(())
     }
 }
