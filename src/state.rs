@@ -126,6 +126,18 @@ impl<'a> SyncState<'a> {
         Ok(article_revisions::table
             .filter(article_revisions::article_id.eq(article_id))
             .filter(article_revisions::revision.eq(revision))
+            .select((
+                article_revisions::sequence_number,
+                article_revisions::article_id,
+                article_revisions::revision,
+                article_revisions::created,
+                article_revisions::slug,
+                article_revisions::title,
+                article_revisions::body,
+                article_revisions::latest,
+                article_revisions::author,
+                ::db::sqlfunc::theme_from_str_hash(article_revisions::title),
+            ))
             .first::<models::ArticleRevision>(self.db_connection)
             .optional()?)
     }
@@ -310,6 +322,18 @@ impl<'a> SyncState<'a> {
             Ok(UpdateResult::Success(article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .filter(article_revisions::revision.eq(new_revision))
+                .select((
+                    article_revisions::sequence_number,
+                    article_revisions::article_id,
+                    article_revisions::revision,
+                    article_revisions::created,
+                    article_revisions::slug,
+                    article_revisions::title,
+                    article_revisions::body,
+                    article_revisions::latest,
+                    article_revisions::author,
+                    ::db::sqlfunc::theme_from_str_hash(article_revisions::title),
+                ))
                 .first::<models::ArticleRevision>(self.db_connection)?
             ))
         })
@@ -358,6 +382,18 @@ impl<'a> SyncState<'a> {
             Ok(article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .filter(article_revisions::revision.eq(new_revision))
+                .select((
+                    article_revisions::sequence_number,
+                    article_revisions::article_id,
+                    article_revisions::revision,
+                    article_revisions::created,
+                    article_revisions::slug,
+                    article_revisions::title,
+                    article_revisions::body,
+                    article_revisions::latest,
+                    article_revisions::author,
+                    ::db::sqlfunc::theme_from_str_hash(article_revisions::title),
+                ))
                 .first::<models::ArticleRevision>(self.db_connection)?
             )
         })

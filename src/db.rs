@@ -13,7 +13,7 @@ embed_migrations!();
 struct SqliteInitializer;
 
 #[allow(dead_code)]
-mod sqlfunc {
+pub mod sqlfunc {
     use diesel::sql_types::Text;
     sql_function!(fn markdown_to_fts(text: Text) -> Text);
     sql_function!(fn theme_from_str_hash(text: Text) -> Text);

@@ -103,7 +103,7 @@ impl Resource for ArticleResource {
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &data.title,
-                        theme: theme::theme_from_str_hash(&data.title),
+                        theme: data.theme,
                         body: &Template {
                             revision: data.revision,
                             last_updated: Some(&last_updated(

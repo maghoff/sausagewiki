@@ -1,5 +1,7 @@
 use chrono;
 
+use theme::Theme;
+
 fn slug_link(slug: &str) -> &str {
     if slug.is_empty() {
         "."
@@ -23,6 +25,8 @@ pub struct ArticleRevision {
     pub latest: bool,
 
     pub author: Option<String>,
+
+    pub theme: Theme,
 }
 
 impl ArticleRevision {
