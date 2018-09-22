@@ -11,7 +11,7 @@ use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
 use state::{State, UpdateResult, RebaseConflict};
-use theme;
+use theme::Theme;
 use web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
@@ -140,6 +140,7 @@ impl Resource for ArticleResource {
             revision: i32,
             title: &'a str,
             body: &'a str,
+            theme: Theme,
             rendered: &'a str,
             last_updated: &'a str,
         }
@@ -165,6 +166,7 @@ impl Resource for ArticleResource {
                             revision: updated.revision,
                             title: &updated.title,
                             body: &updated.body,
+                            theme: updated.theme,
                             rendered: &Template {
                                 title: &updated.title,
                                 rendered: render_markdown(&updated.body),
@@ -177,7 +179,7 @@ impl Resource for ArticleResource {
                         }).expect("Should never fail"))
                     ),
                 UpdateResult::RebaseConflict(RebaseConflict {
-                    base_article, title, body
+                    base_article, title, body, theme
                 }) => {
                     let title = title.flatten();
                     let body = body.flatten();
@@ -190,6 +192,7 @@ impl Resource for ArticleResource {
                             revision: base_article.revision,
                             title: &title,
                             body: &body,
+                            theme,
                             rendered: &Template {
                                 title: &title,
                                 rendered: render_markdown(&body),
@@ -230,7 +233,7 @@ impl Resource for ArticleResource {
                         .with_body("See other")
                     ),
                     UpdateResult::RebaseConflict(RebaseConflict {
-                        base_article, title, body
+                        base_article, title, body, theme
                     }) => {
                         let title = title.flatten();
                         let body = body.flatten();
@@ -240,7 +243,7 @@ impl Resource for ArticleResource {
                             .with_body(Layout {
                                 base: None,
                                 title: &title,
-                                theme: theme::theme_from_str_hash(&title),
+                                theme,
                                 body: &Template {
                                     revision: base_article.revision,
                                     last_updated: Some(&last_updated(

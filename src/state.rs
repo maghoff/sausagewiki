@@ -10,6 +10,7 @@ use r2d2_diesel::ConnectionManager;
 use merge;
 use models;
 use schema::*;
+use theme::Theme;
 
 #[derive(Clone)]
 pub struct State {
@@ -45,11 +46,12 @@ pub struct RebaseConflict {
     pub base_article: models::ArticleRevisionStub,
     pub title: merge::MergeResult<char>,
     pub body: merge::MergeResult<String>,
+    pub theme: Theme,
 }
 
 #[derive(Debug, PartialEq)]
 enum RebaseResult {
-    Clean { title: String, body: String },
+    Clean { title: String, body: String, theme: Theme },
     Conflict(RebaseConflict),
 }
 
@@ -161,6 +163,7 @@ impl<'a> SyncState<'a> {
                 title,
                 latest,
                 author,
+                ::db::sqlfunc::theme_from_str_hash(title),
             ))
             .load(self.db_connection)?
         )
@@ -220,6 +223,15 @@ impl<'a> SyncState<'a> {
     {
         let mut title_a = title;
         let mut body_a = body;
+        let mut theme_a = ::theme::theme_from_str_hash(&title_a);
+
+        // TODO: Improve this implementation.
+        // Weakness: If the range of revisions is big, _one_ request from the
+        //   client can cause _many_ database requests, cheaply causing lots
+        //   of work for the server. Possible attack vector.
+        // Weakness: When the range is larger than just one iteration, the
+        //   same title and body are retrieved from the database multiple
+        //   times. Unnecessary extra copies.
 
         for revision in existing_base_revision..target_base_revision {
             let mut stored = article_revisions::table
@@ -230,25 +242,33 @@ impl<'a> SyncState<'a> {
                 .select((
                     article_revisions::title,
                     article_revisions::body,
+                    ::db::sqlfunc::theme_from_str_hash(article_revisions::title),
                 ))
-                .load::<(String, String)>(self.db_connection)?;
+                .load::<(String, String, Theme)>(self.db_connection)?;
 
-            let (title_b, body_b) = stored.pop().expect("Application layer guarantee");
-            let (title_o, body_o) = stored.pop().expect("Application layer guarantee");
+            let (title_b, body_b, theme_b) = stored.pop().expect("Application layer guarantee");
+            let (title_o, body_o, theme_o) = stored.pop().expect("Application layer guarantee");
 
             use merge::MergeResult::*;
+
+            fn merge_themes(a: Theme, o: Theme, b: Theme) -> Theme {
+                // Last change wins
+                if a != o { a } else { b }
+            }
 
             let update = {
                 let title_merge = merge::merge_chars(&title_a, &title_o, &title_b);
                 let body_merge = merge::merge_lines(&body_a, &body_o, &body_b);
+                let theme = merge_themes(theme_a, theme_o, theme_b);
 
                 match (title_merge, body_merge) {
-                    (Clean(title), Clean(body)) => (title, body),
+                    (Clean(title), Clean(body)) => (title, body, theme),
                     (title_merge, body_merge) => {
                         return Ok(RebaseResult::Conflict(RebaseConflict {
                             base_article: self.get_article_revision_stub(article_id, revision+1)?.expect("Application layer guarantee"),
                             title: title_merge,
                             body: body_merge.to_strings(),
+                            theme,
                         }));
                     },
                 }
@@ -256,9 +276,10 @@ impl<'a> SyncState<'a> {
 
             title_a = update.0;
             body_a = update.1;
+            theme_a = update.2;
         }
 
-        Ok(RebaseResult::Clean { title: title_a, body: body_a })
+        Ok(RebaseResult::Clean { title: title_a, body: body_a, theme: theme_a })
     }
 
     pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>)
@@ -290,8 +311,8 @@ impl<'a> SyncState<'a> {
 
             let rebase_result = self.rebase_update(article_id, latest_revision, base_revision, title, body)?;
 
-            let (title, body) = match rebase_result {
-                RebaseResult::Clean { title, body } => (title, body),
+            let (title, body, theme) = match rebase_result {
+                RebaseResult::Clean { title, body, theme } => (title, body, theme),
                 RebaseResult::Conflict(x) => return Ok(UpdateResult::RebaseConflict(x)),
             };
 
@@ -641,7 +662,7 @@ mod test {
 
         match conflict_edit {
             UpdateResult::Success(..) => panic!("Expected conflict"),
-            UpdateResult::RebaseConflict(RebaseConflict { base_article, title, body }) => {
+            UpdateResult::RebaseConflict(RebaseConflict { base_article, title, body, theme: _ }) => {
                 assert_eq!(first_edit.revision, base_article.revision);
                 assert_eq!(title, merge::MergeResult::Clean(article.title.clone()));
                 assert_eq!(body, merge::MergeResult::Conflicted(vec![

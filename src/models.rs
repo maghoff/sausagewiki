@@ -47,6 +47,8 @@ pub struct ArticleRevisionStub {
     pub latest: bool,
 
     pub author: Option<String>,
+
+    pub theme: Theme,
 }
 
 impl ArticleRevisionStub {
