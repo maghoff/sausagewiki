@@ -9,8 +9,9 @@ use seahash;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[derive(Serialize, Deserialize)] // Serde
-#[derive(AsExpression, FromSqlRow)] // Diesel
 #[serde(rename_all="kebab-case")]
+#[derive(AsExpression, FromSqlRow)] // Diesel
+#[sql_type = "Text"]
 pub enum Theme {
     Red,
     Pink,
