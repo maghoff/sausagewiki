@@ -27,6 +27,7 @@ struct Template<'a> {
     title: &'a str,
     raw: &'a str,
     rendered: String,
+    theme: Theme,
 }
 
 impl<'a> Template<'a> {
@@ -40,6 +41,7 @@ struct UpdateArticle {
     base_revision: i32,
     title: String,
     body: String,
+    theme: Theme,
 }
 
 pub struct ArticleResource {
@@ -116,6 +118,7 @@ impl Resource for ArticleResource {
                             title: &data.title,
                             raw: &data.body,
                             rendered: render_markdown(&data.body),
+                            theme: data.theme,
                         },
                     }.to_string()))
             }))
@@ -153,7 +156,7 @@ impl Resource for ArticleResource {
                     .map_err(Into::into)
             })
             .and_then(move |update: UpdateArticle| {
-                self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
+                self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity, update.theme)
             })
             .and_then(|updated| match updated {
                 UpdateResult::Success(updated) =>
@@ -222,7 +225,7 @@ impl Resource for ArticleResource {
                     .map_err(Into::into)
             })
             .and_then(move |update: UpdateArticle| {
-                self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity)
+                self.state.update_article(self.article_id, update.base_revision, update.title, update.body, identity, update.theme)
             })
             .and_then(|updated| {
                 match updated {
@@ -256,6 +259,7 @@ impl Resource for ArticleResource {
                                     title: &title,
                                     raw: &body,
                                     rendered: render_markdown(&body),
+                                    theme,
                                 },
                             }.to_string())
                         )

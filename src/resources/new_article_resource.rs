@@ -10,7 +10,7 @@ use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
 use state::State;
-use theme;
+use theme::{self, Theme};
 use web::{Resource, ResponseFuture};
 
 const NEW: &str = "NEW";
@@ -35,6 +35,7 @@ struct CreateArticle {
     base_revision: String,
     title: String,
     body: String,
+    theme: Theme,
 }
 
 impl NewArticleResource {
@@ -68,6 +69,7 @@ impl Resource for NewArticleResource {
             title: &'a str,
             raw: &'a str,
             rendered: &'a str,
+            theme: Theme,
         }
         impl<'a> Template<'a> {
             fn script_js(&self) -> &'static str {
@@ -78,13 +80,15 @@ impl Resource for NewArticleResource {
         let title = self.slug.as_ref()
             .map_or("".to_owned(), |x| title_from_slug(x));
 
+        let theme = theme::theme_from_str_hash(&title);
+
         Box::new(self.head()
             .and_then(move |head| {
                 Ok(head
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
-                        theme: theme::theme_from_str_hash(&title),
+                        theme,
                         body: &Template {
                             revision: NEW,
                             last_updated: None,
@@ -97,6 +101,7 @@ impl Resource for NewArticleResource {
                             title: &title,
                             raw: "",
                             rendered: EMPTY_ARTICLE_MESSAGE,
+                            theme,
                         },
                     }.to_string()))
             }))
@@ -138,7 +143,7 @@ impl Resource for NewArticleResource {
                 if arg.base_revision != NEW {
                     unimplemented!("Version update conflict");
                 }
-                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity)
+                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, arg.theme)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()
@@ -182,7 +187,7 @@ impl Resource for NewArticleResource {
                 if arg.base_revision != NEW {
                     unimplemented!("Version update conflict");
                 }
-                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity)
+                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, arg.theme)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()
