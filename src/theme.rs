@@ -91,7 +91,9 @@ mod test {
     use diesel::prelude::*;
     use diesel::sql_query;
     use diesel::sql_types::Text;
+    use serde_json;
     use serde_plain;
+    use serde_urlencoded;
 
     use super::*;
 
@@ -103,6 +105,46 @@ mod test {
     #[test]
     fn serialize_kebab_case() {
         assert_eq!(serde_plain::to_string(&Theme::LightGreen).unwrap(), "light-green");
+    }
+
+    #[test]
+    fn serialize_json() {
+        #[derive(Serialize)]
+        struct Test { x: Theme }
+        assert_eq!(
+            serde_json::to_string(&Test { x: Theme::Red }).unwrap(),
+            "{\"x\":\"red\"}"
+        );
+    }
+
+    #[test]
+    fn deserialize_json() {
+        #[derive(Deserialize, Debug, PartialEq, Eq)]
+        struct Test { x: Theme }
+        assert_eq!(
+            serde_json::from_str::<Test>("{\"x\":\"red\"}").unwrap(),
+            Test { x: Theme::Red }
+        );
+    }
+
+    #[test]
+    fn serialize_urlencoded() {
+        #[derive(Serialize)]
+        struct Test { x: Theme }
+        assert_eq!(
+            serde_urlencoded::to_string(&Test { x: Theme::Red }).unwrap(),
+            "x=red"
+        );
+    }
+
+    #[test]
+    fn deserialize_urlencoded() {
+        #[derive(Deserialize, Debug, PartialEq, Eq)]
+        struct Test { x: Theme }
+        assert_eq!(
+            serde_urlencoded::from_str::<Test>("x=red").unwrap(),
+            Test { x: Theme::Red }
+        );
     }
 
     #[test]
