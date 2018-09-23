@@ -15,6 +15,7 @@ use walkdir::WalkDir;
 mod sqlfunc {
     use diesel::sql_types::Text;
     sql_function!(fn markdown_to_fts(text: Text) -> Text);
+    sql_function!(fn theme_from_str_hash(text: Text) -> Text);
 }
 
 fn main() {
@@ -33,6 +34,7 @@ fn main() {
         .expect("Should be able to enable foreign keys");
 
     sqlfunc::markdown_to_fts::register_impl(&connection, |_: String| -> String { unreachable!() }).unwrap();
+    sqlfunc::theme_from_str_hash::register_impl(&connection, |_: String| -> String { unreachable!() }).unwrap();
 
     diesel_migrations::run_pending_migrations(&connection).unwrap();
 
