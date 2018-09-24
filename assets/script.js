@@ -168,6 +168,9 @@ function openEditor() {
                 if (doReset) {
                     container.classList.remove('edit');
                     form.reset();
+
+                    let selectedTheme = form.querySelector(`.theme-picker--option[checked]`).value;
+                    bodyElement.className = `theme-${selectedTheme}`;
                 }
             });
     }
