@@ -28,6 +28,7 @@ fn title_from_slug(slug: &str) -> String {
 pub struct NewArticleResource {
     state: State,
     slug: Option<String>,
+    edit: bool,
 }
 
 #[derive(Deserialize)]
@@ -39,8 +40,8 @@ struct CreateArticle {
 }
 
 impl NewArticleResource {
-    pub fn new(state: State, slug: Option<String>) -> Self {
-        Self { state, slug }
+    pub fn new(state: State, slug: Option<String>, edit: bool) -> Self {
+        Self { state, slug, edit }
     }
 }
 
@@ -98,12 +99,7 @@ impl Resource for NewArticleResource {
                         body: &Template {
                             revision: NEW,
                             last_updated: None,
-
-                            // Implicitly start in edit-mode when no slug is given. This
-                            // currently directly corresponds to the /_new endpoint
-                            // TODO: Also start in edit mode when the ?edit query arg is given
-                            edit: self.slug.is_none(),
-
+                            edit: self.edit,
                             cancel_url: self.slug.as_ref().map(|x| &**x),
                             title: &title,
                             raw: "",

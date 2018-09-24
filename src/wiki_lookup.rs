@@ -198,7 +198,7 @@ impl WikiLookup {
             ("_diff", Some(tail)) =>
                 self.diff_lookup_f(tail, query),
             ("_new", None) =>
-                Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None)) as BoxResource))),
+                Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None, true)) as BoxResource))),
             ("_revisions", Some(tail)) =>
                 self.revisions_lookup(tail, query),
             ("_search", None) =>
@@ -236,7 +236,7 @@ impl WikiLookup {
         Box::new(self.state.lookup_slug(slug.clone())
             .and_then(move |x| Ok(Some(match x {
                 SlugLookup::Miss =>
-                    Box::new(NewArticleResource::new(state, Some(slug))) as BoxResource,
+                    Box::new(NewArticleResource::new(state, Some(slug), edit)) as BoxResource,
                 SlugLookup::Hit { article_id, revision } =>
                     Box::new(ArticleResource::new(state, article_id, revision, edit)) as BoxResource,
                 SlugLookup::Redirect(slug) =>
