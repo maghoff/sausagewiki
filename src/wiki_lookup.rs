@@ -220,16 +220,17 @@ impl WikiLookup {
             return Box::new(finished(None));
         }
 
+        let edit = query == Some("edit");
+
         // Normalize all user-generated slugs:
         let slugified_slug = slugify(&slug);
         if slugified_slug != slug {
             return Box::new(finished(Some(
-                Box::new(TemporaryRedirectResource::from_slug(slugified_slug)) as BoxResource
+                Box::new(TemporaryRedirectResource::from_slug(slugified_slug, edit)) as BoxResource
             )));
         }
 
         let state = self.state.clone();
-        let edit = query == Some("edit");
         let slug = slug.into_owned();
 
         use state::SlugLookup;
@@ -240,7 +241,7 @@ impl WikiLookup {
                 SlugLookup::Hit { article_id, revision } =>
                     Box::new(ArticleResource::new(state, article_id, revision, edit)) as BoxResource,
                 SlugLookup::Redirect(slug) =>
-                    Box::new(TemporaryRedirectResource::from_slug(slug)) as BoxResource,
+                    Box::new(TemporaryRedirectResource::from_slug(slug, edit)) as BoxResource,
             })))
         )
     }

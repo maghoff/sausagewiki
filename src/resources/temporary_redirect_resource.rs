@@ -14,14 +14,18 @@ impl TemporaryRedirectResource {
         Self { location }
     }
 
-    pub fn from_slug<S: AsRef<str>>(slug: S) -> Self {
+    pub fn from_slug<S: AsRef<str>>(slug: S, edit: bool) -> Self {
+        let base =
+            if slug.as_ref().is_empty() {
+                "."
+            } else {
+                slug.as_ref()
+            };
+
+        let tail = if edit { "?edit" } else { "" };
+
         Self {
-            location:
-                if slug.as_ref().is_empty() {
-                    "."
-                } else {
-                    slug.as_ref()
-                }.to_owned()
+            location: format!("{}{}", base, tail)
         }
     }
 }
