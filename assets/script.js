@@ -8,16 +8,17 @@ function autosizeTextarea(textarea, shadow) {
 
 function queryArgsFromForm(form) {
     const items = [];
-    for (const {name, value} of form.elements) {
+    for (const {name, value, type, checked} of form.elements) {
         if (!name) continue;
+        if (type === "radio" && !checked) continue;
         items.push(encodeURIComponent(name) + '=' + encodeURIComponent(value));
     }
     return items.join('&');
 }
 
 function isEdited(form) {
-    for (const {name, value, defaultValue} of form.elements) {
-        if (name && (value !== defaultValue)) return true;
+    for (const {name, value, defaultValue, checked, defaultChecked} of form.elements) {
+        if (name && ((value !== defaultValue) || (checked !== defaultChecked))) return true;
     }
     return false;
 }
@@ -60,6 +61,7 @@ function confirmDiscard() {
 
 let hasBeenOpen = false;
 function openEditor() {
+    const bodyElement = document.querySelector("body");
     const container = document.querySelector(".container");
     const rendered = container.querySelector(".rendered");
     const editor = container.querySelector(".editor");
@@ -119,6 +121,7 @@ function openEditor() {
                 .then(result => {
                     // Update url-bar, page title and footer
                     window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
+                    // TODO Cancel-link URL should be updated to new slug
                     document.querySelector("title").textContent = result.title;
                     lastUpdated.innerHTML = result.last_updated;
                     lastUpdated.classList.remove("missing");
@@ -129,10 +132,14 @@ function openEditor() {
                     form.elements.title.value = result.title;
                     shadow.value = textarea.value = result.body;
 
+                    form.querySelector(`.theme-picker--option[value=${JSON.stringify(result.theme)}]`).checked = true;
+                    bodyElement.className = `theme-${result.theme}`;
+
                     // Update form:
                     form.elements.base_revision.value = result.revision;
                     for (const element of form.elements) {
                         element.defaultValue = element.value;
+                        element.defaultChecked = element.checked;
                     }
 
                     if (!result.conflict) {
@@ -196,6 +203,13 @@ function openEditor() {
             doSave();
         }
     });
+
+    const themeOptions = form.querySelectorAll(".theme-picker--option");
+    for (let themeOption of themeOptions) {
+        themeOption.addEventListener("click", function (ev) {
+            bodyElement.className = `theme-${ev.target.value}`;
+        });
+    }
 }
 
 document

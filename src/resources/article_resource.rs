@@ -11,10 +11,15 @@ use mimes::*;
 use rendering::render_markdown;
 use site::Layout;
 use state::{State, UpdateResult, RebaseConflict};
-use theme::Theme;
+use theme::{self, Theme};
 use web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
+
+struct SelectableTheme {
+    theme: Theme,
+    selected: bool,
+}
 
 #[derive(BartDisplay)]
 #[template="templates/article.html"]
@@ -27,7 +32,7 @@ struct Template<'a> {
     title: &'a str,
     raw: &'a str,
     rendered: String,
-    theme: Theme,
+    themes: &'a [SelectableTheme],
 }
 
 impl<'a> Template<'a> {
@@ -118,7 +123,10 @@ impl Resource for ArticleResource {
                             title: &data.title,
                             raw: &data.body,
                             rendered: render_markdown(&data.body),
-                            theme: data.theme,
+                            themes: &theme::THEMES.iter().map(|&x| SelectableTheme {
+                                theme: x,
+                                selected: x == data.theme,
+                            }).collect::<Vec<_>>(),
                         },
                     }.to_string()))
             }))
@@ -259,7 +267,10 @@ impl Resource for ArticleResource {
                                     title: &title,
                                     raw: &body,
                                     rendered: render_markdown(&body),
-                                    theme,
+                                    themes: &theme::THEMES.iter().map(|&x| SelectableTheme {
+                                        theme: x,
+                                        selected: x == theme,
+                                    }).collect::<Vec<_>>(),
                                 },
                             }.to_string())
                         )

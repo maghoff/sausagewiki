@@ -58,6 +58,12 @@ impl Resource for NewArticleResource {
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
+        // TODO Remove duplication with article_resource.rs:
+        struct SelectableTheme {
+            theme: Theme,
+            selected: bool,
+        }
+
         #[derive(BartDisplay)]
         #[template="templates/article.html"]
         struct Template<'a> {
@@ -69,7 +75,7 @@ impl Resource for NewArticleResource {
             title: &'a str,
             raw: &'a str,
             rendered: &'a str,
-            theme: Theme,
+            themes: &'a [SelectableTheme],
         }
         impl<'a> Template<'a> {
             fn script_js(&self) -> &'static str {
@@ -95,13 +101,17 @@ impl Resource for NewArticleResource {
 
                             // Implicitly start in edit-mode when no slug is given. This
                             // currently directly corresponds to the /_new endpoint
+                            // TODO: Also start in edit mode when the ?edit query arg is given
                             edit: self.slug.is_none(),
 
                             cancel_url: self.slug.as_ref().map(|x| &**x),
                             title: &title,
                             raw: "",
                             rendered: EMPTY_ARTICLE_MESSAGE,
-                            theme,
+                            themes: &theme::THEMES.iter().map(|&x| SelectableTheme {
+                                theme: x,
+                                selected: x == theme,
+                            }).collect::<Vec<_>>(),
                         },
                     }.to_string()))
             }))

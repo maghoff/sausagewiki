@@ -329,6 +329,49 @@ h1>input {
     transition-timing-function: cubic-bezier(.17,.84,.44,1);
 }
 
+.theme-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+}
+
+.theme-picker--option {
+    /* reset */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -o-appearance: none;
+    -ms-appearance: none;
+    appearance: none;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+
+    height: 20px;
+    background: var(--theme-main);
+    color: var(--theme-text);
+
+    flex-grow: 1;
+
+    position: relative;
+}
+
+.theme-picker--option:checked::after {
+    content: " ";
+    display: block;
+    background: white;
+    border-radius: 5px;
+    width: 10px;
+    height: 10px;
+
+    position: absolute;
+    top: calc(50% - 5px);
+    left: calc(50% - 5px);
+}
+
 .button {
     border-radius: 2px;
 

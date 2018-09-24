@@ -5,7 +5,7 @@
 {{>article_contents.html}}
 </div>
 
-<form id="article-editor" action="" method="POST">
+<form autocomplete="off" id="article-editor" action="" method="POST">
 
 <div class="editor">
 <div class="hero">
@@ -14,9 +14,14 @@
 </header>
 </div>
 
+<div class="theme-picker">
+{{#themes}}
+<input autocomplete="off" type="radio" name="theme" value="{{.theme}}"{{#.selected?}} checked{{/.selected}} class="theme-picker--option {{.theme.css_class()}} themed">
+{{/themes}}
+</div>
+
 <article>
 <p>
-<input autocomplete=off type=hidden name=theme value="{{theme}}">
 <input autocomplete=off type=hidden name=base_revision value="{{revision}}">
 <textarea autocomplete=off name=body placeholder="Article goes here">{{raw}}</textarea>
 <textarea autocomplete=off class="shadow-control"></textarea>
