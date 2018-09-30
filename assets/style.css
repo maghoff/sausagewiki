@@ -414,6 +414,14 @@ h1>input {
     --button-alt: var(--theme-input);
 }
 
+.interaction-group--root--enabled .interaction-group--disabled {
+    display: none;
+}
+
+.interaction-group--root--disabled .interaction-group--enabled {
+    display: none;
+}
+
 @media (min-width: 960px) {
     /* min-width is calculated like this:
 

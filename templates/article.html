@@ -31,13 +31,20 @@
 </div>
 
 <div class="editor-controls">
-{{#cancel_url}}
-    <a class="button button-cancel cancel" href="{{.}}">Cancel</a>
-{{/cancel_url}}
-{{^cancel_url}}
-    <button class="button button-cancel cancel" disabled>Cancel</a>
-{{/cancel_url}}
-    <button class="button button-default" type=submit>Save</button>
+{{#edit?}}
+    <div class="cancel-interaction-group {{#cancel_url}}interaction-group--root--enabled{{/cancel_url}}{{^cancel_url}}interaction-group--root--disabled{{/cancel_url}}">
+        <a class="interaction-group--enabled button button-cancel cancel" href="{{#cancel_url}}{{.}}{{/cancel_url}}">Cancel</a>
+        <button class="interaction-group--disabled button button-cancel" disabled>Cancel</a>
+    </div>
+    <button class="button button-default" type=submit {{^edit?}}disabled{{/edit}}>Save</button>
+{{/edit}}
+{{^edit?}}
+    <div class="cancel-interaction-group interaction-group--root--disabled">
+        <a class="interaction-group--enabled button button-cancel cancel" href="{{#cancel_url}}{{.}}{{/cancel_url}}">Cancel</a>
+        <button class="interaction-group--disabled button button-cancel" disabled>Cancel</a>
+    </div>
+    <button class="button button-default" type=submit disabled>Save</button>
+{{/edit}}
 </div>
 </form>
 

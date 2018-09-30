@@ -59,7 +59,13 @@ function confirmDiscard() {
     return popup(instantiate("confirm-discard"));
 }
 
-let hasBeenOpen = false;
+const state = {
+    hasBeenOpen: false,
+    saving: false,
+    editing: function () { return document.querySelector(".container").classList.contains('edit'); },
+    hasCancelUrl: function () { return document.querySelector("a.button-cancel").getAttribute('href') !== ""; }
+};
+
 function openEditor() {
     const bodyElement = document.querySelector("body");
     const container = document.querySelector(".container");
@@ -69,6 +75,7 @@ function openEditor() {
     const shadow = editor.querySelector('textarea.shadow-control');
     const form = document.getElementById('article-editor');
     const cancel = form.querySelector('.cancel');
+    const cancelInteractionGroup = form.querySelector(".cancel-interaction-group");
 
     const footer = document.querySelector("footer");
     const lastUpdated = footer.querySelector(".last-updated");
@@ -76,22 +83,40 @@ function openEditor() {
     textarea.style.height = rendered.clientHeight + "px";
 
     container.classList.add('edit');
+    updateFormEnabledState();
 
     autosizeTextarea(textarea, shadow);
 
     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     textarea.focus();
 
-    if (hasBeenOpen) return;
-    hasBeenOpen = true;
+    if (state.hasBeenOpen) return;
+    state.hasBeenOpen = true;
 
     textarea.addEventListener('input', () => autosizeTextarea(textarea, shadow));
     window.addEventListener('resize', () => autosizeTextarea(textarea, shadow));
 
+    function updateFormEnabledState() {
+        const baseEnabled = !state.saving && state.editing();
+        const enabled = {
+            cancel: baseEnabled && state.hasCancelUrl(),
+        };
+
+        cancelInteractionGroup.classList.remove(!enabled.cancel ? "interaction-group--root--enabled" : "interaction-group--root--disabled");
+        cancelInteractionGroup.classList.add(enabled.cancel ? "interaction-group--root--enabled" : "interaction-group--root--disabled");
+
+        for (const el of form.elements) {
+            el.disabled = !baseEnabled;
+        }
+
+        // TODO: edit-link in footer?
+    }
+
     function doSave() {
+        state.saving = true;
+        updateFormEnabledState();
+
         const body = queryArgsFromForm(form);
-        textarea.disabled = true;
-        // TODO Disable other interaction as well: title editor, cancel and OK buttons
 
         fetch(
             form.getAttribute("action"),
@@ -111,7 +136,8 @@ function openEditor() {
             if (probablyLoginRedirect) {
                 return loginDialog(response.url)
                     .then(() => {
-                        textarea.disabled = false;
+                        state.saving = false;
+                        updateFormEnabledState();
                     });
             }
 
@@ -119,9 +145,10 @@ function openEditor() {
 
             return response.json()
                 .then(result => {
-                    // Update url-bar, page title and footer
-                    window.history.replaceState(null, result.title, result.slug == "" ? "." : result.slug);
-                    // TODO Cancel-link URL should be updated to new slug
+                    // Update url-bar, page title, footer and cancel link
+                    const url = result.slug == "" ? "." : result.slug;
+                    window.history.replaceState(null, result.title, url);
+                    cancel.setAttribute("href", url);
                     document.querySelector("title").textContent = result.title;
                     lastUpdated.innerHTML = result.last_updated;
                     lastUpdated.classList.remove("missing");
@@ -144,9 +171,11 @@ function openEditor() {
 
                     if (!result.conflict) {
                         container.classList.remove('edit');
+                        document.activeElement && document.activeElement.blur();
                     }
 
-                    textarea.disabled = false;
+                    state.saving = false;
+                    updateFormEnabledState();
                     autosizeTextarea(textarea, shadow);
 
                     if (result.conflict) {
@@ -156,7 +185,8 @@ function openEditor() {
                     }
                 });
         }).catch(err => {
-            textarea.disabled = false;
+            state.saving = false;
+            updateFormEnabledState();
             console.error(err);
             return alertAsync(err.toString());
         });
@@ -167,6 +197,8 @@ function openEditor() {
             .then(doReset => {
                 if (doReset) {
                     container.classList.remove('edit');
+                    document.activeElement && document.activeElement.blur();
+                    updateFormEnabledState();
                     form.reset();
 
                     let selectedTheme = form.querySelector(`.theme-picker--option[checked]`).value;
@@ -197,8 +229,7 @@ function openEditor() {
     document.addEventListener("keypress", function (ev) {
         const accel = ev.ctrlKey || ev.metaKey; // Imprecise, but works cross platform
         if (ev.key === "Enter" && accel) {
-            const isEditing = container.classList.contains('edit');
-            if (!isEditing) return;
+            if (!state.editing()) return;
 
             ev.stopPropagation();
             ev.preventDefault();
