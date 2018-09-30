@@ -134,6 +134,7 @@ impl Resource for NewArticleResource {
             revision: i32,
             title: &'a str,
             body: &'a str,
+            theme: Theme,
             rendered: &'a str,
             last_updated: &'a str,
         }
@@ -161,6 +162,7 @@ impl Resource for NewArticleResource {
                         revision: updated.revision,
                         title: &updated.title,
                         body: &updated.body,
+                        theme: updated.theme,
                         rendered: &Template {
                             title: &updated.title,
                             rendered: render_markdown(&updated.body),
