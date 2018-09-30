@@ -322,11 +322,15 @@ h1>input {
     transform: translate(0, 65px);
     transition: transform 100ms;
     transition-timing-function: linear;
+
+    pointer-events: none;
 }
 
 .edit .editor-controls {
     transform: translate(0, 0);
     transition-timing-function: cubic-bezier(.17,.84,.44,1);
+
+    pointer-events: unset;
 }
 
 .theme-picker {
