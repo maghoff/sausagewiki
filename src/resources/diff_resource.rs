@@ -130,7 +130,7 @@ impl Resource for DiffResource {
                             article_history_link: &format!("_changes{}",
                                 changes_resource::QueryParameters::default()
                                     .article_id(Some(self.from.article_id))
-                                    .pagination(Pagination::After(self.from.revision))
+                                    .pagination(Pagination::After(self.from.sequence_number))
                                     .into_link()
                             ),
                             from_link: &format!("_revisions/{}/{}", self.from.article_id, self.from.revision),
