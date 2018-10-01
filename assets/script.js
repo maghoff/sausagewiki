@@ -82,10 +82,11 @@ function openEditor() {
 
     textarea.style.height = rendered.clientHeight + "px";
 
-    container.classList.add('edit');
+    retainScrollRatio(() => {
+        container.classList.add('edit');
+        autosizeTextarea(textarea, shadow);
+    });
     updateFormEnabledState();
-
-    autosizeTextarea(textarea, shadow);
 
     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     textarea.focus();
@@ -110,6 +111,18 @@ function openEditor() {
         }
 
         // TODO: edit-link in footer?
+    }
+
+    function retainScrollRatio(innerFunction) {
+        const scrollElement = document.body.parentElement;
+        const savedScrollRatio = scrollElement.scrollTop / (scrollElement.scrollHeight - scrollElement.clientHeight);
+        innerFunction();
+        scrollElement.scrollTop = (scrollElement.scrollHeight - scrollElement.clientHeight) * savedScrollRatio;
+    }
+
+    function closeEditor() {
+        retainScrollRatio(() => container.classList.remove('edit'));
+        document.activeElement && document.activeElement.blur();
     }
 
     function doSave() {
@@ -170,8 +183,7 @@ function openEditor() {
                     }
 
                     if (!result.conflict) {
-                        container.classList.remove('edit');
-                        document.activeElement && document.activeElement.blur();
+                        closeEditor();
                     }
 
                     state.saving = false;
@@ -196,8 +208,7 @@ function openEditor() {
         Promise.resolve(!isEdited(form) || confirmDiscard())
             .then(doReset => {
                 if (doReset) {
-                    container.classList.remove('edit');
-                    document.activeElement && document.activeElement.blur();
+                    closeEditor();
                     updateFormEnabledState();
                     form.reset();
 
