@@ -418,6 +418,10 @@ h1>input {
     --button-alt: var(--theme-input);
 }
 
+.cancel-interaction-group {
+    display: inline;
+}
+
 .interaction-group--root--enabled .interaction-group--disabled {
     display: none;
 }
