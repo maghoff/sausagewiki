@@ -72,3 +72,4 @@ Command line arguments
 Sausagewiki will create an SQLite database file with the filename given in the
 `DATABASE` parameter and open an HTTP server bound to the configured address,
 `<address>:<port>`.
+
