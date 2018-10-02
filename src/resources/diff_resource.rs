@@ -101,6 +101,8 @@ impl Resource for DiffResource {
         struct Template<'a> {
             consecutive: bool,
             article_id: u32,
+            author: Option<&'a str>,
+            author_link: &'a str,
             article_history_link: &'a str,
             from_link: &'a str,
             to_link: &'a str,
@@ -119,38 +121,60 @@ impl Resource for DiffResource {
 
         Box::new(head
             .and_then(move |head| {
+                let consecutive = self.to.revision - self.from.revision == 1;
+
+                let author = match consecutive {
+                    true => self.to.author.as_ref().map(|x| &**x),
+                    false => None,
+                };
+
+                let author_link = &format!("_changes{}",
+                    changes_resource::QueryParameters::default()
+                        .author(author.map(|x| x.to_owned()))
+                        .pagination(Pagination::After(self.from.sequence_number))
+                        .into_link()
+                );
+
+                let article_history_link = &format!("_changes{}",
+                    changes_resource::QueryParameters::default()
+                        .article_id(Some(self.from.article_id))
+                        .pagination(Pagination::After(self.from.sequence_number))
+                        .into_link()
+                );
+
+                let title = &diff::chars(&self.from.title, &self.to.title)
+                    .into_iter()
+                    .map(|x| match x {
+                        diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
+                        diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
+                        diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
+                    })
+                    .collect::<Vec<_>>();
+
+                let lines = &diff::lines(&self.from.body, &self.to.body)
+                    .into_iter()
+                    .map(|x| match x {
+                        diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
+                        diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
+                        diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
+                    })
+                    .collect::<Vec<_>>();
+
                 Ok(head
                     .with_body(Layout {
                         base: Some("../"), // Hmm, should perhaps accept `base` as argument
                         title: "Difference",
                         theme: theme::theme_from_str_hash("Difference"),
                         body: &Template {
-                            consecutive: self.to.revision - self.from.revision == 1,
+                            consecutive,
                             article_id: self.from.article_id as u32,
-                            article_history_link: &format!("_changes{}",
-                                changes_resource::QueryParameters::default()
-                                    .article_id(Some(self.from.article_id))
-                                    .pagination(Pagination::After(self.from.sequence_number))
-                                    .into_link()
-                            ),
+                            author,
+                            author_link,
+                            article_history_link,
                             from_link: &format!("_revisions/{}/{}", self.from.article_id, self.from.revision),
                             to_link: &format!("_revisions/{}/{}", self.to.article_id, self.to.revision),
-                            title: &diff::chars(&self.from.title, &self.to.title)
-                                .into_iter()
-                                .map(|x| match x {
-                                    diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
-                                    diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
-                                    diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
-                                })
-                                .collect::<Vec<_>>(),
-                            lines: &diff::lines(&self.from.body, &self.to.body)
-                                .into_iter()
-                                .map(|x| match x {
-                                    diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
-                                    diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
-                                    diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
-                                })
-                                .collect::<Vec<_>>()
+                            title,
+                            lines,
                         },
                     }.to_string()))
             }))
