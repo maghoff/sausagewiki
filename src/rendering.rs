@@ -41,3 +41,22 @@ pub fn render_markdown_for_fts(src: &str) -> String {
 
     buf
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn slug_link() {
+        let actual = render_markdown("[Slug link]");
+        let expected = "<p><a href=\"slug-link\" title=\"Slug link\">Slug link</a></p>\n";
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn footnote_links() {
+        let actual = render_markdown("[Link]\n\n[Link]: target");
+        let expected = "<p><a href=\"target\">Link</a></p>\n";
+        assert_eq!(actual, expected);
+    }
+}
