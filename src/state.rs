@@ -650,7 +650,7 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Theme::Blue).unwrap().unwrap();
+        let _first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Theme::Blue).unwrap().unwrap();
         let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Theme::Cyan).unwrap().unwrap();
 
         assert_eq!(Theme::Blue, second_edit.theme);
