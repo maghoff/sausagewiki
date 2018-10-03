@@ -1,9 +1,18 @@
+use slug::slugify;
 use pulldown_cmark::{Parser, Tag, html, OPTION_ENABLE_TABLES, OPTION_DISABLE_HTML};
 use pulldown_cmark::Event::{Text, End};
 
-pub fn render_markdown(src: &str) -> String {
+fn slugify_link(text: &str, title: &str) -> Option<(String, String)> {
+    Some((slugify(text), title.to_owned()))
+}
+
+fn parser(src: &str) -> Parser {
     let opts = OPTION_ENABLE_TABLES | OPTION_DISABLE_HTML;
-    let p = Parser::new_ext(src, opts);
+    Parser::new_with_broken_link_callback(src, opts, Some(&slugify_link))
+}
+
+pub fn render_markdown(src: &str) -> String {
+    let p = parser(src);
     let mut buf = String::new();
     html::push_html(&mut buf, p);
     buf
@@ -14,8 +23,7 @@ fn is_html_special(c: char) -> bool {
 }
 
 pub fn render_markdown_for_fts(src: &str) -> String {
-    let opts = OPTION_ENABLE_TABLES | OPTION_DISABLE_HTML;
-    let p = Parser::new_ext(src, opts);
+    let p = parser(src);
     let mut buf = String::new();
 
     for event in p {
