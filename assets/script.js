@@ -75,6 +75,7 @@ function openEditor() {
     const shadow = editor.querySelector('textarea.shadow-control');
     const form = document.getElementById('article-editor');
     const cancel = form.querySelector('.cancel');
+    const cancelButton = form.querySelector('button.button-cancel');
     const cancelInteractionGroup = form.querySelector(".cancel-interaction-group");
 
     const footer = document.querySelector("footer");
@@ -108,6 +109,8 @@ function openEditor() {
         for (const el of form.elements) {
             el.disabled = !baseEnabled;
         }
+
+        cancelButton.disabled = true;
 
         // TODO: edit-link in footer?
     }
