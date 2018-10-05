@@ -5,6 +5,7 @@ use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
+use rand;
 use seahash;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -47,6 +48,12 @@ pub fn theme_from_str_hash(x: &str) -> Theme {
     let hash = seahash::hash(x.as_bytes()) as usize;
     let choice = hash % THEMES.len();
     THEMES[choice]
+}
+
+pub fn random() -> Theme {
+    use rand::Rng;
+    *rand::thread_rng().choose(&THEMES)
+        .expect("Could only fail for an empty slice")
 }
 
 impl ToSql<Text, Sqlite> for Theme {

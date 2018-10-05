@@ -22,6 +22,7 @@ extern crate percent_encoding;
 extern crate pulldown_cmark;
 extern crate r2d2_diesel;
 extern crate r2d2;
+extern crate rand;
 extern crate seahash;
 extern crate serde_json;
 extern crate serde_urlencoded;

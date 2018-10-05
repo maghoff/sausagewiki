@@ -36,7 +36,7 @@ struct CreateArticle {
     base_revision: String,
     title: String,
     body: String,
-    theme: Theme,
+    theme: Option<Theme>,
 }
 
 impl NewArticleResource {
@@ -148,7 +148,8 @@ impl Resource for NewArticleResource {
                 if arg.base_revision != NEW {
                     unimplemented!("Version update conflict");
                 }
-                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, arg.theme)
+                let theme = arg.theme.unwrap_or_else(theme::random);
+                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, theme)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()
@@ -193,7 +194,8 @@ impl Resource for NewArticleResource {
                 if arg.base_revision != NEW {
                     unimplemented!("Version update conflict");
                 }
-                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, arg.theme)
+                let theme = arg.theme.unwrap_or_else(theme::random);
+                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, theme)
             })
             .and_then(|updated| {
                 futures::finished(Response::new()
