@@ -87,15 +87,13 @@ impl Resource for NewArticleResource {
         let title = self.slug.as_ref()
             .map_or("".to_owned(), |x| title_from_slug(x));
 
-        let theme = theme::theme_from_str_hash(&title);
-
         Box::new(self.head()
             .and_then(move |head| {
                 Ok(head
                     .with_body(Layout {
                         base: None, // Hmm, should perhaps accept `base` as argument
                         title: &title,
-                        theme,
+                        theme: theme::Theme::Gray,
                         body: &Template {
                             revision: NEW,
                             last_updated: None,
@@ -106,7 +104,7 @@ impl Resource for NewArticleResource {
                             rendered: EMPTY_ARTICLE_MESSAGE,
                             themes: &theme::THEMES.iter().map(|&x| SelectableTheme {
                                 theme: x,
-                                selected: x == theme,
+                                selected: false,
                             }).collect::<Vec<_>>(),
                         },
                     }.to_string()))

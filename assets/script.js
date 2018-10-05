@@ -259,6 +259,22 @@ function openEditor() {
     }
 }
 
+function initializeTheme() {
+    const form = document.getElementById('article-editor');
+
+    let preSelectedTheme = form.querySelector(`.theme-picker--option[checked]`);
+    if (preSelectedTheme) return;
+
+    let themes = form.querySelectorAll(`.theme-picker--option`);
+    let randomThemeId = (Math.random() * themes.length) | 0;
+
+    let theme = themes[randomThemeId];
+    theme.defaultChecked = theme.checked = true;
+    document.querySelector("body").className = `theme-${theme.value}`;
+}
+
+initializeTheme();
+
 document
     .getElementById("openEditor")
     .addEventListener("click", function (ev) {
