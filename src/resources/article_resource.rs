@@ -46,7 +46,7 @@ struct UpdateArticle {
     base_revision: i32,
     title: String,
     body: String,
-    theme: Theme,
+    theme: Option<Theme>,
 }
 
 pub struct ArticleResource {

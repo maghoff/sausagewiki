@@ -271,7 +271,7 @@ impl<'a> SyncState<'a> {
         Ok(RebaseResult::Clean { title: title_a, body: body_a, theme: theme_a })
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>, theme: Theme)
+    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>, theme: Option<Theme>)
         -> Result<UpdateResult, Error>
     {
         if title.is_empty() {
@@ -281,15 +281,16 @@ impl<'a> SyncState<'a> {
         self.db_connection.transaction(|| {
             use schema::article_revisions;
 
-            let (latest_revision, prev_title, prev_slug) = article_revisions::table
+            let (latest_revision, prev_title, prev_slug, prev_theme) = article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .order(article_revisions::revision.desc())
                 .select((
                     article_revisions::revision,
                     article_revisions::title,
                     article_revisions::slug,
+                    article_revisions::theme,
                 ))
-                .first::<(i32, String, String)>(self.db_connection)?;
+                .first::<(i32, String, String, Theme)>(self.db_connection)?;
 
             // TODO: If this is an historic edit repeated, just respond OK
             // This scheme would make POST idempotent.
@@ -298,6 +299,7 @@ impl<'a> SyncState<'a> {
                 Err("This edit is based on a future version of the article")?;
             }
 
+            let theme = theme.unwrap_or(prev_theme);
             let rebase_result = self.rebase_update(article_id, latest_revision, base_revision, title, body, theme)?;
 
             let (title, body, theme) = match rebase_result {
@@ -477,7 +479,7 @@ impl State {
         self.execute(move |state| state.lookup_slug(slug))
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>, theme: Theme)
+    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>, theme: Option<Theme>)
         -> CpuFuture<UpdateResult, Error>
     {
         self.execute(move |state| state.update_article(article_id, base_revision, title, body, author, theme))
@@ -544,7 +546,7 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan).unwrap();
 
-        let new_revision = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None, Theme::BlueGray).unwrap().unwrap();
+        let new_revision = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None, Some(Theme::BlueGray)).unwrap().unwrap();
 
         assert_eq!(article.article_id, new_revision.article_id);
 
@@ -566,8 +568,8 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None, Theme::Blue).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, first_edit.revision, article.title.clone(), "Newer body".into(), None, Theme::Amber).unwrap().unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None, Some(Theme::Blue)).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, first_edit.revision, article.title.clone(), "Newer body".into(), None, Some(Theme::Amber)).unwrap().unwrap();
 
         assert_eq!("Newer body", second_edit.body);
         assert_eq!(Theme::Amber, second_edit.theme);
@@ -579,8 +581,8 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Theme::Blue).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Theme::Amber).unwrap().unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Some(Theme::Blue)).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Some(Theme::Amber)).unwrap().unwrap();
 
         assert!(article.revision < first_edit.revision);
         assert!(first_edit.revision < second_edit.revision);
@@ -595,11 +597,11 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
 
-        let edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx1\nb\nc\n".into(), None, article.theme).unwrap().unwrap();
-        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nb\nc\n".into(), None, article.theme).unwrap().unwrap();
-        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nx3\nb\nc\n".into(), None, article.theme).unwrap().unwrap();
+        let edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx1\nb\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
+        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nb\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
+        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nx3\nb\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
 
-        let rebase_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, article.theme).unwrap().unwrap();
+        let rebase_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
 
         assert!(article.revision < edit.revision);
         assert!(edit.revision < rebase_edit.revision);
@@ -613,8 +615,8 @@ mod test {
 
         let article = state.create_article(None, "titlle".into(), "".into(), None, Theme::Cyan).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, "Titlle".into(), article.body.clone(), None, article.theme).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, "title".into(), article.body.clone(), None, article.theme).unwrap().unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, "Titlle".into(), article.body.clone(), None, Some(article.theme)).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, "title".into(), article.body.clone(), None, Some(article.theme)).unwrap().unwrap();
 
         assert!(article.revision < first_edit.revision);
         assert!(first_edit.revision < second_edit.revision);
@@ -628,8 +630,8 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a".into(), None, Theme::Cyan).unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "b".into(), None, Theme::Blue).unwrap().unwrap();
-        let conflict_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "c".into(), None, Theme::Amber).unwrap();
+        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "b".into(), None, Some(Theme::Blue)).unwrap().unwrap();
+        let conflict_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "c".into(), None, Some(Theme::Amber)).unwrap();
 
         match conflict_edit {
             UpdateResult::Success(..) => panic!("Expected conflict"),
@@ -650,9 +652,20 @@ mod test {
 
         let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
 
-        let _first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Theme::Blue).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Theme::Cyan).unwrap().unwrap();
+        let _first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Some(Theme::Blue)).unwrap().unwrap();
+        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Some(Theme::Cyan)).unwrap().unwrap();
 
         assert_eq!(Theme::Blue, second_edit.theme);
+    }
+
+    #[test]
+    fn update_article_with_no_given_theme_then_theme_unchanged() {
+        init!(state);
+
+        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
+
+        let edit = state.update_article(article.article_id, article.revision, article.title, article.body, None, None).unwrap().unwrap();
+
+        assert_eq!(Theme::Cyan, edit.theme);
     }
 }
