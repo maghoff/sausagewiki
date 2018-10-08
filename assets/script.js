@@ -89,8 +89,6 @@ function openEditor() {
     });
     updateFormEnabledState();
 
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-
     if (state.hasBeenOpen) return;
     state.hasBeenOpen = true;
 
