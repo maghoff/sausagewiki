@@ -532,9 +532,9 @@ input[type="search"] {
     text-overflow: ellipsis;
 }
 
-input[type="search"]::placeholder {
+input[type="search"]::placeholder, .hero input::placeholder {
     color: var(--theme-text);
-    opacity: 0.8;
+    opacity: 0.6;
 }
 
 .search .live-results {
