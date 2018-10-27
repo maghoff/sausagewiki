@@ -1,3 +1,8 @@
+// Diesel causes many warnings of the following kind. I expect this to be
+// fixed in a future release of Diesel. Currently used version of Diesel is
+// 1.3.0.
+#![allow(proc_macro_derive_resolution_fallback)]
+
 #[macro_use] extern crate quote;
 #[macro_use] extern crate diesel;
 extern crate diesel_migrations;
