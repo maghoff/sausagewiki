@@ -13,12 +13,12 @@ walkdir = "1"
 [build-dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "1.3.0"
+version = "1.4.8"
 
 [build-dependencies.diesel_migrations]
 default-features = false
 features = ["sqlite"]
-version = "1.3.0"
+version = "1.4.0"
 
 [dependencies]
 bart = "0.1.4"
@@ -54,21 +54,21 @@ path = "libs/codegen"
 [dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "1.3.0"
+version = "1.4.8"
 
 [dependencies.diesel_infer_schema]
 default-features = false
 features = ["sqlite"]
-version = "1.3.0"
+version = "1.4.0"
 
 [dependencies.diesel_migrations]
 default-features = false
 features = ["sqlite"]
-version = "1.3.0"
+version = "1.4.0"
 
 [dependencies.libsqlite3-sys]
 features = ["bundled"]
-version = "0.9.1"
+version = "<0.23.0"
 
 [dependencies.num]
 default-features = false
