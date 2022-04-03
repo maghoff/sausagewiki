@@ -4,12 +4,12 @@
 use std::fmt;
 
 use futures::{self, Future};
+use hyper;
 use hyper::header::{Accept, ContentType, Server};
 use hyper::mime;
 use hyper::server::*;
-use hyper;
 
-use crate::assets::{ThemesCss, StyleCss, SearchJs};
+use crate::assets::{SearchJs, StyleCss, ThemesCss};
 use crate::build_config;
 use crate::theme;
 use crate::web::Lookup;
@@ -17,8 +17,7 @@ use crate::wiki_lookup::WikiLookup;
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
-    static ref SERVER: Server =
-        Server::new(build_config::HTTP_SERVER.as_str());
+    static ref SERVER: Server = Server::new(build_config::HTTP_SERVER.as_str());
 }
 
 header! { (XIdentity, "X-Identity") => [String] }
@@ -33,25 +32,38 @@ pub struct Layout<'a, T: 'a + fmt::Display> {
 }
 
 impl<'a, T: 'a + fmt::Display> Layout<'a, T> {
-    pub fn themes_css(&self) -> &str { ThemesCss::resource_name() }
-    pub fn style_css(&self) -> &str { StyleCss::resource_name() }
-    pub fn search_js(&self) -> &str { SearchJs::resource_name() }
+    pub fn themes_css(&self) -> &str {
+        ThemesCss::resource_name()
+    }
+    pub fn style_css(&self) -> &str {
+        StyleCss::resource_name()
+    }
+    pub fn search_js(&self) -> &str {
+        SearchJs::resource_name()
+    }
 
-    pub fn project_name(&self) -> &str { build_config::PROJECT_NAME }
-    pub fn version(&self) -> &str { build_config::VERSION.as_str() }
+    pub fn project_name(&self) -> &str {
+        build_config::PROJECT_NAME
+    }
+    pub fn version(&self) -> &str {
+        build_config::VERSION.as_str()
+    }
 }
 
 #[derive(BartDisplay)]
-#[template="templates/system_page_layout.html"]
+#[template = "templates/system_page_layout.html"]
 pub struct SystemPageLayout<'a, T: 'a + fmt::Display> {
     title: &'a str,
     html_body: T,
 }
 
-pub fn system_page<'a, T>(base: Option<&'a str>, title: &'a str, body: T)
-    -> Layout<'a, SystemPageLayout<'a, T>>
+pub fn system_page<'a, T>(
+    base: Option<&'a str>,
+    title: &'a str,
+    body: T,
+) -> Layout<'a, SystemPageLayout<'a, T>>
 where
-    T: 'a + fmt::Display
+    T: 'a + fmt::Display,
 {
     Layout {
         base,
@@ -79,30 +91,28 @@ pub struct Site {
 
 impl Site {
     pub fn new(root: WikiLookup, trust_identity: bool) -> Site {
-        Site { root, trust_identity }
+        Site {
+            root,
+            trust_identity,
+        }
     }
 
     fn not_found(base: Option<&str>) -> Response {
         Response::new()
             .with_header(ContentType(TEXT_HTML.clone()))
-            .with_body(system_page(
-                base,
-                "Not found",
-                NotFound,
-            ).to_string())
+            .with_body(system_page(base, "Not found", NotFound).to_string())
             .with_status(hyper::StatusCode::NotFound)
     }
 
-    fn internal_server_error(base: Option<&str>, err: Box<dyn ::std::error::Error + Send + Sync>) -> Response {
+    fn internal_server_error(
+        base: Option<&str>,
+        err: Box<dyn ::std::error::Error + Send + Sync>,
+    ) -> Response {
         eprintln!("Internal Server Error:\n{:#?}", err);
 
         Response::new()
             .with_header(ContentType(TEXT_HTML.clone()))
-            .with_body(system_page(
-                base,
-                "Internal server error",
-                InternalServerError,
-            ).to_string())
+            .with_body(system_page(base, "Internal server error", InternalServerError).to_string())
             .with_status(hyper::StatusCode::InternalServerError)
     }
 }
@@ -113,7 +123,7 @@ fn root_base_from_request_uri(path: &str) -> Option<String> {
 
     match slashes {
         0 => None,
-        n => Some(::std::iter::repeat("../").take(n).collect())
+        n => Some(::std::iter::repeat("../").take(n).collect()),
     }
 }
 
@@ -133,29 +143,41 @@ impl Service for Site {
             false => None,
         };
 
-        let accept_header = headers.get().map(|x: &Accept| x.clone()).unwrap_or(Accept(vec![]));
+        let accept_header = headers
+            .get()
+            .map(|x: &Accept| x.clone())
+            .unwrap_or(Accept(vec![]));
 
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone
 
-        Box::new(self.root.lookup(uri.path(), uri.query())
-            .and_then(move |resource| match resource {
-                Some(mut resource) => {
-                    use hyper::Method::*;
-                    resource.hacky_inject_accept_header(accept_header);
-                    match method {
-                        Options => Box::new(futures::finished(resource.options())),
-                        Head => resource.head(),
-                        Get => resource.get(),
-                        Put => resource.put(body, identity),
-                        Post => resource.post(body, identity),
-                        _ => Box::new(futures::finished(resource.method_not_allowed()))
+        Box::new(
+            self.root
+                .lookup(uri.path(), uri.query())
+                .and_then(move |resource| match resource {
+                    Some(mut resource) => {
+                        use hyper::Method::*;
+                        resource.hacky_inject_accept_header(accept_header);
+                        match method {
+                            Options => Box::new(futures::finished(resource.options())),
+                            Head => resource.head(),
+                            Get => resource.get(),
+                            Put => resource.put(body, identity),
+                            Post => resource.post(body, identity),
+                            _ => Box::new(futures::finished(resource.method_not_allowed())),
+                        }
                     }
-                },
-                None => Box::new(futures::finished(Self::not_found(base.as_ref().map(|x| &**x))))
-            })
-            .or_else(move |err| Ok(Self::internal_server_error(base2.as_ref().map(|x| &**x), err)))
-            .map(|response| response.with_header(SERVER.clone()))
+                    None => Box::new(futures::finished(Self::not_found(
+                        base.as_ref().map(|x| &**x),
+                    ))),
+                })
+                .or_else(move |err| {
+                    Ok(Self::internal_server_error(
+                        base2.as_ref().map(|x| &**x),
+                        err,
+                    ))
+                })
+                .map(|response| response.with_header(SERVER.clone())),
         )
     }
 }

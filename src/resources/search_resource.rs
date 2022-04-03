@@ -34,14 +34,22 @@ impl QueryParameters {
 
     pub fn limit(self, limit: u32) -> Self {
         Self {
-            limit: if limit != DEFAULT_LIMIT { Some(limit) } else { None },
+            limit: if limit != DEFAULT_LIMIT {
+                Some(limit)
+            } else {
+                None
+            },
             ..self
         }
     }
 
     pub fn snippet_size(self, snippet_size: u32) -> Self {
         Self {
-            snippet_size: if snippet_size != DEFAULT_SNIPPET_SIZE { Some(snippet_size) } else { None },
+            snippet_size: if snippet_size != DEFAULT_SNIPPET_SIZE {
+                Some(snippet_size)
+            } else {
+                None
+            },
             ..self
         }
     }
@@ -69,15 +77,13 @@ impl SearchLookup {
     pub fn lookup(&self, query: Option<&str>) -> Result<Option<BoxResource>, crate::web::Error> {
         let args: QueryParameters = serde_urlencoded::from_str(query.unwrap_or(""))?;
 
-        Ok(Some(Box::new(
-            SearchResource::new(
-                self.state.clone(),
-                args.q,
-                args.limit.unwrap_or(DEFAULT_LIMIT),
-                args.offset.unwrap_or(0),
-                args.snippet_size.unwrap_or(DEFAULT_SNIPPET_SIZE),
-            )
-        )))
+        Ok(Some(Box::new(SearchResource::new(
+            self.state.clone(),
+            args.q,
+            args.limit.unwrap_or(DEFAULT_LIMIT),
+            args.offset.unwrap_or(0),
+            args.snippet_size.unwrap_or(DEFAULT_SNIPPET_SIZE),
+        ))))
     }
 }
 
@@ -98,8 +104,21 @@ pub enum ResponseType {
 }
 
 impl SearchResource {
-    pub fn new(state: State, query: Option<String>, limit: u32, offset: u32, snippet_size: u32) -> Self {
-        Self { state, response_type: ResponseType::Html, query, limit, offset, snippet_size }
+    pub fn new(
+        state: State,
+        query: Option<String>,
+        limit: u32,
+        offset: u32,
+        snippet_size: u32,
+    ) -> Self {
+        Self {
+            state,
+            response_type: ResponseType::Html,
+            query,
+            limit,
+            offset,
+            snippet_size,
+        }
     }
 
     fn query_args(&self) -> QueryParameters {
@@ -107,9 +126,9 @@ impl SearchResource {
             q: self.query.clone(),
             ..QueryParameters::default()
         }
-            .offset(self.offset)
-            .limit(self.limit)
-            .snippet_size(self.snippet_size)
+        .offset(self.offset)
+        .limit(self.limit)
+        .snippet_size(self.snippet_size)
     }
 }
 
@@ -126,8 +145,10 @@ impl Resource for SearchResource {
 
         self.response_type = match accept.first() {
             Some(&QualityItem { item: ref mime, .. })
-                if mime.type_() == mime::APPLICATION && mime.subtype() == mime::JSON
-                => ResponseType::Json,
+                if mime.type_() == mime::APPLICATION && mime.subtype() == mime::JSON =>
+            {
+                ResponseType::Json
+            }
             _ => ResponseType::Html,
         };
     }
@@ -138,9 +159,10 @@ impl Resource for SearchResource {
             &ResponseType::Html => ContentType(TEXT_HTML.clone()),
         };
 
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(content_type)
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(content_type),
         ))
     }
 
@@ -154,7 +176,7 @@ impl Resource for SearchResource {
         }
 
         #[derive(BartDisplay)]
-        #[template="templates/search.html"]
+        #[template = "templates/search.html"]
         struct Template<'a> {
             query: &'a str,
             hits: &'a [(usize, &'a SearchResult)],
@@ -163,54 +185,66 @@ impl Resource for SearchResource {
         }
 
         // TODO: Show a search "front page" when no query is given:
-        let query = self.query.as_ref().map(|x| x.clone()).unwrap_or("".to_owned());
+        let query = self
+            .query
+            .as_ref()
+            .map(|x| x.clone())
+            .unwrap_or("".to_owned());
 
-        let data = self.state.search_query(query, (self.limit + 1) as i32, self.offset as i32, self.snippet_size as i32);
+        let data = self.state.search_query(
+            query,
+            (self.limit + 1) as i32,
+            self.offset as i32,
+            self.snippet_size as i32,
+        );
         let head = self.head();
 
-        Box::new(data.join(head)
-            .and_then(move |(mut data, head)| {
-                let prev = if self.offset > 0 {
-                    Some(self.query_args()
+        Box::new(data.join(head).and_then(move |(mut data, head)| {
+            let prev = if self.offset > 0 {
+                Some(
+                    self.query_args()
                         .offset(self.offset.saturating_sub(self.limit))
-                        .into_link()
-                    )
-                } else {
-                    None
-                };
+                        .into_link(),
+                )
+            } else {
+                None
+            };
 
-                let next = if data.len() > self.limit as usize {
-                    data.pop();
-                    Some(self.query_args()
+            let next = if data.len() > self.limit as usize {
+                data.pop();
+                Some(
+                    self.query_args()
                         .offset(self.offset + self.limit)
-                        .into_link()
-                    )
-                } else {
-                    None
-                };
+                        .into_link(),
+                )
+            } else {
+                None
+            };
 
-                match &self.response_type {
-                    &ResponseType::Json => Ok(head
-                        .with_body(serde_json::to_string(&JsonResponse {
-                            query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
-                            hits: &data,
-                            prev,
-                            next,
-                        }).expect("Should never fail"))
-                    ),
-                    &ResponseType::Html => Ok(head.with_body(system_page(
+            match &self.response_type {
+                &ResponseType::Json => Ok(head.with_body(
+                    serde_json::to_string(&JsonResponse {
+                        query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
+                        hits: &data,
+                        prev,
+                        next,
+                    })
+                    .expect("Should never fail"),
+                )),
+                &ResponseType::Html => Ok(head.with_body(
+                    system_page(
                         None, // Hmm, should perhaps accept `base` as argument
                         "Search",
                         &Template {
                             query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
-                            hits: &data.iter()
-                                .enumerate()
-                                .collect::<Vec<_>>(),
+                            hits: &data.iter().enumerate().collect::<Vec<_>>(),
                             prev,
                             next,
                         },
-                    ).to_string())),
-                }
-            }))
+                    )
+                    .to_string(),
+                )),
+            }
+        }))
     }
 }

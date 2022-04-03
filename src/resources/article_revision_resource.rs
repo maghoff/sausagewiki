@@ -1,4 +1,4 @@
-use chrono::{TimeZone, DateTime, Local};
+use chrono::{DateTime, Local, TimeZone};
 use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
@@ -24,7 +24,12 @@ impl ArticleRevisionResource {
     }
 }
 
-pub fn timestamp_and_author(sequence_number: i32, article_id: i32, created: &DateTime<Local>, author: Option<&str>) -> String {
+pub fn timestamp_and_author(
+    sequence_number: i32,
+    article_id: i32,
+    created: &DateTime<Local>,
+    author: Option<&str>,
+) -> String {
     struct Author<'a> {
         author: &'a str,
         history: String,
@@ -42,7 +47,8 @@ pub fn timestamp_and_author(sequence_number: i32, article_id: i32, created: &Dat
 
     Template {
         created: &created.to_rfc2822(),
-        article_history: &format!("_changes{}",
+        article_history: &format!(
+            "_changes{}",
             QueryParameters::default()
                 .pagination(pagination)
                 .article_id(Some(article_id))
@@ -50,7 +56,8 @@ pub fn timestamp_and_author(sequence_number: i32, article_id: i32, created: &Dat
         ),
         author: author.map(|author| Author {
             author: &author,
-            history: format!("_changes{}",
+            history: format!(
+                "_changes{}",
                 QueryParameters::default()
                     .pagination(pagination)
                     .article_id(Some(article_id))
@@ -58,7 +65,8 @@ pub fn timestamp_and_author(sequence_number: i32, article_id: i32, created: &Dat
                     .into_link()
             ),
         }),
-    }.to_string()
+    }
+    .to_string()
 }
 
 impl Resource for ArticleRevisionResource {
@@ -68,15 +76,16 @@ impl Resource for ArticleRevisionResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
         #[derive(BartDisplay)]
-        #[template="templates/article_revision.html"]
+        #[template = "templates/article_revision.html"]
         struct Template<'a> {
             link_current: &'a str,
             timestamp_and_author: &'a str,
@@ -87,9 +96,9 @@ impl Resource for ArticleRevisionResource {
         let head = self.head();
         let data = self.data;
 
-        Box::new(head
-            .and_then(move |head|
-                Ok(head.with_body(system_page(
+        Box::new(head.and_then(move |head| {
+            Ok(head.with_body(
+                system_page(
                     Some("../../"), // Hmm, should perhaps accept `base` as argument
                     &data.title,
                     &Template {
@@ -98,23 +107,25 @@ impl Resource for ArticleRevisionResource {
                             data.sequence_number,
                             data.article_id,
                             &Local.from_utc_datetime(&data.created),
-                            data.author.as_ref().map(|x| &**x)
+                            data.author.as_ref().map(|x| &**x),
                         ),
-                        diff_link:
-                            if data.revision > 1 {
-                                Some(format!("_diff/{}?{}",
-                                    data.article_id,
-                                    diff_resource::QueryParameters::new(
-                                        data.revision as u32 - 1,
-                                        data.revision as u32,
-                                    )
-                                ))
-                            } else {
-                                None
-                            },
+                        diff_link: if data.revision > 1 {
+                            Some(format!(
+                                "_diff/{}?{}",
+                                data.article_id,
+                                diff_resource::QueryParameters::new(
+                                    data.revision as u32 - 1,
+                                    data.revision as u32,
+                                )
+                            ))
+                        } else {
+                            None
+                        },
                         rendered: render_markdown(&data.body),
                     },
-                ).to_string()))
+                )
+                .to_string(),
             ))
+        }))
     }
 }

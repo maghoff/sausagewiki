@@ -15,7 +15,11 @@ pub struct HtmlResource {
 
 impl HtmlResource {
     pub fn new(base: Option<&'static str>, title: &'static str, html_body: &'static str) -> Self {
-        HtmlResource { base, title, html_body }
+        HtmlResource {
+            base,
+            title,
+            html_body,
+        }
     }
 }
 
@@ -26,22 +30,18 @@ impl Resource for HtmlResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
         let head = self.head();
 
-        Box::new(head
-            .and_then(move |head| {
-                Ok(head.with_body(system_page(
-                    self.base,
-                    self.title,
-                    self.html_body
-                ).to_string()))
-            }))
+        Box::new(head.and_then(move |head| {
+            Ok(head.with_body(system_page(self.base, self.title, self.html_body).to_string()))
+        }))
     }
 }

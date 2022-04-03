@@ -1,5 +1,5 @@
 use futures::Future;
-use hyper::header::{ContentType, ContentLength, CacheControl, CacheDirective};
+use hyper::header::{CacheControl, CacheDirective, ContentLength, ContentType};
 use hyper::server::*;
 use hyper::StatusCode;
 
@@ -18,21 +18,21 @@ impl Resource for ReadOnlyResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(::futures::finished(Response::new()
-            .with_status(StatusCode::Ok)
-            .with_header(ContentType(self.content_type.clone()))
-            .with_header(CacheControl(vec![
-                CacheDirective::MustRevalidate,
-                CacheDirective::NoStore,
-            ]))
+        Box::new(::futures::finished(
+            Response::new()
+                .with_status(StatusCode::Ok)
+                .with_header(ContentType(self.content_type.clone()))
+                .with_header(CacheControl(vec![
+                    CacheDirective::MustRevalidate,
+                    CacheDirective::NoStore,
+                ])),
         ))
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
-        Box::new(self.head().map(move |head|
-            head
-                .with_header(ContentLength(self.body.len() as u64))
+        Box::new(self.head().map(move |head| {
+            head.with_header(ContentLength(self.body.len() as u64))
                 .with_body(self.body.clone())
-        ))
+        }))
     }
 }

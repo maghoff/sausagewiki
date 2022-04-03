@@ -11,29 +11,28 @@ fn user_crate_root() -> PathBuf {
 }
 
 fn find_attr<'a>(attrs: &'a Vec<syn::Attribute>, name: &str) -> Option<&'a str> {
-    attrs.iter()
+    attrs
+        .iter()
         .find(|&x| x.name() == name)
         .and_then(|ref attr| match &attr.value {
             &syn::MetaItem::NameValue(_, syn::Lit::Str(ref template, _)) => Some(template),
-            _ => None
+            _ => None,
         })
         .map(|x| x.as_ref())
 }
 
 fn buf_file<P: AsRef<Path>>(filename: P) -> Vec<u8> {
-    let mut f = File::open(filename)
-        .expect("Unable to open file for reading");
+    let mut f = File::open(filename).expect("Unable to open file for reading");
 
     let mut buf = Vec::new();
-    f.read_to_end(&mut buf)
-        .expect("Unable to read file");
+    f.read_to_end(&mut buf).expect("Unable to read file");
 
     buf
 }
 
 fn calculate_checksum<P: AsRef<Path>>(filename: P) -> String {
     use base64::*;
-    use sha2::{Sha256, Digest};
+    use sha2::{Digest, Sha256};
 
     encode_config(&Sha256::digest(&buf_file(filename)), URL_SAFE)
 }
@@ -42,23 +41,24 @@ pub fn static_resource(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = syn::parse_macro_input(&s).unwrap();
 
-    let filename = find_attr(&ast.attrs, "filename")
-        .expect("The `filename` attribute must be specified");
+    let filename =
+        find_attr(&ast.attrs, "filename").expect("The `filename` attribute must be specified");
     let abs_filename = user_crate_root().join(filename);
-    let abs_filename = abs_filename.to_str().expect("Absolute file path must be valid Unicode");
+    let abs_filename = abs_filename
+        .to_str()
+        .expect("Absolute file path must be valid Unicode");
 
     let checksum = calculate_checksum(&abs_filename);
 
     let path: &Path = filename.as_ref();
-    let resource_name =
-        format!("{}-{}.{}",
-            path.file_stem().unwrap().to_str().unwrap(),
-            checksum,
-            path.extension().unwrap().to_str().unwrap()
-        );
+    let resource_name = format!(
+        "{}-{}.{}",
+        path.file_stem().unwrap().to_str().unwrap(),
+        checksum,
+        path.extension().unwrap().to_str().unwrap()
+    );
 
-    let mime = find_attr(&ast.attrs, "mime")
-        .expect("The `mime` attribute must be specified");
+    let mime = find_attr(&ast.attrs, "mime").expect("The `mime` attribute must be specified");
 
     let name = &ast.ident;
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();

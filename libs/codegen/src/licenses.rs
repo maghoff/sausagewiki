@@ -2,13 +2,10 @@ use std::fs::File;
 
 use proc_macro::TokenStream;
 use quote;
-use serde_json;
 use serde::de::IgnoredAny;
+use serde_json;
 
-const SOURCES: &[&str] = &[
-    "src/licenses/license-hound.json",
-    "src/licenses/other.json",
-];
+const SOURCES: &[&str] = &["src/licenses/license-hound.json", "src/licenses/other.json"];
 
 #[derive(Debug, Copy, Clone, Deserialize)]
 pub enum LicenseId {
@@ -56,8 +53,12 @@ struct LicenseReport {
 impl quote::ToTokens for LicenseReport {
     fn to_tokens(&self, tokens: &mut quote::Tokens) {
         let c: &LicenseDescription = self.conclusion.as_ref().unwrap();
-        let (name, link, copyright, license) =
-            (&self.package_name, &c.link, &c.copyright_notice, &c.chosen_license);
+        let (name, link, copyright, license) = (
+            &self.package_name,
+            &c.link,
+            &c.copyright_notice,
+            &c.chosen_license,
+        );
 
         let link = match link {
             &Some(ref link) => quote! { Some(#link) },
@@ -85,7 +86,10 @@ pub fn licenses(_input: TokenStream) -> TokenStream {
         .iter()
         .map(|x| -> Vec<LicenseReport> { serde_json::from_reader(File::open(x).unwrap()).unwrap() })
         .map(|x| x.into_iter().filter(|x| x.conclusion.is_ok()))
-        .fold(vec![], |mut a, b| { a.extend(b); a });
+        .fold(vec![], |mut a, b| {
+            a.extend(b);
+            a
+        });
 
     license_infos.sort_unstable_by_key(|x| x.package_name.to_lowercase());
 

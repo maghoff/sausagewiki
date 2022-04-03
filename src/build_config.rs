@@ -7,7 +7,7 @@ pub const PROJECT_NAME: &str = env!("CARGO_PKG_NAME");
 
 const SOFT_HYPHEN: &str = "\u{00AD}";
 
-#[cfg(all(not(debug_assertions), feature="dynamic-assets"))]
+#[cfg(all(not(debug_assertions), feature = "dynamic-assets"))]
 compile_error!("dynamic-assets must not be used for production");
 
 lazy_static! {
@@ -20,7 +20,7 @@ lazy_static! {
         #[cfg(test)]
         components.push("test".into());
 
-        #[cfg(feature="dynamic-assets")]
+        #[cfg(feature = "dynamic-assets")]
         components.push("dynamic-assets".into());
 
         if let None = option_env!("CONTINUOUS_INTEGRATION") {
@@ -32,14 +32,12 @@ lazy_static! {
         }
 
         if let Some(commit) = option_env!("TRAVIS_COMMIT") {
-            components.push(format!("commit:{}",
+            components.push(format!(
+                "commit:{}",
                 commit
                     .as_bytes()
                     .chunks(4)
-                    .map(|x|
-                        String::from_utf8(x.to_owned())
-                            .unwrap_or_else(|_| String::new())
-                    )
+                    .map(|x| String::from_utf8(x.to_owned()).unwrap_or_else(|_| String::new()))
                     .collect::<Vec<_>>()
                     .join(SOFT_HYPHEN)
             ));
@@ -51,7 +49,5 @@ lazy_static! {
             env!("CARGO_PKG_VERSION").to_string()
         }
     }();
-
-    pub static ref HTTP_SERVER: String =
-        format!("{}/{}", PROJECT_NAME, VERSION.as_str());
+    pub static ref HTTP_SERVER: String = format!("{}/{}", PROJECT_NAME, VERSION.as_str());
 }

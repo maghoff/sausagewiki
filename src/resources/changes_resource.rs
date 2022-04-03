@@ -1,6 +1,6 @@
 use diesel;
-use futures::{self, Future};
 use futures::future::{done, finished};
+use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
@@ -40,8 +40,16 @@ pub struct QueryParameters {
 impl QueryParameters {
     pub fn pagination(self, pagination: Pagination<i32>) -> Self {
         Self {
-            after: if let Pagination::After(x) = pagination { Some(x) } else { None },
-            before: if let Pagination::Before(x) = pagination { Some(x) } else { None },
+            after: if let Pagination::After(x) = pagination {
+                Some(x)
+            } else {
+                None
+            },
+            before: if let Pagination::Before(x) = pagination {
+                Some(x)
+            } else {
+                None
+            },
             ..self
         }
     }
@@ -56,7 +64,11 @@ impl QueryParameters {
 
     pub fn limit(self, limit: i32) -> Self {
         Self {
-            limit: if limit != DEFAULT_LIMIT { Some(limit) } else { None },
+            limit: if limit != DEFAULT_LIMIT {
+                Some(limit)
+            } else {
+                None
+            },
             ..self
         }
     }
@@ -76,9 +88,7 @@ fn apply_query_config<'a>(
     article_id: Option<i32>,
     author: Option<String>,
     limit: i32,
-)
-    -> article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>
-{
+) -> article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite> {
     use diesel::prelude::*;
 
     if let Some(article_id) = article_id {
@@ -94,10 +104,16 @@ fn apply_query_config<'a>(
 
 impl ChangesLookup {
     pub fn new(state: State, show_authors: bool) -> ChangesLookup {
-        Self { state, show_authors }
+        Self {
+            state,
+            show_authors,
+        }
     }
 
-    pub fn lookup(&self, query: Option<&str>) -> Box<dyn Future<Item=Option<BoxResource>, Error=crate::web::Error>> {
+    pub fn lookup(
+        &self,
+        query: Option<&str>,
+    ) -> Box<dyn Future<Item = Option<BoxResource>, Error = crate::web::Error>> {
         use super::pagination;
 
         let state = self.state.clone();
@@ -117,48 +133,74 @@ impl ChangesLookup {
 
                 Ok((pagination, params.article_id, params.author, limit))
             })())
-            .and_then(move |(pagination, article_id, author, limit)| match pagination {
-                Pagination::After(x) => {
-                    let author2 = author.clone();
+            .and_then(move |(pagination, article_id, author, limit)| {
+                match pagination {
+                    Pagination::After(x) => {
+                        let author2 = author.clone();
 
-                    Box::new(state.query_article_revision_stubs(move |query| {
-                        use diesel::prelude::*;
+                        Box::new(
+                            state
+                                .query_article_revision_stubs(move |query| {
+                                    use diesel::prelude::*;
 
-                        apply_query_config(query, article_id, author2, limit)
-                            .filter(article_revisions::sequence_number.gt(x))
-                            .order(article_revisions::sequence_number.asc())
-                    }).and_then(move |mut data| {
-                        let extra_element = if data.len() > limit as usize {
-                            data.pop()
-                        } else {
-                            None
-                        };
+                                    apply_query_config(query, article_id, author2, limit)
+                                        .filter(article_revisions::sequence_number.gt(x))
+                                        .order(article_revisions::sequence_number.asc())
+                                })
+                                .and_then(move |mut data| {
+                                    let extra_element = if data.len() > limit as usize {
+                                        data.pop()
+                                    } else {
+                                        None
+                                    };
 
-                        let args =
-                            QueryParameters {
-                                after: None,
-                                before: None,
-                                article_id,
-                                author,
-                                limit: None,
-                            }
-                            .limit(limit);
+                                    let args = QueryParameters {
+                                        after: None,
+                                        before: None,
+                                        article_id,
+                                        author,
+                                        limit: None,
+                                    }
+                                    .limit(limit);
 
-                        Ok(Some(match extra_element {
-                            Some(x) => Box::new(TemporaryRedirectResource::new(
-                                args
-                                    .pagination(Pagination::Before(x.sequence_number))
-                                    .into_link()
-                            )) as BoxResource,
-                            None => Box::new(TemporaryRedirectResource::new(
-                                args.into_link()
-                            )) as BoxResource,
-                        }))
-                    })) as Box<dyn Future<Item=Option<BoxResource>, Error=crate::web::Error>>
-                },
-                Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, show_authors, Some(x), article_id, author, limit)) as BoxResource))),
-                Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, show_authors, None, article_id, author, limit)) as BoxResource))),
-            })
+                                    Ok(Some(match extra_element {
+                                        Some(x) => Box::new(TemporaryRedirectResource::new(
+                                            args.pagination(Pagination::Before(x.sequence_number))
+                                                .into_link(),
+                                        ))
+                                            as BoxResource,
+                                        None => Box::new(TemporaryRedirectResource::new(
+                                            args.into_link(),
+                                        ))
+                                            as BoxResource,
+                                    }))
+                                }),
+                        )
+                            as Box<
+                                dyn Future<Item = Option<BoxResource>, Error = crate::web::Error>,
+                            >
+                    }
+                    Pagination::Before(x) => {
+                        Box::new(finished(Some(Box::new(ChangesResource::new(
+                            state,
+                            show_authors,
+                            Some(x),
+                            article_id,
+                            author,
+                            limit,
+                        )) as BoxResource)))
+                    }
+                    Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(
+                        state,
+                        show_authors,
+                        None,
+                        article_id,
+                        author,
+                        limit,
+                    ))
+                        as BoxResource))),
+                }
+            }),
         )
     }
 }
@@ -173,8 +215,22 @@ pub struct ChangesResource {
 }
 
 impl ChangesResource {
-    pub fn new(state: State, show_authors: bool, before: Option<i32>, article_id: Option<i32>, author: Option<String>, limit: i32) -> Self {
-        Self { state, show_authors, before, article_id, author, limit }
+    pub fn new(
+        state: State,
+        show_authors: bool,
+        before: Option<i32>,
+        article_id: Option<i32>,
+        author: Option<String>,
+        limit: i32,
+    ) -> Self {
+        Self {
+            state,
+            show_authors,
+            before,
+            article_id,
+            author,
+            limit,
+        }
     }
 
     fn query_args(&self) -> QueryParameters {
@@ -196,14 +252,15 @@ impl Resource for ChangesResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
-        use chrono::{TimeZone, Local};
+        use chrono::{Local, TimeZone};
 
         struct Row<'a> {
             resource: &'a ChangesResource,
@@ -224,7 +281,8 @@ impl Resource for ChangesResource {
 
         impl<'a> Row<'a> {
             fn author_link(&self) -> String {
-                self.resource.query_args()
+                self.resource
+                    .query_args()
                     .pagination(Pagination::After(self.sequence_number))
                     .author(self.author.clone())
                     .into_link()
@@ -237,7 +295,7 @@ impl Resource for ChangesResource {
         }
 
         #[derive(BartDisplay)]
-        #[template="templates/changes.html"]
+        #[template = "templates/changes.html"]
         struct Template<'a> {
             resource: &'a ChangesResource,
 
@@ -260,24 +318,25 @@ impl Resource for ChangesResource {
             }
 
             fn all_articles_link(&self) -> Option<String> {
-                self.resource.article_id.map(|_| {
-                    self.resource.query_args()
-                        .article_id(None)
-                        .into_link()
-                })
+                self.resource
+                    .article_id
+                    .map(|_| self.resource.query_args().article_id(None).into_link())
             }
 
             fn all_authors_link(&self) -> Option<String> {
-                self.resource.author.as_ref().map(|_| {
-                    self.resource.query_args()
-                        .author(None)
-                        .into_link()
-                })
+                self.resource
+                    .author
+                    .as_ref()
+                    .map(|_| self.resource.query_args().author(None).into_link())
             }
         }
 
-        let (before, article_id, author, limit) =
-            (self.before.clone(), self.article_id.clone(), self.author.clone(), self.limit);
+        let (before, article_id, author, limit) = (
+            self.before.clone(),
+            self.article_id.clone(),
+            self.author.clone(),
+            self.limit,
+        );
         let data = self.state.query_article_revision_stubs(move |query| {
             use diesel::prelude::*;
 
@@ -292,67 +351,79 @@ impl Resource for ChangesResource {
 
         let head = self.head();
 
-        Box::new(data.join(head)
-            .and_then(move |(mut data, head)| {
-                use std::iter::Iterator;
+        Box::new(data.join(head).and_then(move |(mut data, head)| {
+            use std::iter::Iterator;
 
-                let extra_element = if data.len() > self.limit as usize {
-                    data.pop()
-                } else {
-                    None
-                };
+            let extra_element = if data.len() > self.limit as usize {
+                data.pop()
+            } else {
+                None
+            };
 
-                let (newer, older) = match self.before {
-                    Some(x) => (
-                        Some(NavLinks {
-                            more: self.query_args().pagination(Pagination::After(x-1)).into_link(),
-                            end: self.query_args().pagination(Pagination::None).into_link(),
-                        }),
-                        extra_element.map(|_| NavLinks {
-                            more: self.query_args()
-                                .pagination(Pagination::Before(data.last().unwrap().sequence_number))
-                                .into_link(),
-                            end: self.query_args().pagination(Pagination::After(0)).into_link(),
-                        })
-                    ),
-                    None => (
-                        None,
-                        extra_element.map(|_| NavLinks {
-                            more: self.query_args()
-                                .pagination(Pagination::Before(data.last().unwrap().sequence_number))
-                                .into_link(),
-                            end: self.query_args().pagination(Pagination::After(0)).into_link(),
-                        }),
-                    ),
-                };
+            let (newer, older) = match self.before {
+                Some(x) => (
+                    Some(NavLinks {
+                        more: self
+                            .query_args()
+                            .pagination(Pagination::After(x - 1))
+                            .into_link(),
+                        end: self.query_args().pagination(Pagination::None).into_link(),
+                    }),
+                    extra_element.map(|_| NavLinks {
+                        more: self
+                            .query_args()
+                            .pagination(Pagination::Before(data.last().unwrap().sequence_number))
+                            .into_link(),
+                        end: self
+                            .query_args()
+                            .pagination(Pagination::After(0))
+                            .into_link(),
+                    }),
+                ),
+                None => (
+                    None,
+                    extra_element.map(|_| NavLinks {
+                        more: self
+                            .query_args()
+                            .pagination(Pagination::Before(data.last().unwrap().sequence_number))
+                            .into_link(),
+                        end: self
+                            .query_args()
+                            .pagination(Pagination::After(0))
+                            .into_link(),
+                    }),
+                ),
+            };
 
-                let changes = &data.into_iter().map(|x| {
-                    Row {
-                        resource: &self,
-                        sequence_number: x.sequence_number,
-                        article_id: x.article_id,
-                        revision: x.revision,
-                        created: Local.from_utc_datetime(&x.created).to_rfc2822(),
-                        author: x.author,
-                        _slug: x.slug,
-                        title: x.title,
-                        _latest: x.latest,
-                        diff_link:
-                            if x.revision > 1 {
-                                Some(format!("_diff/{}?{}",
-                                    x.article_id,
-                                    diff_resource::QueryParameters::new(
-                                        x.revision as u32 - 1,
-                                        x.revision as u32,
-                                    )
-                                ))
-                            } else {
-                                None
-                            },
-                    }
-                }).collect::<Vec<_>>();
+            let changes = &data
+                .into_iter()
+                .map(|x| Row {
+                    resource: &self,
+                    sequence_number: x.sequence_number,
+                    article_id: x.article_id,
+                    revision: x.revision,
+                    created: Local.from_utc_datetime(&x.created).to_rfc2822(),
+                    author: x.author,
+                    _slug: x.slug,
+                    title: x.title,
+                    _latest: x.latest,
+                    diff_link: if x.revision > 1 {
+                        Some(format!(
+                            "_diff/{}?{}",
+                            x.article_id,
+                            diff_resource::QueryParameters::new(
+                                x.revision as u32 - 1,
+                                x.revision as u32,
+                            )
+                        ))
+                    } else {
+                        None
+                    },
+                })
+                .collect::<Vec<_>>();
 
-                Ok(head.with_body(system_page(
+            Ok(head.with_body(
+                system_page(
                     None, // Hmm, should perhaps accept `base` as argument
                     "Changes",
                     Template {
@@ -360,9 +431,11 @@ impl Resource for ChangesResource {
                         show_authors: self.show_authors,
                         newer,
                         older,
-                        changes
-                    }
-                ).to_string()))
-            }))
+                        changes,
+                    },
+                )
+                .to_string(),
+            ))
+        }))
     }
 }

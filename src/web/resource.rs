@@ -1,7 +1,7 @@
 use futures;
 use futures::{Future, Stream};
-use hyper::{self, header, mime, server};
 use hyper::server::Response;
+use hyper::{self, header, mime, server};
 use std;
 
 lazy_static! {
@@ -23,22 +23,24 @@ pub trait Resource {
     }
 
     fn put(self: Box<Self>, body: hyper::Body, _identity: Option<String>) -> ResponseFuture
-        where Self: 'static
+    where
+        Self: 'static,
     {
-        Box::new(body
-            .fold((), |_, _| -> Result<(), hyper::Error> { Ok(()) })
-            .map_err(Into::into)
-            .and_then(move |_| futures::finished(self.method_not_allowed()))
+        Box::new(
+            body.fold((), |_, _| -> Result<(), hyper::Error> { Ok(()) })
+                .map_err(Into::into)
+                .and_then(move |_| futures::finished(self.method_not_allowed())),
         )
     }
 
     fn post(self: Box<Self>, body: hyper::Body, _identity: Option<String>) -> ResponseFuture
-        where Self: 'static
+    where
+        Self: 'static,
     {
-        Box::new(body
-            .fold((), |_, _| -> Result<(), hyper::Error> { Ok(()) })
-            .map_err(Into::into)
-            .and_then(move |_| futures::finished(self.method_not_allowed()))
+        Box::new(
+            body.fold((), |_, _| -> Result<(), hyper::Error> { Ok(()) })
+                .map_err(Into::into)
+                .and_then(move |_| futures::finished(self.method_not_allowed())),
         )
     }
 

@@ -1,8 +1,8 @@
-#[cfg(not(feature="dynamic-assets"))]
+#[cfg(not(feature = "dynamic-assets"))]
 mod static_assets {
-    use std::collections::HashMap;
-    use futures::Future;
     use crate::web::{Resource, ResponseFuture};
+    use futures::Future;
+    use std::collections::HashMap;
 
     // The CSS should be built to a single CSS file at compile time
     #[derive(StaticResource)]
@@ -52,31 +52,39 @@ mod static_assets {
     }
 }
 
-#[cfg(not(feature="dynamic-assets"))]
+#[cfg(not(feature = "dynamic-assets"))]
 pub use self::static_assets::*;
 
-#[cfg(feature="dynamic-assets")]
+#[cfg(feature = "dynamic-assets")]
 mod dynamic_assets {
     pub struct ThemesCss;
     impl ThemesCss {
-        pub fn resource_name() -> &'static str { "themes.css" }
+        pub fn resource_name() -> &'static str {
+            "themes.css"
+        }
     }
 
     pub struct StyleCss;
     impl StyleCss {
-        pub fn resource_name() -> &'static str { "style.css" }
+        pub fn resource_name() -> &'static str {
+            "style.css"
+        }
     }
 
     pub struct ScriptJs;
     impl ScriptJs {
-        pub fn resource_name() -> &'static str { "script.js" }
+        pub fn resource_name() -> &'static str {
+            "script.js"
+        }
     }
 
     pub struct SearchJs;
     impl SearchJs {
-        pub fn resource_name() -> &'static str { "search.js" }
+        pub fn resource_name() -> &'static str {
+            "search.js"
+        }
     }
 }
 
-#[cfg(feature="dynamic-assets")]
+#[cfg(feature = "dynamic-assets")]
 pub use self::dynamic_assets::*;

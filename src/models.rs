@@ -30,7 +30,9 @@ pub struct ArticleRevision {
 }
 
 impl ArticleRevision {
-    pub fn link(&self) -> &str { slug_link(&self.slug) }
+    pub fn link(&self) -> &str {
+        slug_link(&self.slug)
+    }
 }
 
 #[derive(Debug, PartialEq, Queryable)]
@@ -52,7 +54,9 @@ pub struct ArticleRevisionStub {
 }
 
 impl ArticleRevisionStub {
-    pub fn link(&self) -> &str { slug_link(&self.slug) }
+    pub fn link(&self) -> &str {
+        slug_link(&self.slug)
+    }
 }
 
 use diesel::sql_types::Text;
@@ -69,5 +73,7 @@ pub struct SearchResult {
 }
 
 impl SearchResult {
-    pub fn link(&self) -> &str { slug_link(&self.slug) }
+    pub fn link(&self) -> &str {
+        slug_link(&self.slug)
+    }
 }

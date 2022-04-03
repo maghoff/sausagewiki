@@ -26,15 +26,16 @@ impl Resource for SitemapResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
         #[derive(BartDisplay)]
-        #[template="templates/sitemap.html"]
+        #[template = "templates/sitemap.html"]
         struct Template<'a> {
             articles: &'a [ArticleRevisionStub],
         }
@@ -42,15 +43,17 @@ impl Resource for SitemapResource {
         let data = self.state.get_latest_article_revision_stubs();
         let head = self.head();
 
-        Box::new(data.join(head)
-            .and_then(move |(articles, head)| {
-                Ok(head.with_body(system_page(
+        Box::new(data.join(head).and_then(move |(articles, head)| {
+            Ok(head.with_body(
+                system_page(
                     None, // Hmm, should perhaps accept `base` as argument
                     "Sitemap",
                     Template {
                         articles: &articles,
                     },
-                ).to_string()))
-            }))
+                )
+                .to_string(),
+            ))
+        }))
     }
 }

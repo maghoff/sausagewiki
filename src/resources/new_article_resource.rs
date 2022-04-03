@@ -52,9 +52,10 @@ impl Resource for NewArticleResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::NotFound)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::NotFound)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
@@ -66,7 +67,7 @@ impl Resource for NewArticleResource {
         }
 
         #[derive(BartDisplay)]
-        #[template="templates/article.html"]
+        #[template = "templates/article.html"]
         struct Template<'a> {
             revision: &'a str,
             last_updated: Option<&'a str>,
@@ -84,42 +85,48 @@ impl Resource for NewArticleResource {
             }
         }
 
-        let title = self.slug.as_ref()
+        let title = self
+            .slug
+            .as_ref()
             .map_or("".to_owned(), |x| title_from_slug(x));
 
-        Box::new(self.head()
-            .and_then(move |head| {
-                Ok(head
-                    .with_body(Layout {
-                        base: None, // Hmm, should perhaps accept `base` as argument
+        Box::new(self.head().and_then(move |head| {
+            Ok(head.with_body(
+                Layout {
+                    base: None, // Hmm, should perhaps accept `base` as argument
+                    title: &title,
+                    theme: theme::Theme::Gray,
+                    body: &Template {
+                        revision: NEW,
+                        last_updated: None,
+                        edit: self.edit,
+                        cancel_url: self.slug.as_ref().map(|x| &**x),
                         title: &title,
-                        theme: theme::Theme::Gray,
-                        body: &Template {
-                            revision: NEW,
-                            last_updated: None,
-                            edit: self.edit,
-                            cancel_url: self.slug.as_ref().map(|x| &**x),
-                            title: &title,
-                            raw: "",
-                            rendered: EMPTY_ARTICLE_MESSAGE,
-                            themes: &theme::THEMES.iter().map(|&x| SelectableTheme {
+                        raw: "",
+                        rendered: EMPTY_ARTICLE_MESSAGE,
+                        themes: &theme::THEMES
+                            .iter()
+                            .map(|&x| SelectableTheme {
                                 theme: x,
                                 selected: false,
-                            }).collect::<Vec<_>>(),
-                        },
-                    }.to_string()))
-            }))
+                            })
+                            .collect::<Vec<_>>(),
+                    },
+                }
+                .to_string(),
+            ))
+        }))
     }
 
     fn put(self: Box<Self>, body: hyper::Body, identity: Option<String>) -> ResponseFuture {
         // TODO Check incoming Content-Type
         // TODO Refactor? Reduce duplication with ArticleResource::put?
 
-        use chrono::{TimeZone, Local};
+        use chrono::{Local, TimeZone};
         use futures::Stream;
 
         #[derive(BartDisplay)]
-        #[template="templates/article_contents.html"]
+        #[template = "templates/article_contents.html"]
         struct Template<'a> {
             title: &'a str,
             rendered: String,
@@ -137,43 +144,51 @@ impl Resource for NewArticleResource {
             last_updated: &'a str,
         }
 
-        Box::new(body
-            .concat2()
-            .map_err(Into::into)
-            .and_then(|body| {
-                serde_urlencoded::from_bytes(&body)
-                    .map_err(Into::into)
-            })
-            .and_then(move |arg: CreateArticle| {
-                if arg.base_revision != NEW {
-                    unimplemented!("Version update conflict");
-                }
-                let theme = arg.theme.unwrap_or_else(theme::random);
-                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, theme)
-            })
-            .and_then(|updated| {
-                futures::finished(Response::new()
-                    .with_status(hyper::StatusCode::Ok)
-                    .with_header(ContentType(APPLICATION_JSON.clone()))
-                    .with_body(serde_json::to_string(&PutResponse {
-                        slug: &updated.slug,
-                        article_id: updated.article_id,
-                        revision: updated.revision,
-                        title: &updated.title,
-                        body: &updated.body,
-                        theme: updated.theme,
-                        rendered: &Template {
-                            title: &updated.title,
-                            rendered: render_markdown(&updated.body),
-                        }.to_string(),
-                        last_updated: &super::article_resource::last_updated(
-                            updated.article_id,
-                            &Local.from_utc_datetime(&updated.created),
-                            updated.author.as_ref().map(|x| &**x)
-                        ),
-                    }).expect("Should never fail"))
-                )
-            })
+        Box::new(
+            body.concat2()
+                .map_err(Into::into)
+                .and_then(|body| serde_urlencoded::from_bytes(&body).map_err(Into::into))
+                .and_then(move |arg: CreateArticle| {
+                    if arg.base_revision != NEW {
+                        unimplemented!("Version update conflict");
+                    }
+                    let theme = arg.theme.unwrap_or_else(theme::random);
+                    self.state.create_article(
+                        self.slug.clone(),
+                        arg.title,
+                        arg.body,
+                        identity,
+                        theme,
+                    )
+                })
+                .and_then(|updated| {
+                    futures::finished(
+                        Response::new()
+                            .with_status(hyper::StatusCode::Ok)
+                            .with_header(ContentType(APPLICATION_JSON.clone()))
+                            .with_body(
+                                serde_json::to_string(&PutResponse {
+                                    slug: &updated.slug,
+                                    article_id: updated.article_id,
+                                    revision: updated.revision,
+                                    title: &updated.title,
+                                    body: &updated.body,
+                                    theme: updated.theme,
+                                    rendered: &Template {
+                                        title: &updated.title,
+                                        rendered: render_markdown(&updated.body),
+                                    }
+                                    .to_string(),
+                                    last_updated: &super::article_resource::last_updated(
+                                        updated.article_id,
+                                        &Local.from_utc_datetime(&updated.created),
+                                        updated.author.as_ref().map(|x| &**x),
+                                    ),
+                                })
+                                .expect("Should never fail"),
+                            ),
+                    )
+                }),
         )
     }
 
@@ -183,28 +198,32 @@ impl Resource for NewArticleResource {
 
         use futures::Stream;
 
-        Box::new(body
-            .concat2()
-            .map_err(Into::into)
-            .and_then(|body| {
-                serde_urlencoded::from_bytes(&body)
-                    .map_err(Into::into)
-            })
-            .and_then(move |arg: CreateArticle| {
-                if arg.base_revision != NEW {
-                    unimplemented!("Version update conflict");
-                }
-                let theme = arg.theme.unwrap_or_else(theme::random);
-                self.state.create_article(self.slug.clone(), arg.title, arg.body, identity, theme)
-            })
-            .and_then(|updated| {
-                futures::finished(Response::new()
-                    .with_status(hyper::StatusCode::SeeOther)
-                    .with_header(ContentType(TEXT_PLAIN.clone()))
-                    .with_header(Location::new(updated.link().to_owned()))
-                    .with_body("See other")
-                )
-            })
+        Box::new(
+            body.concat2()
+                .map_err(Into::into)
+                .and_then(|body| serde_urlencoded::from_bytes(&body).map_err(Into::into))
+                .and_then(move |arg: CreateArticle| {
+                    if arg.base_revision != NEW {
+                        unimplemented!("Version update conflict");
+                    }
+                    let theme = arg.theme.unwrap_or_else(theme::random);
+                    self.state.create_article(
+                        self.slug.clone(),
+                        arg.title,
+                        arg.body,
+                        identity,
+                        theme,
+                    )
+                })
+                .and_then(|updated| {
+                    futures::finished(
+                        Response::new()
+                            .with_status(hyper::StatusCode::SeeOther)
+                            .with_header(ContentType(TEXT_PLAIN.clone()))
+                            .with_header(Location::new(updated.link().to_owned()))
+                            .with_body("See other"),
+                    )
+                }),
         )
     }
 }

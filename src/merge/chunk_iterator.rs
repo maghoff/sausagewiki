@@ -7,7 +7,7 @@ use super::chunk::Chunk;
 
 pub struct ChunkIterator<'a, Item>
 where
-    Item: 'a + Debug + PartialEq
+    Item: 'a + Debug + PartialEq,
 {
     left: &'a [diff::Result<Item>],
     right: &'a [diff::Result<Item>],
@@ -15,16 +15,19 @@ where
 
 impl<'a, Item> ChunkIterator<'a, Item>
 where
-    Item: 'a + Debug + PartialEq + Eq
+    Item: 'a + Debug + PartialEq + Eq,
 {
-    pub fn new(left: &'a [diff::Result<Item>], right: &'a [diff::Result<Item>]) -> ChunkIterator<'a, Item> {
+    pub fn new(
+        left: &'a [diff::Result<Item>],
+        right: &'a [diff::Result<Item>],
+    ) -> ChunkIterator<'a, Item> {
         ChunkIterator { left, right }
     }
 }
 
 impl<'a, Item> Iterator for ChunkIterator<'a, Item>
 where
-    Item: 'a + Debug + PartialEq + Copy
+    Item: 'a + Debug + PartialEq + Copy,
 {
     type Item = Chunk<'a, Item>;
 
@@ -46,18 +49,18 @@ where
             match (self.left.get(li), self.right.get(ri)) {
                 (Some(&Right(_)), _) => {
                     li += 1;
-                },
+                }
                 (_, Some(&Right(_))) => {
                     ri += 1;
-                },
+                }
                 (Some(&Left(_)), Some(_)) => {
                     li += 1;
                     ri += 1;
-                },
+                }
                 (Some(_), Some(&Left(_))) => {
                     li += 1;
                     ri += 1;
-                },
+                }
                 (Some(&Both(..)), Some(&Both(..))) => {
                     let chunk = Chunk(&self.left[..li], &self.right[..ri]);
                     self.left = &self.left[li..];
@@ -94,13 +97,16 @@ mod test {
 
         let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
 
-        assert_eq!(vec![
-            Chunk(&oa[0.. 3], &ob[0.. 3]),
-            Chunk(&oa[3.. 6], &ob[3.. 3]),
-            Chunk(&oa[6.. 9], &ob[3.. 6]),
-            Chunk(&oa[9.. 9], &ob[6.. 9]),
-            Chunk(&oa[9..12], &ob[9..12]),
-        ], chunks);
+        assert_eq!(
+            vec![
+                Chunk(&oa[0..3], &ob[0..3]),
+                Chunk(&oa[3..6], &ob[3..3]),
+                Chunk(&oa[6..9], &ob[3..6]),
+                Chunk(&oa[9..9], &ob[6..9]),
+                Chunk(&oa[9..12], &ob[9..12]),
+            ],
+            chunks
+        );
     }
 
     #[test]
@@ -113,11 +119,14 @@ mod test {
         let ob = diff::chars(o, b);
 
         let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
-        assert_eq!(vec![
-            Chunk(&oa[0.. 3], &ob[0.. 3]),
-            Chunk(&oa[3.. 9], &ob[3.. 9]),
-            Chunk(&oa[9..12], &ob[9..12]),
-        ], chunks);
+        assert_eq!(
+            vec![
+                Chunk(&oa[0..3], &ob[0..3]),
+                Chunk(&oa[3..9], &ob[3..9]),
+                Chunk(&oa[9..12], &ob[9..12]),
+            ],
+            chunks
+        );
     }
 
     #[test]
@@ -130,10 +139,10 @@ mod test {
         let ob = diff::chars(o, b);
 
         let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
-        assert_eq!(vec![
-            Chunk(&oa[0..9], &ob[0.. 9]),
-            Chunk(&oa[9..9], &ob[9..12]),
-        ], chunks);
+        assert_eq!(
+            vec![Chunk(&oa[0..9], &ob[0..9]), Chunk(&oa[9..9], &ob[9..12]),],
+            chunks
+        );
     }
 
     #[test]
@@ -146,10 +155,10 @@ mod test {
         let ob = diff::chars(o, b);
 
         let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
-        assert_eq!(vec![
-            Chunk(&oa[0..6], &ob[0.. 6]),
-            Chunk(&oa[6..9], &ob[6..12]),
-        ], chunks);
+        assert_eq!(
+            vec![Chunk(&oa[0..6], &ob[0..6]), Chunk(&oa[6..9], &ob[6..12]),],
+            chunks
+        );
     }
 
     #[test]
@@ -162,8 +171,6 @@ mod test {
         let ob = diff::chars(o, b);
 
         let chunks = ChunkIterator::new(&oa, &ob).collect::<Vec<_>>();
-        assert_eq!(vec![
-            Chunk(&oa[0..6], &ob[0..6]),
-        ], chunks);
+        assert_eq!(vec![Chunk(&oa[0..6], &ob[0..6]),], chunks);
     }
 }

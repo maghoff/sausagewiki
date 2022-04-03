@@ -54,13 +54,15 @@ struct LicenseInfo {
 }
 
 #[derive(BartDisplay)]
-#[template="templates/about.html"]
+#[template = "templates/about.html"]
 struct Template<'a> {
-    deps: &'a [LicenseInfo]
+    deps: &'a [LicenseInfo],
 }
 
 impl<'a> Template<'a> {
-    fn version(&self) -> &str { &build_config::VERSION }
+    fn version(&self) -> &str {
+        &build_config::VERSION
+    }
 }
 
 impl Resource for AboutResource {
@@ -70,24 +72,27 @@ impl Resource for AboutResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
     fn get(self: Box<Self>) -> ResponseFuture {
         let head = self.head();
 
-        Box::new(head
-            .and_then(move |head| {
-                Ok(head.with_body(system_page(
+        Box::new(head.and_then(move |head| {
+            Ok(head.with_body(
+                system_page(
                     None, // Hmm, should perhaps accept `base` as argument
                     "About Sausagewiki",
                     Template {
-                        deps: &*LICENSE_INFOS
+                        deps: &*LICENSE_INFOS,
                     },
-                ).to_string()))
-            }))
+                )
+                .to_string(),
+            ))
+        }))
     }
 }

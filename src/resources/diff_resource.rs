@@ -1,8 +1,8 @@
 use std::fmt;
 
 use diff;
-use futures::{self, Future};
 use futures::future::done;
+use futures::{self, Future};
 use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
@@ -48,25 +48,28 @@ impl DiffLookup {
         Self { state }
     }
 
-    pub fn lookup(&self, article_id: u32, query: Option<&str>) -> Box<dyn Future<Item=Option<BoxResource>, Error=crate::web::Error>> {
+    pub fn lookup(
+        &self,
+        article_id: u32,
+        query: Option<&str>,
+    ) -> Box<dyn Future<Item = Option<BoxResource>, Error = crate::web::Error>> {
         let state = self.state.clone();
 
-        Box::new(done(
-            serde_urlencoded::from_str(query.unwrap_or(""))
-                .map_err(Into::into)
-        ).and_then(move |params: QueryParameters| {
-            let from = state.get_article_revision(article_id as i32, params.from as i32);
-            let to = state.get_article_revision(article_id as i32, params.to as i32);
+        Box::new(
+            done(serde_urlencoded::from_str(query.unwrap_or("")).map_err(Into::into))
+                .and_then(move |params: QueryParameters| {
+                    let from = state.get_article_revision(article_id as i32, params.from as i32);
+                    let to = state.get_article_revision(article_id as i32, params.to as i32);
 
-            from.join(to)
-        }).and_then(move |(from, to)| {
-            match (from, to) {
-                (Some(from), Some(to)) =>
-                    Ok(Some(Box::new(DiffResource::new(from, to)) as BoxResource)),
-                _ =>
-                    Ok(None),
-            }
-        }))
+                    from.join(to)
+                })
+                .and_then(move |(from, to)| match (from, to) {
+                    (Some(from), Some(to)) => {
+                        Ok(Some(Box::new(DiffResource::new(from, to)) as BoxResource))
+                    }
+                    _ => Ok(None),
+                }),
+        )
     }
 }
 
@@ -89,9 +92,10 @@ impl Resource for DiffResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        Box::new(futures::finished(Response::new()
-            .with_status(hyper::StatusCode::Ok)
-            .with_header(ContentType(TEXT_HTML.clone()))
+        Box::new(futures::finished(
+            Response::new()
+                .with_status(hyper::StatusCode::Ok)
+                .with_header(ContentType(TEXT_HTML.clone())),
         ))
     }
 
@@ -119,64 +123,88 @@ impl Resource for DiffResource {
 
         let head = self.head();
 
-        Box::new(head
-            .and_then(move |head| {
-                let consecutive = self.to.revision - self.from.revision == 1;
+        Box::new(head.and_then(move |head| {
+            let consecutive = self.to.revision - self.from.revision == 1;
 
-                let author = match consecutive {
-                    true => self.to.author.as_ref().map(|x| &**x),
-                    false => None,
-                };
+            let author = match consecutive {
+                true => self.to.author.as_ref().map(|x| &**x),
+                false => None,
+            };
 
-                let author_link = &format!("_changes{}",
-                    changes_resource::QueryParameters::default()
-                        .author(author.map(|x| x.to_owned()))
-                        .pagination(Pagination::After(self.from.sequence_number))
-                        .into_link()
-                );
+            let author_link = &format!(
+                "_changes{}",
+                changes_resource::QueryParameters::default()
+                    .author(author.map(|x| x.to_owned()))
+                    .pagination(Pagination::After(self.from.sequence_number))
+                    .into_link()
+            );
 
-                let article_history_link = &format!("_changes{}",
-                    changes_resource::QueryParameters::default()
-                        .article_id(Some(self.from.article_id))
-                        .pagination(Pagination::After(self.from.sequence_number))
-                        .into_link()
-                );
+            let article_history_link = &format!(
+                "_changes{}",
+                changes_resource::QueryParameters::default()
+                    .article_id(Some(self.from.article_id))
+                    .pagination(Pagination::After(self.from.sequence_number))
+                    .into_link()
+            );
 
-                let title = &diff::chars(&self.from.title, &self.to.title)
-                    .into_iter()
-                    .map(|x| match x {
-                        diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
-                        diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
-                        diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
-                    })
-                    .collect::<Vec<_>>();
+            let title = &diff::chars(&self.from.title, &self.to.title)
+                .into_iter()
+                .map(|x| match x {
+                    diff::Result::Left(x) => Diff {
+                        removed: Some(x),
+                        ..Default::default()
+                    },
+                    diff::Result::Both(x, _) => Diff {
+                        same: Some(x),
+                        ..Default::default()
+                    },
+                    diff::Result::Right(x) => Diff {
+                        added: Some(x),
+                        ..Default::default()
+                    },
+                })
+                .collect::<Vec<_>>();
 
-                let lines = &diff::lines(&self.from.body, &self.to.body)
-                    .into_iter()
-                    .map(|x| match x {
-                        diff::Result::Left(x) => Diff { removed: Some(x), ..Default::default() },
-                        diff::Result::Both(x, _) => Diff { same: Some(x), ..Default::default() },
-                        diff::Result::Right(x) => Diff { added: Some(x), ..Default::default() },
-                    })
-                    .collect::<Vec<_>>();
+            let lines = &diff::lines(&self.from.body, &self.to.body)
+                .into_iter()
+                .map(|x| match x {
+                    diff::Result::Left(x) => Diff {
+                        removed: Some(x),
+                        ..Default::default()
+                    },
+                    diff::Result::Both(x, _) => Diff {
+                        same: Some(x),
+                        ..Default::default()
+                    },
+                    diff::Result::Right(x) => Diff {
+                        added: Some(x),
+                        ..Default::default()
+                    },
+                })
+                .collect::<Vec<_>>();
 
-                Ok(head
-                    .with_body(Layout {
-                        base: Some("../"), // Hmm, should perhaps accept `base` as argument
-                        title: "Difference",
-                        theme: theme::theme_from_str_hash("Difference"),
-                        body: &Template {
-                            consecutive,
-                            article_id: self.from.article_id as u32,
-                            author,
-                            author_link,
-                            article_history_link,
-                            from_link: &format!("_revisions/{}/{}", self.from.article_id, self.from.revision),
-                            to_link: &format!("_revisions/{}/{}", self.to.article_id, self.to.revision),
-                            title,
-                            lines,
-                        },
-                    }.to_string()))
-            }))
+            Ok(head.with_body(
+                Layout {
+                    base: Some("../"), // Hmm, should perhaps accept `base` as argument
+                    title: "Difference",
+                    theme: theme::theme_from_str_hash("Difference"),
+                    body: &Template {
+                        consecutive,
+                        article_id: self.from.article_id as u32,
+                        author,
+                        author_link,
+                        article_history_link,
+                        from_link: &format!(
+                            "_revisions/{}/{}",
+                            self.from.article_id, self.from.revision
+                        ),
+                        to_link: &format!("_revisions/{}/{}", self.to.article_id, self.to.revision),
+                        title,
+                        lines,
+                    },
+                }
+                .to_string(),
+            ))
+        }))
     }
 }

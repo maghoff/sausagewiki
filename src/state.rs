@@ -1,8 +1,8 @@
 use std;
 
 use diesel;
-use diesel::sqlite::SqliteConnection;
 use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
 use futures_cpupool::{self, CpuFuture};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
@@ -22,15 +22,12 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub enum SlugLookup {
     Miss,
-    Hit {
-        article_id: i32,
-        revision: i32,
-    },
+    Hit { article_id: i32, revision: i32 },
     Redirect(String),
 }
 
 #[derive(Insertable)]
-#[table_name="article_revisions"]
+#[table_name = "article_revisions"]
 struct NewRevision<'a> {
     article_id: i32,
     revision: i32,
@@ -52,7 +49,11 @@ pub struct RebaseConflict {
 
 #[derive(Debug, PartialEq)]
 enum RebaseResult {
-    Clean { title: String, body: String, theme: Theme },
+    Clean {
+        title: String,
+        body: String,
+        theme: Theme,
+    },
     Conflict(RebaseConflict),
 }
 
@@ -61,7 +62,13 @@ pub enum UpdateResult {
     RebaseConflict(RebaseConflict),
 }
 
-fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title: &str, prev_slug: Option<&str>) -> Result<String, Error> {
+fn decide_slug(
+    conn: &SqliteConnection,
+    article_id: i32,
+    prev_title: &str,
+    title: &str,
+    prev_slug: Option<&str>,
+) -> Result<String, Error> {
     let base_slug = ::slug::slugify(title);
 
     if let Some(prev_slug) = prev_slug {
@@ -79,7 +86,11 @@ fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title
         }
     }
 
-    let base_slug = if base_slug.is_empty() { "article" } else { &base_slug };
+    let base_slug = if base_slug.is_empty() {
+        "article"
+    } else {
+        &base_slug
+    };
 
     use crate::schema::article_revisions;
 
@@ -92,7 +103,8 @@ fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title
             .filter(article_revisions::slug.eq(&slug))
             .filter(article_revisions::latest.eq(true))
             .count()
-            .first::<i64>(conn)? != 0;
+            .first::<i64>(conn)?
+            != 0;
 
         if !slug_in_use {
             break Ok(slug);
@@ -123,7 +135,11 @@ impl<'a> SyncState<'a> {
             .optional()?)
     }
 
-    pub fn get_article_revision(&self, article_id: i32, revision: i32) -> Result<Option<models::ArticleRevision>, Error> {
+    pub fn get_article_revision(
+        &self,
+        article_id: i32,
+        revision: i32,
+    ) -> Result<Option<models::ArticleRevision>, Error> {
         use crate::schema::article_revisions;
 
         Ok(article_revisions::table
@@ -133,12 +149,15 @@ impl<'a> SyncState<'a> {
             .optional()?)
     }
 
-    pub fn query_article_revision_stubs<F>(&self, f: F) -> Result<Vec<models::ArticleRevisionStub>, Error>
+    pub fn query_article_revision_stubs<F>(
+        &self,
+        f: F,
+    ) -> Result<Vec<models::ArticleRevisionStub>, Error>
     where
         F: 'static + Send + Sync,
-        for <'x> F:
-            FnOnce(article_revisions::BoxedQuery<'x, diesel::sqlite::Sqlite>) ->
-                article_revisions::BoxedQuery<'x, diesel::sqlite::Sqlite>,
+        for<'x> F: FnOnce(
+            article_revisions::BoxedQuery<'x, diesel::sqlite::Sqlite>,
+        ) -> article_revisions::BoxedQuery<'x, diesel::sqlite::Sqlite>,
     {
         use crate::schema::article_revisions::dsl::*;
 
@@ -154,19 +173,24 @@ impl<'a> SyncState<'a> {
                 author,
                 theme,
             ))
-            .load(self.db_connection)?
-        )
+            .load(self.db_connection)?)
     }
 
-    fn get_article_revision_stub(&self, article_id: i32, revision: i32) -> Result<Option<models::ArticleRevisionStub>, Error> {
+    fn get_article_revision_stub(
+        &self,
+        article_id: i32,
+        revision: i32,
+    ) -> Result<Option<models::ArticleRevisionStub>, Error> {
         use crate::schema::article_revisions;
 
-        Ok(self.query_article_revision_stubs(move |query| {
-            query
-                .filter(article_revisions::article_id.eq(article_id))
-                .filter(article_revisions::revision.eq(revision))
-                .limit(1)
-        })?.pop())
+        Ok(self
+            .query_article_revision_stubs(move |query| {
+                query
+                    .filter(article_revisions::article_id.eq(article_id))
+                    .filter(article_revisions::revision.eq(revision))
+                    .limit(1)
+            })?
+            .pop())
     }
 
     pub fn lookup_slug(&self, slug: String) -> Result<SlugLookup, Error> {
@@ -180,36 +204,44 @@ impl<'a> SyncState<'a> {
         self.db_connection.transaction(|| {
             use crate::schema::article_revisions;
 
-            Ok(match article_revisions::table
-                .filter(article_revisions::slug.eq(slug))
-                .order(article_revisions::sequence_number.desc())
-                .select((
-                    article_revisions::article_id,
-                    article_revisions::revision,
-                    article_revisions::latest,
-                ))
-                .first::<ArticleRevisionStub>(self.db_connection)
-                .optional()?
-            {
-                None => SlugLookup::Miss,
-                Some(ref stub) if stub.latest => SlugLookup::Hit {
-                    article_id: stub.article_id,
-                    revision: stub.revision,
+            Ok(
+                match article_revisions::table
+                    .filter(article_revisions::slug.eq(slug))
+                    .order(article_revisions::sequence_number.desc())
+                    .select((
+                        article_revisions::article_id,
+                        article_revisions::revision,
+                        article_revisions::latest,
+                    ))
+                    .first::<ArticleRevisionStub>(self.db_connection)
+                    .optional()?
+                {
+                    None => SlugLookup::Miss,
+                    Some(ref stub) if stub.latest => SlugLookup::Hit {
+                        article_id: stub.article_id,
+                        revision: stub.revision,
+                    },
+                    Some(stub) => SlugLookup::Redirect(
+                        article_revisions::table
+                            .filter(article_revisions::latest.eq(true))
+                            .filter(article_revisions::article_id.eq(stub.article_id))
+                            .select(article_revisions::slug)
+                            .first::<String>(self.db_connection)?,
+                    ),
                 },
-                Some(stub) => SlugLookup::Redirect(
-                    article_revisions::table
-                        .filter(article_revisions::latest.eq(true))
-                        .filter(article_revisions::article_id.eq(stub.article_id))
-                        .select(article_revisions::slug)
-                        .first::<String>(self.db_connection)?
-                )
-            })
+            )
         })
     }
 
-    fn rebase_update(&self, article_id: i32, target_base_revision: i32, existing_base_revision: i32, title: String, body: String, theme: Theme)
-        -> Result<RebaseResult, Error>
-    {
+    fn rebase_update(
+        &self,
+        article_id: i32,
+        target_base_revision: i32,
+        existing_base_revision: i32,
+        title: String,
+        body: String,
+        theme: Theme,
+    ) -> Result<RebaseResult, Error> {
         let mut title_a = title;
         let mut body_a = body;
         let mut theme_a = theme;
@@ -226,7 +258,7 @@ impl<'a> SyncState<'a> {
             let mut stored = article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .filter(article_revisions::revision.ge(revision))
-                .filter(article_revisions::revision.le(revision+1))
+                .filter(article_revisions::revision.le(revision + 1))
                 .order(article_revisions::revision.asc())
                 .select((
                     article_revisions::title,
@@ -242,7 +274,11 @@ impl<'a> SyncState<'a> {
 
             fn merge_themes(a: Theme, o: Theme, b: Theme) -> Theme {
                 // Last change wins
-                if a != o { a } else { b }
+                if a != o {
+                    a
+                } else {
+                    b
+                }
             }
 
             let update = {
@@ -254,12 +290,14 @@ impl<'a> SyncState<'a> {
                     (Clean(title), Clean(body)) => (title, body, theme),
                     (title_merge, body_merge) => {
                         return Ok(RebaseResult::Conflict(RebaseConflict {
-                            base_article: self.get_article_revision_stub(article_id, revision+1)?.expect("Application layer guarantee"),
+                            base_article: self
+                                .get_article_revision_stub(article_id, revision + 1)?
+                                .expect("Application layer guarantee"),
                             title: title_merge,
                             body: body_merge.to_strings(),
                             theme,
                         }));
-                    },
+                    }
                 }
             };
 
@@ -268,12 +306,22 @@ impl<'a> SyncState<'a> {
             theme_a = update.2;
         }
 
-        Ok(RebaseResult::Clean { title: title_a, body: body_a, theme: theme_a })
+        Ok(RebaseResult::Clean {
+            title: title_a,
+            body: body_a,
+            theme: theme_a,
+        })
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>, theme: Option<Theme>)
-        -> Result<UpdateResult, Error>
-    {
+    pub fn update_article(
+        &self,
+        article_id: i32,
+        base_revision: i32,
+        title: String,
+        body: String,
+        author: Option<String>,
+        theme: Option<Theme>,
+    ) -> Result<UpdateResult, Error> {
         if title.is_empty() {
             Err("title cannot be empty")?;
         }
@@ -300,7 +348,14 @@ impl<'a> SyncState<'a> {
             }
 
             let theme = theme.unwrap_or(prev_theme);
-            let rebase_result = self.rebase_update(article_id, latest_revision, base_revision, title, body, theme)?;
+            let rebase_result = self.rebase_update(
+                article_id,
+                latest_revision,
+                base_revision,
+                title,
+                body,
+                theme,
+            )?;
 
             let (title, body, theme) = match rebase_result {
                 RebaseResult::Clean { title, body, theme } => (title, body, theme),
@@ -309,15 +364,21 @@ impl<'a> SyncState<'a> {
 
             let new_revision = latest_revision + 1;
 
-            let slug = decide_slug(self.db_connection, article_id, &prev_title, &title, Some(&prev_slug))?;
+            let slug = decide_slug(
+                self.db_connection,
+                article_id,
+                &prev_title,
+                &title,
+                Some(&prev_slug),
+            )?;
 
             diesel::update(
                 article_revisions::table
                     .filter(article_revisions::article_id.eq(article_id))
-                    .filter(article_revisions::revision.eq(latest_revision))
+                    .filter(article_revisions::revision.eq(latest_revision)),
             )
-                .set(article_revisions::latest.eq(false))
-                .execute(self.db_connection)?;
+            .set(article_revisions::latest.eq(false))
+            .execute(self.db_connection)?;
 
             diesel::insert_into(article_revisions::table)
                 .values(&NewRevision {
@@ -332,26 +393,32 @@ impl<'a> SyncState<'a> {
                 })
                 .execute(self.db_connection)?;
 
-            Ok(UpdateResult::Success(article_revisions::table
-                .filter(article_revisions::article_id.eq(article_id))
-                .filter(article_revisions::revision.eq(new_revision))
-                .first::<models::ArticleRevision>(self.db_connection)?
+            Ok(UpdateResult::Success(
+                article_revisions::table
+                    .filter(article_revisions::article_id.eq(article_id))
+                    .filter(article_revisions::revision.eq(new_revision))
+                    .first::<models::ArticleRevision>(self.db_connection)?,
             ))
         })
     }
 
-    pub fn create_article(&self, target_slug: Option<String>, title: String, body: String, author: Option<String>, theme: Theme)
-        -> Result<models::ArticleRevision, Error>
-    {
+    pub fn create_article(
+        &self,
+        target_slug: Option<String>,
+        title: String,
+        body: String,
+        author: Option<String>,
+        theme: Theme,
+    ) -> Result<models::ArticleRevision, Error> {
         if title.is_empty() {
             Err("title cannot be empty")?;
         }
 
         self.db_connection.transaction(|| {
             #[derive(Insertable)]
-            #[table_name="articles"]
+            #[table_name = "articles"]
             struct NewArticle {
-                id: Option<i32>
+                id: Option<i32>,
             }
 
             let article_id = {
@@ -361,10 +428,17 @@ impl<'a> SyncState<'a> {
                     .execute(self.db_connection)?;
                 sql::<(diesel::sql_types::Integer)>("SELECT LAST_INSERT_ROWID()")
                     .load::<i32>(self.db_connection)?
-                    .pop().expect("Statement must evaluate to an integer")
+                    .pop()
+                    .expect("Statement must evaluate to an integer")
             };
 
-            let slug = decide_slug(self.db_connection, article_id, "", &title, target_slug.as_ref().map(|x| &**x))?;
+            let slug = decide_slug(
+                self.db_connection,
+                article_id,
+                "",
+                &title,
+                target_slug.as_ref().map(|x| &**x),
+            )?;
 
             let new_revision = 1;
 
@@ -384,12 +458,17 @@ impl<'a> SyncState<'a> {
             Ok(article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .filter(article_revisions::revision.eq(new_revision))
-                .first::<models::ArticleRevision>(self.db_connection)?
-            )
+                .first::<models::ArticleRevision>(self.db_connection)?)
         })
     }
 
-    pub fn search_query(&self, query_string: String, limit: i32, offset: i32, snippet_size: i32) -> Result<Vec<models::SearchResult>, Error> {
+    pub fn search_query(
+        &self,
+        query_string: String,
+        limit: i32,
+        offset: i32,
+        snippet_size: i32,
+    ) -> Result<Vec<models::SearchResult>, Error> {
         use diesel::sql_query;
         use diesel::sql_types::{Integer, Text};
 
@@ -427,7 +506,10 @@ impl<'a> SyncState<'a> {
 }
 
 impl State {
-    pub fn new(connection_pool: Pool<ConnectionManager<SqliteConnection>>, cpu_pool: futures_cpupool::CpuPool) -> State {
+    pub fn new(
+        connection_pool: Pool<ConnectionManager<SqliteConnection>>,
+        cpu_pool: futures_cpupool::CpuPool,
+    ) -> State {
         State {
             connection_pool,
             cpu_pool,
@@ -437,7 +519,7 @@ impl State {
     fn execute<F, T>(&self, f: F) -> CpuFuture<T, Error>
     where
         F: 'static + Sync + Send,
-        for <'a> F: FnOnce(SyncState<'a>) -> Result<T, Error>,
+        for<'a> F: FnOnce(SyncState<'a>) -> Result<T, Error>,
         T: 'static + Send,
     {
         let connection_pool = self.connection_pool.clone();
@@ -453,21 +535,30 @@ impl State {
         self.execute(move |state| state.get_article_slug(article_id))
     }
 
-    pub fn get_article_revision(&self, article_id: i32, revision: i32) -> CpuFuture<Option<models::ArticleRevision>, Error> {
+    pub fn get_article_revision(
+        &self,
+        article_id: i32,
+        revision: i32,
+    ) -> CpuFuture<Option<models::ArticleRevision>, Error> {
         self.execute(move |state| state.get_article_revision(article_id, revision))
     }
 
-    pub fn query_article_revision_stubs<F>(&self, f: F) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error>
+    pub fn query_article_revision_stubs<F>(
+        &self,
+        f: F,
+    ) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error>
     where
         F: 'static + Send + Sync,
-        for <'a> F:
-            FnOnce(article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>) ->
-                article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
+        for<'a> F: FnOnce(
+            article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
+        ) -> article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
     {
         self.execute(move |state| state.query_article_revision_stubs(f))
     }
 
-    pub fn get_latest_article_revision_stubs(&self) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error> {
+    pub fn get_latest_article_revision_stubs(
+        &self,
+    ) -> CpuFuture<Vec<models::ArticleRevisionStub>, Error> {
         self.query_article_revision_stubs(|query| {
             query
                 .filter(article_revisions::latest.eq(true))
@@ -479,19 +570,38 @@ impl State {
         self.execute(move |state| state.lookup_slug(slug))
     }
 
-    pub fn update_article(&self, article_id: i32, base_revision: i32, title: String, body: String, author: Option<String>, theme: Option<Theme>)
-        -> CpuFuture<UpdateResult, Error>
-    {
-        self.execute(move |state| state.update_article(article_id, base_revision, title, body, author, theme))
+    pub fn update_article(
+        &self,
+        article_id: i32,
+        base_revision: i32,
+        title: String,
+        body: String,
+        author: Option<String>,
+        theme: Option<Theme>,
+    ) -> CpuFuture<UpdateResult, Error> {
+        self.execute(move |state| {
+            state.update_article(article_id, base_revision, title, body, author, theme)
+        })
     }
 
-    pub fn create_article(&self, target_slug: Option<String>, title: String, body: String, author: Option<String>, theme: Theme)
-        -> CpuFuture<models::ArticleRevision, Error>
-    {
+    pub fn create_article(
+        &self,
+        target_slug: Option<String>,
+        title: String,
+        body: String,
+        author: Option<String>,
+        theme: Theme,
+    ) -> CpuFuture<models::ArticleRevision, Error> {
         self.execute(move |state| state.create_article(target_slug, title, body, author, theme))
     }
 
-    pub fn search_query(&self, query_string: String, limit: i32, offset: i32, snippet_size: i32) -> CpuFuture<Vec<models::SearchResult>, Error> {
+    pub fn search_query(
+        &self,
+        query_string: String,
+        limit: i32,
+        offset: i32,
+        snippet_size: i32,
+    ) -> CpuFuture<Vec<models::SearchResult>, Error> {
         self.execute(move |state| state.search_query(query_string, limit, offset, snippet_size))
     }
 }
@@ -505,7 +615,7 @@ mod test {
         pub fn unwrap(self) -> models::ArticleRevision {
             match self {
                 UpdateResult::Success(x) => x,
-                _ => panic!("Expected success")
+                _ => panic!("Expected success"),
             }
         }
     }
@@ -514,7 +624,7 @@ mod test {
         ($state:ident) => {
             let db = db::test_connection();
             let $state = SyncState::new(&db);
-        }
+        };
     }
 
     #[test]
@@ -526,7 +636,9 @@ mod test {
     #[test]
     fn create_article() {
         init!(state);
-        let article_revision = state.create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan).unwrap();
+        let article_revision = state
+            .create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan)
+            .unwrap();
         assert_eq!("title", article_revision.slug);
         assert_eq!(true, article_revision.latest);
         assert_eq!(Theme::Cyan, article_revision.theme);
@@ -536,7 +648,15 @@ mod test {
     fn create_article_when_empty_slug_then_empty_slug() {
         // Front page gets to keep its empty slug
         init!(state);
-        let article_revision = state.create_article(Some("".into()), "Title".into(), "Body".into(), None, Theme::Cyan).unwrap();
+        let article_revision = state
+            .create_article(
+                Some("".into()),
+                "Title".into(),
+                "Body".into(),
+                None,
+                Theme::Cyan,
+            )
+            .unwrap();
         assert_eq!("", article_revision.slug);
     }
 
@@ -544,9 +664,21 @@ mod test {
     fn update_article() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let new_revision = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None, Some(Theme::BlueGray)).unwrap().unwrap();
+        let new_revision = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "New body".into(),
+                None,
+                Some(Theme::BlueGray),
+            )
+            .unwrap()
+            .unwrap();
 
         assert_eq!(article.article_id, new_revision.article_id);
 
@@ -566,10 +698,32 @@ mod test {
     fn update_article_when_sequential_edits_then_last_wins() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "New body".into(), None, Some(Theme::Blue)).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, first_edit.revision, article.title.clone(), "Newer body".into(), None, Some(Theme::Amber)).unwrap().unwrap();
+        let first_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "New body".into(),
+                None,
+                Some(Theme::Blue),
+            )
+            .unwrap()
+            .unwrap();
+        let second_edit = state
+            .update_article(
+                article.article_id,
+                first_edit.revision,
+                article.title.clone(),
+                "Newer body".into(),
+                None,
+                Some(Theme::Amber),
+            )
+            .unwrap()
+            .unwrap();
 
         assert_eq!("Newer body", second_edit.body);
         assert_eq!(Theme::Amber, second_edit.theme);
@@ -579,10 +733,32 @@ mod test {
     fn update_article_when_edit_conflict_then_merge() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Some(Theme::Blue)).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Some(Theme::Amber)).unwrap().unwrap();
+        let first_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "a\nx\nb\nc\n".into(),
+                None,
+                Some(Theme::Blue),
+            )
+            .unwrap()
+            .unwrap();
+        let second_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "a\nb\ny\nc\n".into(),
+                None,
+                Some(Theme::Amber),
+            )
+            .unwrap()
+            .unwrap();
 
         assert!(article.revision < first_edit.revision);
         assert!(first_edit.revision < second_edit.revision);
@@ -595,13 +771,55 @@ mod test {
     fn update_article_when_edit_conflict_then_rebase_over_multiple_revisions() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx1\nb\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
-        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nb\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
-        let edit = state.update_article(article.article_id, edit.revision, article.title.clone(), "a\nx1\nx2\nx3\nb\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
+        let edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "a\nx1\nb\nc\n".into(),
+                None,
+                Some(article.theme),
+            )
+            .unwrap()
+            .unwrap();
+        let edit = state
+            .update_article(
+                article.article_id,
+                edit.revision,
+                article.title.clone(),
+                "a\nx1\nx2\nb\nc\n".into(),
+                None,
+                Some(article.theme),
+            )
+            .unwrap()
+            .unwrap();
+        let edit = state
+            .update_article(
+                article.article_id,
+                edit.revision,
+                article.title.clone(),
+                "a\nx1\nx2\nx3\nb\nc\n".into(),
+                None,
+                Some(article.theme),
+            )
+            .unwrap()
+            .unwrap();
 
-        let rebase_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Some(article.theme)).unwrap().unwrap();
+        let rebase_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "a\nb\ny\nc\n".into(),
+                None,
+                Some(article.theme),
+            )
+            .unwrap()
+            .unwrap();
 
         assert!(article.revision < edit.revision);
         assert!(edit.revision < rebase_edit.revision);
@@ -613,10 +831,32 @@ mod test {
     fn update_article_when_title_edit_conflict_then_merge_title() {
         init!(state);
 
-        let article = state.create_article(None, "titlle".into(), "".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "titlle".into(), "".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, "Titlle".into(), article.body.clone(), None, Some(article.theme)).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, "title".into(), article.body.clone(), None, Some(article.theme)).unwrap().unwrap();
+        let first_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                "Titlle".into(),
+                article.body.clone(),
+                None,
+                Some(article.theme),
+            )
+            .unwrap()
+            .unwrap();
+        let second_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                "title".into(),
+                article.body.clone(),
+                None,
+                Some(article.theme),
+            )
+            .unwrap()
+            .unwrap();
 
         assert!(article.revision < first_edit.revision);
         assert!(first_edit.revision < second_edit.revision);
@@ -628,19 +868,51 @@ mod test {
     fn update_article_when_merge_conflict() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "a".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "a".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "b".into(), None, Some(Theme::Blue)).unwrap().unwrap();
-        let conflict_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "c".into(), None, Some(Theme::Amber)).unwrap();
+        let first_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "b".into(),
+                None,
+                Some(Theme::Blue),
+            )
+            .unwrap()
+            .unwrap();
+        let conflict_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "c".into(),
+                None,
+                Some(Theme::Amber),
+            )
+            .unwrap();
 
         match conflict_edit {
             UpdateResult::Success(..) => panic!("Expected conflict"),
-            UpdateResult::RebaseConflict(RebaseConflict { base_article, title, body, theme }) => {
+            UpdateResult::RebaseConflict(RebaseConflict {
+                base_article,
+                title,
+                body,
+                theme,
+            }) => {
                 assert_eq!(first_edit.revision, base_article.revision);
                 assert_eq!(title, merge::MergeResult::Clean(article.title.clone()));
-                assert_eq!(body, merge::MergeResult::Conflicted(vec![
-                    merge::Output::Conflict(vec!["c"], vec!["a"], vec!["b"]),
-                ]).to_strings());
+                assert_eq!(
+                    body,
+                    merge::MergeResult::Conflicted(vec![merge::Output::Conflict(
+                        vec!["c"],
+                        vec!["a"],
+                        vec!["b"]
+                    ),])
+                    .to_strings()
+                );
                 assert_eq!(Theme::Amber, theme);
             }
         };
@@ -650,10 +922,32 @@ mod test {
     fn update_article_when_theme_conflict_then_ignore_unchanged() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let _first_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nx\nb\nc\n".into(), None, Some(Theme::Blue)).unwrap().unwrap();
-        let second_edit = state.update_article(article.article_id, article.revision, article.title.clone(), "a\nb\ny\nc\n".into(), None, Some(Theme::Cyan)).unwrap().unwrap();
+        let _first_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "a\nx\nb\nc\n".into(),
+                None,
+                Some(Theme::Blue),
+            )
+            .unwrap()
+            .unwrap();
+        let second_edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title.clone(),
+                "a\nb\ny\nc\n".into(),
+                None,
+                Some(Theme::Cyan),
+            )
+            .unwrap()
+            .unwrap();
 
         assert_eq!(Theme::Blue, second_edit.theme);
     }
@@ -662,9 +956,21 @@ mod test {
     fn update_article_with_no_given_theme_then_theme_unchanged() {
         init!(state);
 
-        let article = state.create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan).unwrap();
+        let article = state
+            .create_article(None, "Title".into(), "a\nb\nc\n".into(), None, Theme::Cyan)
+            .unwrap();
 
-        let edit = state.update_article(article.article_id, article.revision, article.title, article.body, None, None).unwrap().unwrap();
+        let edit = state
+            .update_article(
+                article.article_id,
+                article.revision,
+                article.title,
+                article.body,
+                None,
+                None,
+            )
+            .unwrap()
+            .unwrap();
 
         assert_eq!(Theme::Cyan, edit.theme);
     }

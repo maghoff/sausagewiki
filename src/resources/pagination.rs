@@ -37,7 +37,7 @@ impl<T> PaginationStruct<T> {
             (Some(x), None) => Ok(Pagination::After(x)),
             (None, Some(x)) => Ok(Pagination::Before(x)),
             (None, None) => Ok(Pagination::None),
-            _ => Err(Error)
+            _ => Err(Error),
         }
     }
 }

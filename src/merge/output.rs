@@ -47,12 +47,10 @@ fn choose_right<Item: Copy>(operations: &[diff::Result<Item>]) -> Vec<Item> {
 }
 
 fn no_change<Item>(operations: &[diff::Result<Item>]) -> bool {
-    operations
-        .iter()
-        .all(|x| match x {
-            &Both(..) => true,
-            _ => false,
-        })
+    operations.iter().all(|x| match x {
+        &Both(..) => true,
+        _ => false,
+    })
 }
 
 pub fn resolve<'a, Item: 'a + Debug + PartialEq + Copy>(chunk: Chunk<'a, Item>) -> Output<Item> {
@@ -78,83 +76,43 @@ pub fn resolve<'a, Item: 'a + Debug + PartialEq + Copy>(chunk: Chunk<'a, Item>) 
 
 #[cfg(test)]
 mod test {
-    use diff::Result::*;
     use super::*;
+    use diff::Result::*;
 
     #[test]
     fn empty() {
-        assert_eq!(
-            Output::Resolved(vec![]),
-            resolve::<i32>(Chunk(&[], &[]))
-        );
+        assert_eq!(Output::Resolved(vec![]), resolve::<i32>(Chunk(&[], &[])));
     }
 
     #[test]
     fn same() {
         assert_eq!(
-            Output::Resolved(vec![
-                1
-            ]),
-            resolve::<i32>(Chunk(
-                &[Both(1, 1)],
-                &[Both(1, 1)]
-            ))
+            Output::Resolved(vec![1]),
+            resolve::<i32>(Chunk(&[Both(1, 1)], &[Both(1, 1)]))
         );
     }
 
     #[test]
     fn only_left() {
         assert_eq!(
-            Output::Resolved(vec![
-                2
-            ]),
-            resolve::<i32>(Chunk(
-                &[
-                    Left(1),
-                    Right(2)
-                ],
-                &[]
-            ))
+            Output::Resolved(vec![2]),
+            resolve::<i32>(Chunk(&[Left(1), Right(2)], &[]))
         );
     }
 
     #[test]
     fn false_conflict() {
         assert_eq!(
-            Output::Resolved(vec![
-                2
-            ]),
-            resolve::<i32>(Chunk(
-                &[
-                    Left(1),
-                    Right(2)
-                ],
-                &[
-                    Left(1),
-                    Right(2)
-                ],
-            ))
+            Output::Resolved(vec![2]),
+            resolve::<i32>(Chunk(&[Left(1), Right(2)], &[Left(1), Right(2)],))
         );
     }
 
     #[test]
     fn real_conflict() {
         assert_eq!(
-            Output::Conflict(
-                vec![2],
-                vec![1],
-                vec![3],
-            ),
-            resolve::<i32>(Chunk(
-                &[
-                    Left(1),
-                    Right(2)
-                ],
-                &[
-                    Left(1),
-                    Right(3)
-                ],
-            ))
+            Output::Conflict(vec![2], vec![1], vec![3],),
+            resolve::<i32>(Chunk(&[Left(1), Right(2)], &[Left(1), Right(3)],))
         );
     }
 }

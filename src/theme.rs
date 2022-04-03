@@ -8,9 +8,8 @@ use diesel::sqlite::Sqlite;
 use rand;
 use seahash;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-#[derive(Serialize, Deserialize)] // Serde
-#[serde(rename_all="kebab-case")]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)] // Serde
+#[serde(rename_all = "kebab-case")]
 #[derive(AsExpression, FromSqlRow)] // Diesel
 #[sql_type = "Text"]
 pub enum Theme {
@@ -40,9 +39,10 @@ use self::Theme::*;
 forward_display_to_serde!(Theme);
 forward_from_str_to_serde!(Theme);
 
-pub const THEMES: [Theme; 19] = [Red, Pink, Purple, DeepPurple, Indigo, Blue,
-    LightBlue, Cyan, Teal, Green, LightGreen, Lime, Yellow, Amber, Orange,
-    DeepOrange, Brown, Gray, BlueGray];
+pub const THEMES: [Theme; 19] = [
+    Red, Pink, Purple, DeepPurple, Indigo, Blue, LightBlue, Cyan, Teal, Green, LightGreen, Lime,
+    Yellow, Amber, Orange, DeepOrange, Brown, Gray, BlueGray,
+];
 
 pub fn theme_from_str_hash(x: &str) -> Theme {
     let hash = seahash::hash(x.as_bytes()) as usize;
@@ -52,7 +52,8 @@ pub fn theme_from_str_hash(x: &str) -> Theme {
 
 pub fn random() -> Theme {
     use rand::Rng;
-    *rand::thread_rng().choose(&THEMES)
+    *rand::thread_rng()
+        .choose(&THEMES)
         .expect("Could only fail for an empty slice")
 }
 
@@ -73,7 +74,6 @@ impl FromSql<Text, Sqlite> for Theme {
     }
 }
 
-
 pub struct CssClass(Theme);
 
 impl Theme {
@@ -89,7 +89,6 @@ impl Display for CssClass {
         write!(fmt, "theme-{}", self.0)
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -111,13 +110,18 @@ mod test {
 
     #[test]
     fn serialize_kebab_case() {
-        assert_eq!(serde_plain::to_string(&Theme::LightGreen).unwrap(), "light-green");
+        assert_eq!(
+            serde_plain::to_string(&Theme::LightGreen).unwrap(),
+            "light-green"
+        );
     }
 
     #[test]
     fn serialize_json() {
         #[derive(Serialize)]
-        struct Test { x: Theme }
+        struct Test {
+            x: Theme,
+        }
         assert_eq!(
             serde_json::to_string(&Test { x: Theme::Red }).unwrap(),
             "{\"x\":\"red\"}"
@@ -127,7 +131,9 @@ mod test {
     #[test]
     fn deserialize_json() {
         #[derive(Deserialize, Debug, PartialEq, Eq)]
-        struct Test { x: Theme }
+        struct Test {
+            x: Theme,
+        }
         assert_eq!(
             serde_json::from_str::<Test>("{\"x\":\"red\"}").unwrap(),
             Test { x: Theme::Red }
@@ -137,7 +143,9 @@ mod test {
     #[test]
     fn serialize_urlencoded() {
         #[derive(Serialize)]
-        struct Test { x: Theme }
+        struct Test {
+            x: Theme,
+        }
         assert_eq!(
             serde_urlencoded::to_string(&Test { x: Theme::Red }).unwrap(),
             "x=red"
@@ -147,7 +155,9 @@ mod test {
     #[test]
     fn deserialize_urlencoded() {
         #[derive(Deserialize, Debug, PartialEq, Eq)]
-        struct Test { x: Theme }
+        struct Test {
+            x: Theme,
+        }
         assert_eq!(
             serde_urlencoded::from_str::<Test>("x=red").unwrap(),
             Test { x: Theme::Red }
@@ -192,13 +202,16 @@ mod test {
         let conn = SqliteConnection::establish(":memory:")?;
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]
-        struct Row { #[sql_type = "Text"] theme: Theme }
+        struct Row {
+            #[sql_type = "Text"]
+            theme: Theme,
+        }
 
         let res = sql_query("SELECT ? as theme")
             .bind::<Text, _>(DeepPurple)
             .load::<Row>(&conn)?;
 
-        assert_eq!(&[ Row { theme: DeepPurple } ], res.as_slice());
+        assert_eq!(&[Row { theme: DeepPurple }], res.as_slice());
 
         Ok(())
     }
@@ -208,14 +221,15 @@ mod test {
         let conn = SqliteConnection::establish(":memory:")?;
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]
-        struct Row { #[sql_type = "Text"] theme: Theme }
+        struct Row {
+            #[sql_type = "Text"]
+            theme: Theme,
+        }
 
-        let res = sql_query("SELECT 'green' as theme")
-            .load::<Row>(&conn);
+        let res = sql_query("SELECT 'green' as theme").load::<Row>(&conn);
         assert!(res.is_ok());
 
-        let res = sql_query("SELECT 'blueish-yellow' as theme")
-            .load::<Row>(&conn);
+        let res = sql_query("SELECT 'blueish-yellow' as theme").load::<Row>(&conn);
         assert!(res.is_err());
 
         Ok(())

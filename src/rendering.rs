@@ -1,6 +1,6 @@
+use pulldown_cmark::Event::{End, Text};
+use pulldown_cmark::{html, Parser, Tag, OPTION_DISABLE_HTML, OPTION_ENABLE_TABLES};
 use slug::slugify;
-use pulldown_cmark::{Parser, Tag, html, OPTION_ENABLE_TABLES, OPTION_DISABLE_HTML};
-use pulldown_cmark::Event::{Text, End};
 
 fn slugify_link(text: &str, title: &str) -> Option<(String, String)> {
     Some((slugify(text), title.to_owned()))
@@ -28,8 +28,7 @@ pub fn render_markdown_for_fts(src: &str) -> String {
 
     for event in p {
         match event {
-            Text(text) =>
-                buf.push_str(&text.replace(is_html_special, " ")),
+            Text(text) => buf.push_str(&text.replace(is_html_special, " ")),
             End(Tag::Link(uri, _title)) => {
                 buf.push_str(" (");
                 buf.push_str(&uri.replace(is_html_special, " "));

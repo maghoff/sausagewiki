@@ -2,8 +2,8 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::Utf8Error;
 
-use futures::{Future, finished, failed, done};
 use futures::future::FutureResult;
+use futures::{done, failed, finished, Future};
 use percent_encoding::percent_decode;
 use slug::slugify;
 
@@ -18,7 +18,7 @@ type BoxResource = Box<dyn Resource + Sync + Send>;
 type ResourceFn = Box<dyn Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
-    static ref LICENSES_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
+    static ref LICENSES_MAP: HashMap<&'static str, ResourceFn> = hashmap! {
         "bsd-3-clause" => Box::new(|| Box::new(
             HtmlResource::new(Some("../"), "The 3-Clause BSD License", include_str!("licenses/bsd-3-clause.html"))
         ) as BoxResource) as ResourceFn,
@@ -54,9 +54,10 @@ fn split_one(path: &str) -> Result<(Cow<str>, Option<&str>), Utf8Error> {
     Ok((head, tail))
 }
 
-fn map_lookup(map: &HashMap<&str, ResourceFn>, path: &str) ->
-    FutureResult<Option<BoxResource>, Box<dyn ::std::error::Error + Send + Sync>>
-{
+fn map_lookup(
+    map: &HashMap<&str, ResourceFn>,
+    path: &str,
+) -> FutureResult<Option<BoxResource>, Box<dyn ::std::error::Error + Send + Sync>> {
     let (head, tail) = match split_one(path) {
         Ok(x) => x,
         Err(x) => return failed(x.into()),
@@ -73,9 +74,10 @@ fn map_lookup(map: &HashMap<&str, ResourceFn>, path: &str) ->
 }
 
 #[allow(unused)]
-fn fs_lookup(root: &str, path: &str) ->
-    FutureResult<Option<BoxResource>, Box<dyn ::std::error::Error + Send + Sync>>
-{
+fn fs_lookup(
+    root: &str,
+    path: &str,
+) -> FutureResult<Option<BoxResource>, Box<dyn ::std::error::Error + Send + Sync>> {
     use std::fs::File;
     use std::io::prelude::*;
 
@@ -87,17 +89,17 @@ fn fs_lookup(root: &str, path: &str) ->
         Some("js") => "application/javascript",
         Some("woff") => "application/font-woff",
         _ => "application/binary",
-    }.parse().unwrap();
+    }
+    .parse()
+    .unwrap();
 
     let mut filename = root.to_string();
     filename.push_str(path);
 
-    let mut f = File::open(&filename)
-        .unwrap_or_else(|_| panic!("Not found: {}", filename));
+    let mut f = File::open(&filename).unwrap_or_else(|_| panic!("Not found: {}", filename));
 
     let mut body = Vec::new();
-    f.read_to_end(&mut body)
-        .expect("Unable to read file");
+    f.read_to_end(&mut body).expect("Unable to read file");
 
     finished(Some(Box::new(ReadOnlyResource { content_type, body })))
 }
@@ -108,7 +110,12 @@ impl WikiLookup {
         let diff_lookup = DiffLookup::new(state.clone());
         let search_lookup = SearchLookup::new(state.clone());
 
-        WikiLookup { state, changes_lookup, diff_lookup, search_lookup }
+        WikiLookup {
+            state,
+            changes_lookup,
+            diff_lookup,
+            search_lookup,
+        }
     }
 
     fn revisions_lookup(&self, path: &str, _query: Option<&str>) -> <Self as Lookup>::Future {
@@ -126,12 +133,12 @@ impl WikiLookup {
         };
 
         Box::new(
-            self.state.get_article_revision(article_id, revision)
-                .and_then(|article_revision|
-                    Ok(article_revision.map(move |x| Box::new(
-                        ArticleRevisionResource::new(x)
-                    ) as BoxResource))
-                )
+            self.state
+                .get_article_revision(article_id, revision)
+                .and_then(|article_revision| {
+                    Ok(article_revision
+                        .map(move |x| Box::new(ArticleRevisionResource::new(x)) as BoxResource))
+                }),
         )
     }
 
@@ -148,14 +155,11 @@ impl WikiLookup {
             Err(_) => return Box::new(finished(None)),
         };
 
-        Box::new(
-            self.state.get_article_slug(article_id)
-                .and_then(|slug|
-                    Ok(slug.map(|slug| Box::new(
-                        TemporaryRedirectResource::new(format!("../{}", slug))
-                    ) as BoxResource))
-                )
-        )
+        Box::new(self.state.get_article_slug(article_id).and_then(|slug| {
+            Ok(slug.map(|slug| {
+                Box::new(TemporaryRedirectResource::new(format!("../{}", slug))) as BoxResource
+            }))
+        }))
     }
 
     fn diff_lookup_f(&self, path: &str, query: Option<&str>) -> <Self as Lookup>::Future {
@@ -181,30 +185,30 @@ impl WikiLookup {
         };
 
         match (head.as_ref(), tail) {
-            ("_about", None) =>
-                Box::new(finished(Some(Box::new(AboutResource::new()) as BoxResource))),
-            ("_about", Some(license)) =>
-                Box::new(map_lookup(&LICENSES_MAP, license)),
-            #[cfg(feature="dynamic-assets")]
-            ("_assets", Some(asset)) =>
-                Box::new(fs_lookup(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/"), asset)),
-            #[cfg(not(feature="dynamic-assets"))]
-            ("_assets", Some(asset)) =>
-                Box::new(map_lookup(&ASSETS_MAP, asset)),
-            ("_by_id", Some(tail)) =>
-                self.by_id_lookup(tail, query),
-            ("_changes", None) =>
-                Box::new(self.changes_lookup.lookup(query)),
-            ("_diff", Some(tail)) =>
-                self.diff_lookup_f(tail, query),
-            ("_new", None) =>
-                Box::new(finished(Some(Box::new(NewArticleResource::new(self.state.clone(), None, true)) as BoxResource))),
-            ("_revisions", Some(tail)) =>
-                self.revisions_lookup(tail, query),
-            ("_search", None) =>
-                Box::new(done(self.search_lookup.lookup(query))),
-            ("_sitemap", None) =>
-                Box::new(finished(Some(Box::new(SitemapResource::new(self.state.clone())) as BoxResource))),
+            ("_about", None) => Box::new(finished(Some(
+                Box::new(AboutResource::new()) as BoxResource
+            ))),
+            ("_about", Some(license)) => Box::new(map_lookup(&LICENSES_MAP, license)),
+            #[cfg(feature = "dynamic-assets")]
+            ("_assets", Some(asset)) => Box::new(fs_lookup(
+                concat!(env!("CARGO_MANIFEST_DIR"), "/assets/"),
+                asset,
+            )),
+            #[cfg(not(feature = "dynamic-assets"))]
+            ("_assets", Some(asset)) => Box::new(map_lookup(&ASSETS_MAP, asset)),
+            ("_by_id", Some(tail)) => self.by_id_lookup(tail, query),
+            ("_changes", None) => Box::new(self.changes_lookup.lookup(query)),
+            ("_diff", Some(tail)) => self.diff_lookup_f(tail, query),
+            ("_new", None) => Box::new(finished(Some(Box::new(NewArticleResource::new(
+                self.state.clone(),
+                None,
+                true,
+            )) as BoxResource))),
+            ("_revisions", Some(tail)) => self.revisions_lookup(tail, query),
+            ("_search", None) => Box::new(done(self.search_lookup.lookup(query))),
+            ("_sitemap", None) => Box::new(finished(Some(Box::new(SitemapResource::new(
+                self.state.clone(),
+            )) as BoxResource))),
             _ => Box::new(finished(None)),
         }
     }
@@ -226,7 +230,7 @@ impl WikiLookup {
         let slugified_slug = slugify(&slug);
         if slugified_slug != slug {
             return Box::new(finished(Some(
-                Box::new(TemporaryRedirectResource::from_slug(slugified_slug, edit)) as BoxResource
+                Box::new(TemporaryRedirectResource::from_slug(slugified_slug, edit)) as BoxResource,
             )));
         }
 
@@ -234,16 +238,22 @@ impl WikiLookup {
         let slug = slug.into_owned();
 
         use crate::state::SlugLookup;
-        Box::new(self.state.lookup_slug(slug.clone())
-            .and_then(move |x| Ok(Some(match x {
-                SlugLookup::Miss =>
-                    Box::new(NewArticleResource::new(state, Some(slug), edit)) as BoxResource,
-                SlugLookup::Hit { article_id, revision } =>
-                    Box::new(ArticleResource::new(state, article_id, revision, edit)) as BoxResource,
-                SlugLookup::Redirect(slug) =>
-                    Box::new(TemporaryRedirectResource::from_slug(slug, edit)) as BoxResource,
-            })))
-        )
+        Box::new(self.state.lookup_slug(slug.clone()).and_then(move |x| {
+            Ok(Some(match x {
+                SlugLookup::Miss => {
+                    Box::new(NewArticleResource::new(state, Some(slug), edit)) as BoxResource
+                }
+                SlugLookup::Hit {
+                    article_id,
+                    revision,
+                } => {
+                    Box::new(ArticleResource::new(state, article_id, revision, edit)) as BoxResource
+                }
+                SlugLookup::Redirect(slug) => {
+                    Box::new(TemporaryRedirectResource::from_slug(slug, edit)) as BoxResource
+                }
+            }))
+        }))
     }
 }
 

@@ -1,5 +1,5 @@
-use diesel::prelude::*;
 use diesel::expression::sql_literal::sql;
+use diesel::prelude::*;
 use diesel::sql_types::*;
 use r2d2::{CustomizeConnection, Pool};
 use r2d2_diesel::{self, ConnectionManager};
@@ -25,21 +25,23 @@ impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitial
             .execute(conn)
             .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 
-        sqlfunc::markdown_to_fts::register_impl(
-            conn,
-            |text: String| rendering::render_markdown_for_fts(&text)
-        ).map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+        sqlfunc::markdown_to_fts::register_impl(conn, |text: String| {
+            rendering::render_markdown_for_fts(&text)
+        })
+        .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 
-        sqlfunc::theme_from_str_hash::register_impl(
-            conn,
-            |title: String| theme::theme_from_str_hash(&title)
-        ).map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+        sqlfunc::theme_from_str_hash::register_impl(conn, |title: String| {
+            theme::theme_from_str_hash(&title)
+        })
+        .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 
         Ok(())
     }
 }
 
-pub fn create_pool<S: Into<String>>(connection_string: S) -> Result<Pool<ConnectionManager<SqliteConnection>>, Box<dyn (::std::error::Error)>> {
+pub fn create_pool<S: Into<String>>(
+    connection_string: S,
+) -> Result<Pool<ConnectionManager<SqliteConnection>>, Box<dyn (::std::error::Error)>> {
     let manager = ConnectionManager::<SqliteConnection>::new(connection_string);
     let pool = Pool::builder()
         .connection_customizer(Box::new(SqliteInitializer {}))
@@ -72,7 +74,10 @@ mod test {
         let conn = test_connection();
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]
-        struct Row { #[sql_type = "Text"] text: String }
+        struct Row {
+            #[sql_type = "Text"]
+            text: String,
+        }
 
         let res = sql_query("SELECT markdown_to_fts('[link](url)') as text")
             .load::<Row>(&conn)
@@ -88,7 +93,10 @@ mod test {
         let conn = test_connection();
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]
-        struct Row { #[sql_type = "Text"] theme: theme::Theme }
+        struct Row {
+            #[sql_type = "Text"]
+            theme: theme::Theme,
+        }
 
         let res = sql_query("SELECT theme_from_str_hash('Bartefjes') as theme")
             .load::<Row>(&conn)
