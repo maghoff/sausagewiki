@@ -1,10 +1,8 @@
 use chrono::{DateTime, Local, TimeZone};
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::{ContentType, Location};
 use hyper::server::*;
-use serde_json;
-use serde_urlencoded;
 
 use crate::assets::ScriptJs;
 use crate::mimes::*;
@@ -90,7 +88,7 @@ pub fn last_updated(article_id: i32, created: &DateTime<Local>, author: Option<&
                 .into_link()
         ),
         author: author.map(|author| Author {
-            author: &author,
+            author,
             history: format!(
                 "_changes{}",
                 QueryParameters::default()
@@ -134,7 +132,7 @@ impl Resource for ArticleResource {
                         last_updated: Some(&last_updated(
                             data.article_id,
                             &Local.from_utc_datetime(&data.created),
-                            data.author.as_ref().map(|x| &**x),
+                            data.author.as_deref(),
                         )),
                         edit: self.edit,
                         cancel_url: Some(data.link()),
@@ -213,7 +211,7 @@ impl Resource for ArticleResource {
                                 last_updated: &last_updated(
                                     updated.article_id,
                                     &Local.from_utc_datetime(&updated.created),
-                                    updated.author.as_ref().map(|x| &**x),
+                                    updated.author.as_deref(),
                                 ),
                             })
                             .expect("Should never fail"),
@@ -245,7 +243,7 @@ impl Resource for ArticleResource {
                                     last_updated: &last_updated(
                                         base_article.article_id,
                                         &Local.from_utc_datetime(&base_article.created),
-                                        base_article.author.as_ref().map(|x| &**x),
+                                        base_article.author.as_deref(),
                                     ),
                                 })
                                 .expect("Should never fail"),
@@ -301,7 +299,7 @@ impl Resource for ArticleResource {
                                         last_updated: Some(&last_updated(
                                             base_article.article_id,
                                             &Local.from_utc_datetime(&base_article.created),
-                                            base_article.author.as_ref().map(|x| &**x),
+                                            base_article.author.as_deref(),
                                         )),
                                         edit: true,
                                         cancel_url: Some(base_article.link()),

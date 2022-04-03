@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use diff;
 use diff::Result::*;
 
 use super::chunk::Chunk;
@@ -68,7 +67,7 @@ where
                     return Some(chunk);
                 }
                 _ => {
-                    if self.left.len() > 0 || self.right.len() > 0 {
+                    if !self.left.is_empty() || !self.right.is_empty() {
                         let chunk = Chunk(self.left, self.right);
                         self.left = &self.left[self.left.len()..];
                         self.right = &self.right[self.right.len()..];
@@ -84,7 +83,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use diff;
 
     #[test]
     fn simple_case() {

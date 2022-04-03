@@ -4,8 +4,6 @@ mod output;
 
 use std::fmt::Debug;
 
-use diff;
-
 use self::chunk_iterator::ChunkIterator;
 use self::output::Output::Resolved;
 use self::output::*;
@@ -132,7 +130,6 @@ pub fn merge_chars<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<char> 
 
 #[cfg(test)]
 mod test {
-    use diff;
 
     use super::output::Output::*;
     use super::output::*;

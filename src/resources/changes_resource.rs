@@ -1,10 +1,8 @@
-use diesel;
 use futures::future::{done, finished};
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::ContentType;
 use hyper::server::*;
-use serde_urlencoded;
 
 use crate::mimes::*;
 use crate::schema::article_revisions;
@@ -75,7 +73,7 @@ impl QueryParameters {
 
     pub fn into_link(self) -> String {
         let args = serde_urlencoded::to_string(self).expect("Serializing to String cannot fail");
-        if args.len() > 0 {
+        if !args.is_empty() {
             format!("?{}", args)
         } else {
             "_changes".to_owned()
@@ -127,7 +125,7 @@ impl ChangesLookup {
 
                 let limit = match params.limit {
                     None => Ok(DEFAULT_LIMIT),
-                    Some(x) if 1 <= x && x <= 100 => Ok(x),
+                    Some(x) if (1..=100).contains(&x) => Ok(x),
                     _ => Err("`limit` argument must be in range [1, 100]"),
                 }?;
 
@@ -309,7 +307,7 @@ impl Resource for ChangesResource {
             fn subject_clause(&self) -> String {
                 match self.resource.article_id {
                     Some(x) => format!(" <a href=\"_by_id/{}\">this article</a>", x),
-                    None => format!(" the wiki"),
+                    None => " the wiki".to_string(),
                 }
             }
 
@@ -332,8 +330,8 @@ impl Resource for ChangesResource {
         }
 
         let (before, article_id, author, limit) = (
-            self.before.clone(),
-            self.article_id.clone(),
+            self.before,
+            self.article_id,
             self.author.clone(),
             self.limit,
         );

@@ -23,17 +23,17 @@ impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitial
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), r2d2_diesel::Error> {
         sql::<Integer>("PRAGMA foreign_keys = ON")
             .execute(conn)
-            .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+            .map_err(r2d2_diesel::Error::QueryError)?;
 
         sqlfunc::markdown_to_fts::register_impl(conn, |text: String| {
             rendering::render_markdown_for_fts(&text)
         })
-        .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+        .map_err(r2d2_diesel::Error::QueryError)?;
 
         sqlfunc::theme_from_str_hash::register_impl(conn, |title: String| {
             theme::theme_from_str_hash(&title)
         })
-        .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
+        .map_err(r2d2_diesel::Error::QueryError)?;
 
         Ok(())
     }

@@ -1,5 +1,5 @@
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::ContentType;
 use hyper::server::*;
 
@@ -88,7 +88,7 @@ impl Resource for AboutResource {
                     None, // Hmm, should perhaps accept `base` as argument
                     "About Sausagewiki",
                     Template {
-                        deps: &*LICENSE_INFOS,
+                        deps: *LICENSE_INFOS,
                     },
                 )
                 .to_string(),

@@ -1,12 +1,10 @@
 use std::fmt;
 
-use diff;
 use futures::future::done;
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::ContentType;
 use hyper::server::*;
-use serde_urlencoded;
 
 use crate::mimes::*;
 use crate::models::ArticleRevision;
@@ -127,7 +125,7 @@ impl Resource for DiffResource {
             let consecutive = self.to.revision - self.from.revision == 1;
 
             let author = match consecutive {
-                true => self.to.author.as_ref().map(|x| &**x),
+                true => self.to.author.as_deref(),
                 false => None,
             };
 

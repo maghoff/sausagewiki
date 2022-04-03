@@ -1,6 +1,3 @@
-use std;
-
-use diesel;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use futures_cpupool::{self, CpuFuture};
@@ -72,7 +69,7 @@ fn decide_slug(
     let base_slug = ::slug::slugify(title);
 
     if let Some(prev_slug) = prev_slug {
-        if prev_slug == "" {
+        if prev_slug.is_empty() {
             // Never give a non-empty slug to the front page
             return Ok(String::new());
         }
@@ -313,7 +310,7 @@ impl<'a> SyncState<'a> {
         theme: Option<Theme>,
     ) -> Result<UpdateResult, Error> {
         if title.is_empty() {
-            Err("title cannot be empty")?;
+            return Err("title cannot be empty".into());
         }
 
         self.db_connection.transaction(|| {
@@ -332,7 +329,7 @@ impl<'a> SyncState<'a> {
             // This scheme would make POST idempotent.
 
             if base_revision > latest_revision {
-                Err("This edit is based on a future version of the article")?;
+                return Err("This edit is based on a future version of the article".into());
             }
 
             let theme = theme.unwrap_or(prev_theme);
@@ -375,7 +372,7 @@ impl<'a> SyncState<'a> {
                     slug: &slug,
                     title: &title,
                     body: &body,
-                    author: author.as_ref().map(|x| &**x),
+                    author: author.as_deref(),
                     latest: true,
                     theme,
                 })
@@ -399,7 +396,7 @@ impl<'a> SyncState<'a> {
         theme: Theme,
     ) -> Result<models::ArticleRevision, Error> {
         if title.is_empty() {
-            Err("title cannot be empty")?;
+            return Err("title cannot be empty".into());
         }
 
         self.db_connection.transaction(|| {
@@ -425,7 +422,7 @@ impl<'a> SyncState<'a> {
                 article_id,
                 "",
                 &title,
-                target_slug.as_ref().map(|x| &**x),
+                target_slug.as_deref(),
             )?;
 
             let new_revision = 1;
@@ -437,7 +434,7 @@ impl<'a> SyncState<'a> {
                     slug: &slug,
                     title: &title,
                     body: &body,
-                    author: author.as_ref().map(|x| &**x),
+                    author: author.as_deref(),
                     latest: true,
                     theme,
                 })
@@ -705,7 +702,7 @@ mod test {
             .update_article(
                 article.article_id,
                 first_edit.revision,
-                article.title.clone(),
+                article.title,
                 "Newer body".into(),
                 None,
                 Some(Theme::Amber),
@@ -891,7 +888,7 @@ mod test {
                 theme,
             }) => {
                 assert_eq!(first_edit.revision, base_article.revision);
-                assert_eq!(title, merge::MergeResult::Clean(article.title.clone()));
+                assert_eq!(title, merge::MergeResult::Clean(article.title));
                 assert_eq!(
                     body,
                     merge::MergeResult::Conflicted(vec![merge::Output::Conflict(
@@ -929,7 +926,7 @@ mod test {
             .update_article(
                 article.article_id,
                 article.revision,
-                article.title.clone(),
+                article.title,
                 "a\nb\ny\nc\n".into(),
                 None,
                 Some(Theme::Cyan),

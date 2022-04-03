@@ -1,5 +1,5 @@
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::Location;
 use hyper::server::*;
 

@@ -1,5 +1,3 @@
-use chrono;
-
 use crate::theme::Theme;
 
 fn slug_link(slug: &str) -> &str {

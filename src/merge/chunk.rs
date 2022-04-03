@@ -1,4 +1,3 @@
-use diff;
 use std::fmt::Debug;
 
 #[derive(Debug, PartialEq)]

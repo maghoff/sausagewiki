@@ -81,7 +81,7 @@ fn fs_lookup(
     use std::fs::File;
     use std::io::prelude::*;
 
-    let extension = path.rsplitn(2, ".").next();
+    let extension = path.rsplit_once('.').map(|x| x.1);
 
     let content_type = match extension {
         Some("html") => "text/html",
@@ -263,10 +263,10 @@ impl Lookup for WikiLookup {
     type Future = Box<dyn Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
     fn lookup(&self, path: &str, query: Option<&str>) -> Self::Future {
-        assert!(path.starts_with("/"));
+        assert!(path.starts_with('/'));
         let path = &path[1..];
 
-        if path.starts_with("_") {
+        if path.starts_with('_') {
             self.reserved_lookup(path, query)
         } else {
             self.article_lookup(path, query)

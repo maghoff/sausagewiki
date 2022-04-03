@@ -23,7 +23,7 @@ lazy_static! {
         #[cfg(feature = "dynamic-assets")]
         components.push("dynamic-assets".into());
 
-        if let None = option_env!("CONTINUOUS_INTEGRATION") {
+        if option_env!("CONTINUOUS_INTEGRATION").is_none() {
             components.push("local-build".into());
         }
 
@@ -43,7 +43,7 @@ lazy_static! {
             ));
         }
 
-        if components.len() > 0 {
+        if !components.is_empty() {
             format!("{} ({})", env!("CARGO_PKG_VERSION"), components.join(" "))
         } else {
             env!("CARGO_PKG_VERSION").to_string()

@@ -1,6 +1,6 @@
 use chrono::{DateTime, Local, TimeZone};
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::ContentType;
 use hyper::server::*;
 
@@ -55,7 +55,7 @@ pub fn timestamp_and_author(
                 .into_link()
         ),
         author: author.map(|author| Author {
-            author: &author,
+            author,
             history: format!(
                 "_changes{}",
                 QueryParameters::default()
@@ -107,7 +107,7 @@ impl Resource for ArticleRevisionResource {
                             data.sequence_number,
                             data.article_id,
                             &Local.from_utc_datetime(&data.created),
-                            data.author.as_ref().map(|x| &**x),
+                            data.author.as_deref(),
                         ),
                         diff_link: if data.revision > 1 {
                             Some(format!(

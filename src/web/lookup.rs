@@ -1,5 +1,3 @@
-use futures;
-
 pub trait Lookup {
     type Resource;
     type Error;

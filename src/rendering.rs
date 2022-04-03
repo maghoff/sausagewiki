@@ -34,7 +34,7 @@ pub fn render_markdown_for_fts(src: &str) -> String {
                 buf.push_str(&uri.replace(is_html_special, " "));
                 buf.push_str(") ");
             }
-            _ => buf.push_str(" "),
+            _ => buf.push(' '),
         }
     }
 

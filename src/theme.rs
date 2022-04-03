@@ -5,8 +5,6 @@ use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
-use rand;
-use seahash;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)] // Serde
 #[serde(rename_all = "kebab-case")]
@@ -97,9 +95,6 @@ mod test {
     use diesel::prelude::*;
     use diesel::sql_query;
     use diesel::sql_types::Text;
-    use serde_json;
-    use serde_plain;
-    use serde_urlencoded;
 
     use super::*;
 

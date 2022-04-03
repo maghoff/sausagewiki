@@ -1,9 +1,7 @@
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::{Accept, ContentType};
 use hyper::server::*;
-use serde_json;
-use serde_urlencoded;
 
 use crate::mimes::*;
 use crate::models::SearchResult;
@@ -56,7 +54,7 @@ impl QueryParameters {
 
     pub fn into_link(self) -> String {
         let args = serde_urlencoded::to_string(self).expect("Serializing to String cannot fail");
-        if args.len() > 0 {
+        if !args.is_empty() {
             format!("_search?{}", args)
         } else {
             "_search".to_owned()
@@ -185,11 +183,7 @@ impl Resource for SearchResource {
         }
 
         // TODO: Show a search "front page" when no query is given:
-        let query = self
-            .query
-            .as_ref()
-            .map(|x| x.clone())
-            .unwrap_or("".to_owned());
+        let query = self.query.as_ref().cloned().unwrap_or("".to_owned());
 
         let data = self.state.search_query(
             query,
@@ -224,7 +218,7 @@ impl Resource for SearchResource {
             match &self.response_type {
                 &ResponseType::Json => Ok(head.with_body(
                     serde_json::to_string(&JsonResponse {
-                        query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
+                        query: self.query.as_deref().unwrap_or(""),
                         hits: &data,
                         prev,
                         next,
@@ -236,7 +230,7 @@ impl Resource for SearchResource {
                         None, // Hmm, should perhaps accept `base` as argument
                         "Search",
                         &Template {
-                            query: self.query.as_ref().map(|x| &**x).unwrap_or(""),
+                            query: self.query.as_deref().unwrap_or(""),
                             hits: &data.iter().enumerate().collect::<Vec<_>>(),
                             prev,
                             next,

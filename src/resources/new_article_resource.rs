@@ -1,9 +1,7 @@
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::{ContentType, Location};
 use hyper::server::*;
-use serde_json;
-use serde_urlencoded;
 
 use crate::assets::ScriptJs;
 use crate::mimes::*;
@@ -100,7 +98,7 @@ impl Resource for NewArticleResource {
                         revision: NEW,
                         last_updated: None,
                         edit: self.edit,
-                        cancel_url: self.slug.as_ref().map(|x| &**x),
+                        cancel_url: self.slug.as_deref(),
                         title: &title,
                         raw: "",
                         rendered: EMPTY_ARTICLE_MESSAGE,
@@ -182,7 +180,7 @@ impl Resource for NewArticleResource {
                                     last_updated: &super::article_resource::last_updated(
                                         updated.article_id,
                                         &Local.from_utc_datetime(&updated.created),
-                                        updated.author.as_ref().map(|x| &**x),
+                                        updated.author.as_deref(),
                                     ),
                                 })
                                 .expect("Should never fail"),

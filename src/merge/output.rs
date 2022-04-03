@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use diff;
 use diff::Result::*;
 
 use super::chunk::Chunk;
@@ -67,17 +66,16 @@ pub fn resolve<'a, Item: 'a + Debug + PartialEq + Copy>(chunk: Chunk<'a, Item>) 
         return Output::Resolved(choose_right(chunk.0));
     }
 
-    return Output::Conflict(
+    Output::Conflict(
         choose_right(chunk.0),
         choose_left(chunk.0),
         choose_right(chunk.1),
-    );
+    )
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use diff::Result::*;
 
     #[test]
     fn empty() {

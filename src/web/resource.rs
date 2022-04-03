@@ -1,8 +1,6 @@
-use futures;
 use futures::{Future, Stream};
 use hyper::server::Response;
 use hyper::{self, header, mime, server};
-use std;
 
 lazy_static! {
     static ref TEXT_PLAIN: mime::Mime = "text/plain;charset=utf-8".parse().unwrap();

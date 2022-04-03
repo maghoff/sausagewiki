@@ -34,10 +34,8 @@ fn main() {
 
     let _ignore_failure = std::fs::remove_file(db_path);
 
-    let connection = SqliteConnection::establish(db_path).expect(&format!(
-        "Error esablishing a database connection to {}",
-        db_path
-    ));
+    let connection = SqliteConnection::establish(db_path)
+        .unwrap_or_else(|_| panic!("Error esablishing a database connection to {}", db_path));
 
     // Integer is a dummy placeholder. Compiling fails when passing ().
     diesel::expression::sql_literal::sql::<diesel::sql_types::Integer>("PRAGMA foreign_keys = ON")

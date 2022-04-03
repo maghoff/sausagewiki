@@ -4,7 +4,7 @@
 use std::fmt;
 
 use futures::{self, Future};
-use hyper;
+
 use hyper::header::{Accept, ContentType, Server};
 use hyper::mime;
 use hyper::server::*;
@@ -118,12 +118,12 @@ impl Site {
 }
 
 fn root_base_from_request_uri(path: &str) -> Option<String> {
-    assert!(path.starts_with("/"));
+    assert!(path.starts_with('/'));
     let slashes = path[1..].matches('/').count();
 
     match slashes {
         0 => None,
-        n => Some(::std::iter::repeat("../").take(n).collect()),
+        n => Some("../".repeat(n)),
     }
 }
 
@@ -143,10 +143,7 @@ impl Service for Site {
             false => None,
         };
 
-        let accept_header = headers
-            .get()
-            .map(|x: &Accept| x.clone())
-            .unwrap_or(Accept(vec![]));
+        let accept_header = headers.get().cloned().unwrap_or(Accept(vec![]));
 
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone
@@ -167,16 +164,9 @@ impl Service for Site {
                             _ => Box::new(futures::finished(resource.method_not_allowed())),
                         }
                     }
-                    None => Box::new(futures::finished(Self::not_found(
-                        base.as_ref().map(|x| &**x),
-                    ))),
+                    None => Box::new(futures::finished(Self::not_found(base.as_deref()))),
                 })
-                .or_else(move |err| {
-                    Ok(Self::internal_server_error(
-                        base2.as_ref().map(|x| &**x),
-                        err,
-                    ))
-                })
+                .or_else(move |err| Ok(Self::internal_server_error(base2.as_deref(), err)))
                 .map(|response| response.with_header(SERVER.clone())),
         )
     }
