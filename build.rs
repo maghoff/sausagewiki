@@ -1,12 +1,9 @@
 #[macro_use]
-extern crate quote;
-#[macro_use]
 extern crate diesel;
-extern crate diesel_migrations;
-extern crate walkdir;
 
 use diesel::prelude::*;
 use diesel::Connection;
+use quote::quote;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -61,7 +58,7 @@ fn main() {
             }
             pub use self::__diesel_infer_schema_article_revisions::*;
         }
-        .as_str()
+        .to_string()
         .as_bytes(),
     )
     .expect("Unable to write to file");

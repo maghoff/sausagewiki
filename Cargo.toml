@@ -7,7 +7,7 @@ version = "0.1.0-dev"
 edition = "2018"
 
 [build-dependencies]
-quote = "0.3.10"
+quote = "1.0.17"
 walkdir = "1"
 
 [build-dependencies.diesel]
