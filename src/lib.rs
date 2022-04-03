@@ -29,22 +29,6 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_plain;
 
-extern crate chrono;
-extern crate diff;
-extern crate futures;
-extern crate futures_cpupool;
-extern crate percent_encoding;
-extern crate pulldown_cmark;
-extern crate r2d2;
-extern crate r2d2_diesel;
-extern crate rand;
-extern crate seahash;
-extern crate serde;
-extern crate serde_json;
-extern crate serde_urlencoded;
-extern crate slug;
-extern crate titlecase;
-
 use std::net::{IpAddr, SocketAddr};
 
 mod assets;

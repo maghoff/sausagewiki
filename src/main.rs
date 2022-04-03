@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate lazy_static;
-extern crate clap;
-extern crate sausagewiki;
 
 use std::net::IpAddr;
 
