@@ -3,11 +3,11 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
-use mimes::*;
-use models::ArticleRevisionStub;
-use site::system_page;
-use state::State;
-use web::{Resource, ResponseFuture};
+use crate::mimes::*;
+use crate::models::ArticleRevisionStub;
+use crate::site::system_page;
+use crate::state::State;
+use crate::web::{Resource, ResponseFuture};
 
 pub struct SitemapResource {
     state: State,

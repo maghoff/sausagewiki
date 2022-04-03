@@ -2,7 +2,7 @@
 mod static_assets {
     use std::collections::HashMap;
     use futures::Future;
-    use web::{Resource, ResponseFuture};
+    use crate::web::{Resource, ResponseFuture};
 
     // The CSS should be built to a single CSS file at compile time
     #[derive(StaticResource)]
@@ -32,8 +32,8 @@ mod static_assets {
     // #[mime = "application/font-woff"]
     // pub struct AmaticFont;
 
-    type BoxResource = Box<Resource + Sync + Send>;
-    type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
+    type BoxResource = Box<dyn Resource + Sync + Send>;
+    type ResourceFn = Box<dyn Fn() -> BoxResource + Sync + Send>;
     lazy_static! {
         pub static ref ASSETS_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
             // The CSS should be built to a single CSS file at compile time

@@ -5,7 +5,7 @@ extern crate sausagewiki;
 use std::net::IpAddr;
 
 mod build_config;
-use build_config::*;
+use crate::build_config::*;
 
 const DATABASE: &str = "DATABASE";
 const TRUST_IDENTITY: &str = "trust-identity";
@@ -49,7 +49,7 @@ fn args<'a>() -> clap::ArgMatches<'a> {
         .get_matches()
 }
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = args();
 
     const CLAP: &str = "Guaranteed by clap";

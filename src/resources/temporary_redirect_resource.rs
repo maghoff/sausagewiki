@@ -3,7 +3,7 @@ use hyper;
 use hyper::header::Location;
 use hyper::server::*;
 
-use web::{Resource, ResponseFuture};
+use crate::web::{Resource, ResponseFuture};
 
 pub struct TemporaryRedirectResource {
     location: String,

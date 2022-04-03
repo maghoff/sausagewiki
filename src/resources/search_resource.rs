@@ -5,16 +5,16 @@ use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
 
-use mimes::*;
-use models::SearchResult;
-use site::system_page;
-use state::State;
-use web::{Resource, ResponseFuture};
+use crate::mimes::*;
+use crate::models::SearchResult;
+use crate::site::system_page;
+use crate::state::State;
+use crate::web::{Resource, ResponseFuture};
 
 const DEFAULT_LIMIT: u32 = 10;
 const DEFAULT_SNIPPET_SIZE: u32 = 30;
 
-type BoxResource = Box<Resource + Sync + Send>;
+type BoxResource = Box<dyn Resource + Sync + Send>;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct QueryParameters {
@@ -66,7 +66,7 @@ impl SearchLookup {
         Self { state }
     }
 
-    pub fn lookup(&self, query: Option<&str>) -> Result<Option<BoxResource>, ::web::Error> {
+    pub fn lookup(&self, query: Option<&str>) -> Result<Option<BoxResource>, crate::web::Error> {
         let args: QueryParameters = serde_urlencoded::from_str(query.unwrap_or(""))?;
 
         Ok(Some(Box::new(

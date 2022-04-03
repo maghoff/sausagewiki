@@ -4,11 +4,11 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
-use mimes::*;
-use models;
-use rendering::render_markdown;
-use site::system_page;
-use web::{Resource, ResponseFuture};
+use crate::mimes::*;
+use crate::models;
+use crate::rendering::render_markdown;
+use crate::site::system_page;
+use crate::web::{Resource, ResponseFuture};
 
 use super::changes_resource::QueryParameters;
 use super::diff_resource;

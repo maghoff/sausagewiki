@@ -8,17 +8,17 @@ use hyper::header::ContentType;
 use hyper::server::*;
 use serde_urlencoded;
 
-use mimes::*;
-use models::ArticleRevision;
-use site::Layout;
-use state::State;
-use theme;
-use web::{Resource, ResponseFuture};
+use crate::mimes::*;
+use crate::models::ArticleRevision;
+use crate::site::Layout;
+use crate::state::State;
+use crate::theme;
+use crate::web::{Resource, ResponseFuture};
 
 use super::changes_resource;
 use super::pagination::Pagination;
 
-type BoxResource = Box<Resource + Sync + Send>;
+type BoxResource = Box<dyn Resource + Sync + Send>;
 
 #[derive(Clone)]
 pub struct DiffLookup {
@@ -48,7 +48,7 @@ impl DiffLookup {
         Self { state }
     }
 
-    pub fn lookup(&self, article_id: u32, query: Option<&str>) -> Box<Future<Item=Option<BoxResource>, Error=::web::Error>> {
+    pub fn lookup(&self, article_id: u32, query: Option<&str>) -> Box<dyn Future<Item=Option<BoxResource>, Error=crate::web::Error>> {
         let state = self.state.clone();
 
         Box::new(done(

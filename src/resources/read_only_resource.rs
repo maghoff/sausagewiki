@@ -3,7 +3,7 @@ use hyper::header::{ContentType, ContentLength, CacheControl, CacheDirective};
 use hyper::server::*;
 use hyper::StatusCode;
 
-use web::{Resource, ResponseFuture};
+use crate::web::{Resource, ResponseFuture};
 
 #[allow(unused)]
 pub struct ReadOnlyResource {

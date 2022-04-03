@@ -4,6 +4,7 @@ description = "A wiki engine"
 license = "GPL-3.0"
 name = "sausagewiki"
 version = "0.1.0-dev"
+edition = "2018"
 
 [build-dependencies]
 quote = "0.3.10"

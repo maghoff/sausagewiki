@@ -1,6 +1,6 @@
 use chrono;
 
-use theme::Theme;
+use crate::theme::Theme;
 
 fn slug_link(slug: &str) -> &str {
     if slug.is_empty() {

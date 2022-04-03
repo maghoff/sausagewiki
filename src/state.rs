@@ -7,10 +7,10 @@ use futures_cpupool::{self, CpuFuture};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 
-use merge;
-use models;
-use schema::*;
-use theme::Theme;
+use crate::merge;
+use crate::models;
+use crate::schema::*;
+use crate::theme::Theme;
 
 #[derive(Clone)]
 pub struct State {
@@ -18,7 +18,7 @@ pub struct State {
     cpu_pool: futures_cpupool::CpuPool,
 }
 
-pub type Error = Box<std::error::Error + Send + Sync>;
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub enum SlugLookup {
     Miss,
@@ -81,7 +81,7 @@ fn decide_slug(conn: &SqliteConnection, article_id: i32, prev_title: &str, title
 
     let base_slug = if base_slug.is_empty() { "article" } else { &base_slug };
 
-    use schema::article_revisions;
+    use crate::schema::article_revisions;
 
     let mut slug = base_slug.to_owned();
     let mut disambiguator = 1;
@@ -113,7 +113,7 @@ impl<'a> SyncState<'a> {
     }
 
     pub fn get_article_slug(&self, article_id: i32) -> Result<Option<String>, Error> {
-        use schema::article_revisions;
+        use crate::schema::article_revisions;
 
         Ok(article_revisions::table
             .filter(article_revisions::article_id.eq(article_id))
@@ -124,7 +124,7 @@ impl<'a> SyncState<'a> {
     }
 
     pub fn get_article_revision(&self, article_id: i32, revision: i32) -> Result<Option<models::ArticleRevision>, Error> {
-        use schema::article_revisions;
+        use crate::schema::article_revisions;
 
         Ok(article_revisions::table
             .filter(article_revisions::article_id.eq(article_id))
@@ -140,7 +140,7 @@ impl<'a> SyncState<'a> {
             FnOnce(article_revisions::BoxedQuery<'x, diesel::sqlite::Sqlite>) ->
                 article_revisions::BoxedQuery<'x, diesel::sqlite::Sqlite>,
     {
-        use schema::article_revisions::dsl::*;
+        use crate::schema::article_revisions::dsl::*;
 
         Ok(f(article_revisions.into_boxed())
             .select((
@@ -159,7 +159,7 @@ impl<'a> SyncState<'a> {
     }
 
     fn get_article_revision_stub(&self, article_id: i32, revision: i32) -> Result<Option<models::ArticleRevisionStub>, Error> {
-        use schema::article_revisions;
+        use crate::schema::article_revisions;
 
         Ok(self.query_article_revision_stubs(move |query| {
             query
@@ -178,7 +178,7 @@ impl<'a> SyncState<'a> {
         }
 
         self.db_connection.transaction(|| {
-            use schema::article_revisions;
+            use crate::schema::article_revisions;
 
             Ok(match article_revisions::table
                 .filter(article_revisions::slug.eq(slug))
@@ -238,7 +238,7 @@ impl<'a> SyncState<'a> {
             let (title_b, body_b, theme_b) = stored.pop().expect("Application layer guarantee");
             let (title_o, body_o, theme_o) = stored.pop().expect("Application layer guarantee");
 
-            use merge::MergeResult::*;
+            use crate::merge::MergeResult::*;
 
             fn merge_themes(a: Theme, o: Theme, b: Theme) -> Theme {
                 // Last change wins
@@ -279,7 +279,7 @@ impl<'a> SyncState<'a> {
         }
 
         self.db_connection.transaction(|| {
-            use schema::article_revisions;
+            use crate::schema::article_revisions;
 
             let (latest_revision, prev_title, prev_slug, prev_theme) = article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
@@ -499,7 +499,7 @@ impl State {
 #[cfg(test)]
 mod test {
     use super::*;
-    use db;
+    use crate::db;
 
     impl UpdateResult {
         pub fn unwrap(self) -> models::ArticleRevision {

@@ -5,13 +5,13 @@ use hyper::server::*;
 use serde_json;
 use serde_urlencoded;
 
-use assets::ScriptJs;
-use mimes::*;
-use rendering::render_markdown;
-use site::Layout;
-use state::State;
-use theme::{self, Theme};
-use web::{Resource, ResponseFuture};
+use crate::assets::ScriptJs;
+use crate::mimes::*;
+use crate::rendering::render_markdown;
+use crate::site::Layout;
+use crate::state::State;
+use crate::theme::{self, Theme};
+use crate::web::{Resource, ResponseFuture};
 
 const NEW: &str = "NEW";
 

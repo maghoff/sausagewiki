@@ -7,15 +7,15 @@ use futures::future::FutureResult;
 use percent_encoding::percent_decode;
 use slug::slugify;
 
-use resources::*;
-use state::State;
-use web::{Lookup, Resource};
+use crate::resources::*;
+use crate::state::State;
+use crate::web::{Lookup, Resource};
 
 #[allow(unused)]
-use assets::*;
+use crate::assets::*;
 
-type BoxResource = Box<Resource + Sync + Send>;
-type ResourceFn = Box<Fn() -> BoxResource + Sync + Send>;
+type BoxResource = Box<dyn Resource + Sync + Send>;
+type ResourceFn = Box<dyn Fn() -> BoxResource + Sync + Send>;
 
 lazy_static! {
     static ref LICENSES_MAP: HashMap<&'static str, ResourceFn> = hashmap!{
@@ -55,7 +55,7 @@ fn split_one(path: &str) -> Result<(Cow<str>, Option<&str>), Utf8Error> {
 }
 
 fn map_lookup(map: &HashMap<&str, ResourceFn>, path: &str) ->
-    FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>>
+    FutureResult<Option<BoxResource>, Box<dyn ::std::error::Error + Send + Sync>>
 {
     let (head, tail) = match split_one(path) {
         Ok(x) => x,
@@ -74,7 +74,7 @@ fn map_lookup(map: &HashMap<&str, ResourceFn>, path: &str) ->
 
 #[allow(unused)]
 fn fs_lookup(root: &str, path: &str) ->
-    FutureResult<Option<BoxResource>, Box<::std::error::Error + Send + Sync>>
+    FutureResult<Option<BoxResource>, Box<dyn ::std::error::Error + Send + Sync>>
 {
     use std::fs::File;
     use std::io::prelude::*;
@@ -93,7 +93,7 @@ fn fs_lookup(root: &str, path: &str) ->
     filename.push_str(path);
 
     let mut f = File::open(&filename)
-        .unwrap_or_else(|_| panic!(format!("Not found: {}", filename)));
+        .unwrap_or_else(|_| panic!("Not found: {}", filename));
 
     let mut body = Vec::new();
     f.read_to_end(&mut body)
@@ -233,7 +233,7 @@ impl WikiLookup {
         let state = self.state.clone();
         let slug = slug.into_owned();
 
-        use state::SlugLookup;
+        use crate::state::SlugLookup;
         Box::new(self.state.lookup_slug(slug.clone())
             .and_then(move |x| Ok(Some(match x {
                 SlugLookup::Miss =>
@@ -249,8 +249,8 @@ impl WikiLookup {
 
 impl Lookup for WikiLookup {
     type Resource = BoxResource;
-    type Error = Box<::std::error::Error + Send + Sync>;
-    type Future = Box<Future<Item = Option<Self::Resource>, Error = Self::Error>>;
+    type Error = Box<dyn ::std::error::Error + Send + Sync>;
+    type Future = Box<dyn Future<Item = Option<Self::Resource>, Error = Self::Error>>;
 
     fn lookup(&self, path: &str, query: Option<&str>) -> Self::Future {
         assert!(path.starts_with("/"));

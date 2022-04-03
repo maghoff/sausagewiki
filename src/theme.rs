@@ -188,7 +188,7 @@ mod test {
     }
 
     #[test]
-    fn basic_db_roundtrip() -> Result<(), Box<Error>> {
+    fn basic_db_roundtrip() -> Result<(), Box<dyn Error>> {
         let conn = SqliteConnection::establish(":memory:")?;
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]
@@ -204,7 +204,7 @@ mod test {
     }
 
     #[test]
-    fn db_invalid_value_gives_error() -> Result<(), Box<Error>> {
+    fn db_invalid_value_gives_error() -> Result<(), Box<dyn Error>> {
         let conn = SqliteConnection::establish(":memory:")?;
 
         #[derive(QueryableByName, PartialEq, Eq, Debug)]

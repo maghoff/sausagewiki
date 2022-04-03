@@ -3,9 +3,9 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
-use mimes::*;
-use site::system_page;
-use web::{Resource, ResponseFuture};
+use crate::mimes::*;
+use crate::site::system_page;
+use crate::web::{Resource, ResponseFuture};
 
 pub struct HtmlResource {
     base: Option<&'static str>,

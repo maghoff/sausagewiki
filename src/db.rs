@@ -4,8 +4,8 @@ use diesel::sql_types::*;
 use r2d2::{CustomizeConnection, Pool};
 use r2d2_diesel::{self, ConnectionManager};
 
-use rendering;
-use theme;
+use crate::rendering;
+use crate::theme;
 
 embed_migrations!();
 
@@ -39,7 +39,7 @@ impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitial
     }
 }
 
-pub fn create_pool<S: Into<String>>(connection_string: S) -> Result<Pool<ConnectionManager<SqliteConnection>>, Box<::std::error::Error>> {
+pub fn create_pool<S: Into<String>>(connection_string: S) -> Result<Pool<ConnectionManager<SqliteConnection>>, Box<dyn (::std::error::Error)>> {
     let manager = ConnectionManager::<SqliteConnection>::new(connection_string);
     let pool = Pool::builder()
         .connection_customizer(Box::new(SqliteInitializer {}))

@@ -9,11 +9,11 @@ use hyper::mime;
 use hyper::server::*;
 use hyper;
 
-use assets::{ThemesCss, StyleCss, SearchJs};
-use build_config;
-use theme;
-use web::Lookup;
-use wiki_lookup::WikiLookup;
+use crate::assets::{ThemesCss, StyleCss, SearchJs};
+use crate::build_config;
+use crate::theme;
+use crate::web::Lookup;
+use crate::wiki_lookup::WikiLookup;
 
 lazy_static! {
     static ref TEXT_HTML: mime::Mime = "text/html;charset=utf-8".parse().unwrap();
@@ -93,7 +93,7 @@ impl Site {
             .with_status(hyper::StatusCode::NotFound)
     }
 
-    fn internal_server_error(base: Option<&str>, err: Box<::std::error::Error + Send + Sync>) -> Response {
+    fn internal_server_error(base: Option<&str>, err: Box<dyn ::std::error::Error + Send + Sync>) -> Response {
         eprintln!("Internal Server Error:\n{:#?}", err);
 
         Response::new()
@@ -121,7 +121,7 @@ impl Service for Site {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
-    type Future = Box<futures::Future<Item = Response, Error = Self::Error>>;
+    type Future = Box<dyn futures::Future<Item = Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
         let (method, uri, _http_version, headers, body) = req.deconstruct();

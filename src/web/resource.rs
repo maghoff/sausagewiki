@@ -8,8 +8,8 @@ lazy_static! {
     static ref TEXT_PLAIN: mime::Mime = "text/plain;charset=utf-8".parse().unwrap();
 }
 
-pub type Error = Box<std::error::Error + Send + Sync>;
-pub type ResponseFuture = Box<futures::Future<Item = server::Response, Error = Error>>;
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type ResponseFuture = Box<dyn futures::Future<Item = server::Response, Error = Error>>;
 
 pub trait Resource {
     fn allow(&self) -> Vec<hyper::Method>;

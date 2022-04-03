@@ -3,10 +3,10 @@ use hyper;
 use hyper::header::ContentType;
 use hyper::server::*;
 
-use build_config;
-use mimes::*;
-use site::system_page;
-use web::{Resource, ResponseFuture};
+use crate::build_config;
+use crate::mimes::*;
+use crate::site::system_page;
+use crate::web::{Resource, ResponseFuture};
 
 #[derive(Licenses)]
 pub struct AboutResource;

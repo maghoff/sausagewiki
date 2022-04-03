@@ -6,11 +6,11 @@ use hyper::header::ContentType;
 use hyper::server::*;
 use serde_urlencoded;
 
-use mimes::*;
-use schema::article_revisions;
-use site::system_page;
-use state::State;
-use web::{Resource, ResponseFuture};
+use crate::mimes::*;
+use crate::schema::article_revisions;
+use crate::site::system_page;
+use crate::state::State;
+use crate::web::{Resource, ResponseFuture};
 
 use super::diff_resource;
 use super::pagination::Pagination;
@@ -18,7 +18,7 @@ use super::TemporaryRedirectResource;
 
 const DEFAULT_LIMIT: i32 = 30;
 
-type BoxResource = Box<Resource + Sync + Send>;
+type BoxResource = Box<dyn Resource + Sync + Send>;
 
 #[derive(Clone)]
 pub struct ChangesLookup {
@@ -97,7 +97,7 @@ impl ChangesLookup {
         Self { state, show_authors }
     }
 
-    pub fn lookup(&self, query: Option<&str>) -> Box<Future<Item=Option<BoxResource>, Error=::web::Error>> {
+    pub fn lookup(&self, query: Option<&str>) -> Box<dyn Future<Item=Option<BoxResource>, Error=crate::web::Error>> {
         use super::pagination;
 
         let state = self.state.clone();
@@ -154,7 +154,7 @@ impl ChangesLookup {
                                 args.into_link()
                             )) as BoxResource,
                         }))
-                    })) as Box<Future<Item=Option<BoxResource>, Error=::web::Error>>
+                    })) as Box<dyn Future<Item=Option<BoxResource>, Error=crate::web::Error>>
                 },
                 Pagination::Before(x) => Box::new(finished(Some(Box::new(ChangesResource::new(state, show_authors, Some(x), article_id, author, limit)) as BoxResource))),
                 Pagination::None => Box::new(finished(Some(Box::new(ChangesResource::new(state, show_authors, None, article_id, author, limit)) as BoxResource))),

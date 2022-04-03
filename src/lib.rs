@@ -52,7 +52,7 @@ mod theme;
 mod web;
 mod wiki_lookup;
 
-pub fn main(db_file: String, bind_host: IpAddr, bind_port: u16, trust_identity: bool) -> Result<(), Box<std::error::Error>> {
+pub fn main(db_file: String, bind_host: IpAddr, bind_port: u16, trust_identity: bool) -> Result<(), Box<dyn std::error::Error>> {
     let db_pool = db::create_pool(db_file)?;
     let cpu_pool = futures_cpupool::CpuPool::new_num_cpus();
 
