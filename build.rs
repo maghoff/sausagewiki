@@ -40,11 +40,9 @@ fn main() {
     ));
 
     // Integer is a dummy placeholder. Compiling fails when passing ().
-    diesel::expression::sql_literal::sql::<(diesel::sql_types::Integer)>(
-        "PRAGMA foreign_keys = ON",
-    )
-    .execute(&connection)
-    .expect("Should be able to enable foreign keys");
+    diesel::expression::sql_literal::sql::<diesel::sql_types::Integer>("PRAGMA foreign_keys = ON")
+        .execute(&connection)
+        .expect("Should be able to enable foreign keys");
 
     sqlfunc::markdown_to_fts::register_impl(&connection, |_: String| -> String { unreachable!() })
         .unwrap();

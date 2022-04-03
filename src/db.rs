@@ -21,7 +21,7 @@ pub mod sqlfunc {
 
 impl CustomizeConnection<SqliteConnection, r2d2_diesel::Error> for SqliteInitializer {
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), r2d2_diesel::Error> {
-        sql::<(Integer)>("PRAGMA foreign_keys = ON")
+        sql::<Integer>("PRAGMA foreign_keys = ON")
             .execute(conn)
             .map_err(|x| r2d2_diesel::Error::QueryError(x))?;
 

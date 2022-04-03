@@ -92,8 +92,6 @@ fn decide_slug(
         &base_slug
     };
 
-    use crate::schema::article_revisions;
-
     let mut slug = base_slug.to_owned();
     let mut disambiguator = 1;
 
@@ -125,8 +123,6 @@ impl<'a> SyncState<'a> {
     }
 
     pub fn get_article_slug(&self, article_id: i32) -> Result<Option<String>, Error> {
-        use crate::schema::article_revisions;
-
         Ok(article_revisions::table
             .filter(article_revisions::article_id.eq(article_id))
             .filter(article_revisions::latest.eq(true))
@@ -140,8 +136,6 @@ impl<'a> SyncState<'a> {
         article_id: i32,
         revision: i32,
     ) -> Result<Option<models::ArticleRevision>, Error> {
-        use crate::schema::article_revisions;
-
         Ok(article_revisions::table
             .filter(article_revisions::article_id.eq(article_id))
             .filter(article_revisions::revision.eq(revision))
@@ -181,8 +175,6 @@ impl<'a> SyncState<'a> {
         article_id: i32,
         revision: i32,
     ) -> Result<Option<models::ArticleRevisionStub>, Error> {
-        use crate::schema::article_revisions;
-
         Ok(self
             .query_article_revision_stubs(move |query| {
                 query
@@ -202,8 +194,6 @@ impl<'a> SyncState<'a> {
         }
 
         self.db_connection.transaction(|| {
-            use crate::schema::article_revisions;
-
             Ok(
                 match article_revisions::table
                     .filter(article_revisions::slug.eq(slug))
@@ -327,8 +317,6 @@ impl<'a> SyncState<'a> {
         }
 
         self.db_connection.transaction(|| {
-            use crate::schema::article_revisions;
-
             let (latest_revision, prev_title, prev_slug, prev_theme) = article_revisions::table
                 .filter(article_revisions::article_id.eq(article_id))
                 .order(article_revisions::revision.desc())
@@ -424,9 +412,9 @@ impl<'a> SyncState<'a> {
             let article_id = {
                 use diesel::expression::sql_literal::sql;
                 // Diesel and SQLite are a bit in disagreement for how this should look:
-                sql::<(diesel::sql_types::Integer)>("INSERT INTO articles VALUES (null)")
+                sql::<diesel::sql_types::Integer>("INSERT INTO articles VALUES (null)")
                     .execute(self.db_connection)?;
-                sql::<(diesel::sql_types::Integer)>("SELECT LAST_INSERT_ROWID()")
+                sql::<diesel::sql_types::Integer>("SELECT LAST_INSERT_ROWID()")
                     .load::<i32>(self.db_connection)?
                     .pop()
                     .expect("Statement must evaluate to an integer")

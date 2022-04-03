@@ -8,15 +8,11 @@ pub struct Error;
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{}", (self as &dyn error::Error).description())
+        write!(f, "`after` and `before` are mutually exclusive")
     }
 }
 
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        "`after` and `before` are mutually exclusive"
-    }
-}
+impl error::Error for Error {}
 
 #[derive(Deserialize)]
 struct PaginationStruct<T> {

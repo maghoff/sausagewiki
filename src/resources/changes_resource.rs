@@ -352,8 +352,6 @@ impl Resource for ChangesResource {
         let head = self.head();
 
         Box::new(data.join(head).and_then(move |(mut data, head)| {
-            use std::iter::Iterator;
-
             let extra_element = if data.len() > self.limit as usize {
                 data.pop()
             } else {
