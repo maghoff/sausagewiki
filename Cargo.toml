@@ -79,7 +79,7 @@ default-features = false
 git = "https://github.com/maghoff/pulldown-cmark.git"
 
 [dev-dependencies]
-indoc = "0.2"
+indoc = "1.0.4"
 matches = "0.1"
 
 [features]

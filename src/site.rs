@@ -143,7 +143,7 @@ impl Service for Site {
             false => None,
         };
 
-        let accept_header = headers.get().cloned().unwrap_or(Accept(vec![]));
+        let accept_header = headers.get().cloned().unwrap_or_else(|| Accept(vec![]));
 
         let base = root_base_from_request_uri(uri.path());
         let base2 = base.clone(); // Bah, stupid clone

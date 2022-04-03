@@ -28,20 +28,20 @@ impl License {
     fn link(&self) -> &'static str {
         use self::License::*;
         match self {
-            &Bsd3Clause => "bsd-3-clause",
-            &Mit => "mit",
-            &Mpl2 => "mpl2",
-            &Ofl11 => "sil-ofl-1.1",
+            Bsd3Clause => "bsd-3-clause",
+            Mit => "mit",
+            Mpl2 => "mpl2",
+            Ofl11 => "sil-ofl-1.1",
         }
     }
 
     fn name(&self) -> &'static str {
         use self::License::*;
         match self {
-            &Bsd3Clause => "BSD-3-Clause",
-            &Mit => "MIT",
-            &Mpl2 => "MPL2",
-            &Ofl11 => "OFL-1.1",
+            Bsd3Clause => "BSD-3-Clause",
+            Mit => "MIT",
+            Mpl2 => "MPL2",
+            Ofl11 => "OFL-1.1",
         }
     }
 }

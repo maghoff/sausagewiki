@@ -19,7 +19,7 @@ impl LicenseId {
     fn include_notice(&self) -> bool {
         use self::LicenseId::*;
         match self {
-            &Mpl2 => false,
+            Mpl2 => false,
             _ => true,
         }
     }
@@ -29,10 +29,10 @@ impl quote::ToTokens for LicenseId {
     fn to_tokens(&self, tokens: &mut quote::Tokens) {
         use self::LicenseId::*;
         tokens.append(match self {
-            &Bsd3Clause => "Bsd3Clause",
-            &Mit => "Mit",
-            &Mpl2 => "Mpl2",
-            &Ofl11 => "Ofl11",
+            Bsd3Clause => "Bsd3Clause",
+            Mit => "Mit",
+            Mpl2 => "Mpl2",
+            Ofl11 => "Ofl11",
         });
     }
 }
@@ -60,9 +60,9 @@ impl quote::ToTokens for LicenseReport {
             &c.chosen_license,
         );
 
-        let link = match link {
-            &Some(ref link) => quote! { Some(#link) },
-            &None => quote! { None },
+        let link = match *link {
+            Some(ref link) => quote! { Some(#link) },
+            None => quote! { None },
         };
 
         let copyright = match license.include_notice() {

@@ -11,7 +11,7 @@ pub enum Output<Item: Debug + PartialEq> {
 }
 
 impl<'a> Output<&'a str> {
-    pub fn to_strings(self) -> Output<String> {
+    pub fn into_strings(self) -> Output<String> {
         match self {
             Output::Resolved(x) => Output::Resolved(x.into_iter().map(str::to_string).collect()),
             Output::Conflict(a, o, b) => Output::Conflict(
@@ -26,10 +26,10 @@ impl<'a> Output<&'a str> {
 fn choose_left<Item: Copy>(operations: &[diff::Result<Item>]) -> Vec<Item> {
     operations
         .iter()
-        .filter_map(|x| match x {
-            &Both(y, _) => Some(y),
-            &Left(y) => Some(y),
-            &Right(_) => None,
+        .filter_map(|x| match *x {
+            Both(y, _) => Some(y),
+            Left(y) => Some(y),
+            Right(_) => None,
         })
         .collect()
 }
@@ -37,19 +37,16 @@ fn choose_left<Item: Copy>(operations: &[diff::Result<Item>]) -> Vec<Item> {
 fn choose_right<Item: Copy>(operations: &[diff::Result<Item>]) -> Vec<Item> {
     operations
         .iter()
-        .filter_map(|x| match x {
-            &Both(_, y) => Some(y),
-            &Left(_) => None,
-            &Right(y) => Some(y),
+        .filter_map(|x| match *x {
+            Both(_, y) => Some(y),
+            Left(_) => None,
+            Right(y) => Some(y),
         })
         .collect()
 }
 
 fn no_change<Item>(operations: &[diff::Result<Item>]) -> bool {
-    operations.iter().all(|x| match x {
-        &Both(..) => true,
-        _ => false,
-    })
+    operations.iter().all(|x| matches!(x, Both(..)))
 }
 
 pub fn resolve<'a, Item: 'a + Debug + PartialEq + Copy>(chunk: Chunk<'a, Item>) -> Output<Item> {

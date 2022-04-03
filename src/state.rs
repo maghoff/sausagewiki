@@ -281,7 +281,7 @@ impl<'a> SyncState<'a> {
                                 .get_article_revision_stub(article_id, revision + 1)?
                                 .expect("Application layer guarantee"),
                             title: title_merge,
-                            body: body_merge.to_strings(),
+                            body: body_merge.into_strings(),
                             theme,
                         }));
                     }
@@ -625,7 +625,7 @@ mod test {
             .create_article(None, "Title".into(), "Body".into(), None, Theme::Cyan)
             .unwrap();
         assert_eq!("title", article_revision.slug);
-        assert_eq!(true, article_revision.latest);
+        assert!(article_revision.latest);
         assert_eq!(Theme::Cyan, article_revision.theme);
     }
 
@@ -896,7 +896,7 @@ mod test {
                         vec!["a"],
                         vec!["b"]
                     ),])
-                    .to_strings()
+                    .into_strings()
                 );
                 assert_eq!(Theme::Amber, theme);
             }

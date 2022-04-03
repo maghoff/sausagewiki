@@ -12,7 +12,7 @@ compile_error!("dynamic-assets must not be used for production");
 
 lazy_static! {
     pub static ref VERSION: String = || -> String {
-        let mut components = Vec::<String>::new();
+        let mut components = vec![];
 
         #[cfg(debug_assertions)]
         components.push("debug".into());

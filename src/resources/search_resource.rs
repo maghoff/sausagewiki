@@ -152,9 +152,9 @@ impl Resource for SearchResource {
     }
 
     fn head(&self) -> ResponseFuture {
-        let content_type = match &self.response_type {
-            &ResponseType::Json => ContentType(APPLICATION_JSON.clone()),
-            &ResponseType::Html => ContentType(TEXT_HTML.clone()),
+        let content_type = match self.response_type {
+            ResponseType::Json => ContentType(APPLICATION_JSON.clone()),
+            ResponseType::Html => ContentType(TEXT_HTML.clone()),
         };
 
         Box::new(futures::finished(
@@ -183,7 +183,11 @@ impl Resource for SearchResource {
         }
 
         // TODO: Show a search "front page" when no query is given:
-        let query = self.query.as_ref().cloned().unwrap_or("".to_owned());
+        let query = self
+            .query
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| "".to_owned());
 
         let data = self.state.search_query(
             query,
@@ -215,8 +219,8 @@ impl Resource for SearchResource {
                 None
             };
 
-            match &self.response_type {
-                &ResponseType::Json => Ok(head.with_body(
+            match self.response_type {
+                ResponseType::Json => Ok(head.with_body(
                     serde_json::to_string(&JsonResponse {
                         query: self.query.as_deref().unwrap_or(""),
                         hits: &data,
@@ -225,7 +229,7 @@ impl Resource for SearchResource {
                     })
                     .expect("Should never fail"),
                 )),
-                &ResponseType::Html => Ok(head.with_body(
+                ResponseType::Html => Ok(head.with_body(
                     system_page(
                         None, // Hmm, should perhaps accept `base` as argument
                         "Search",

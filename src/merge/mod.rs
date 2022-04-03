@@ -17,11 +17,11 @@ pub enum MergeResult<Item: Debug + PartialEq> {
 }
 
 impl<'a> MergeResult<&'a str> {
-    pub fn to_strings(self) -> MergeResult<String> {
+    pub fn into_strings(self) -> MergeResult<String> {
         match self {
             MergeResult::Clean(x) => MergeResult::Clean(x),
             MergeResult::Conflicted(x) => {
-                MergeResult::Conflicted(x.into_iter().map(Output::to_strings).collect())
+                MergeResult::Conflicted(x.into_iter().map(Output::into_strings).collect())
             }
         }
     }
@@ -80,10 +80,7 @@ pub fn merge_lines<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<&'a st
     let chunks = ChunkIterator::new(&oa, &ob);
     let hunks: Vec<_> = chunks.map(resolve).collect();
 
-    let clean = hunks.iter().all(|x| match x {
-        &Resolved(..) => true,
-        _ => false,
-    });
+    let clean = hunks.iter().all(|x| matches!(x, Resolved(..)));
 
     if clean {
         MergeResult::Clean(
@@ -108,10 +105,7 @@ pub fn merge_chars<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<char> 
     let chunks = ChunkIterator::new(&oa, &ob);
     let hunks: Vec<_> = chunks.map(resolve).collect();
 
-    let clean = hunks.iter().all(|x| match x {
-        &Resolved(..) => true,
-        _ => false,
-    });
+    let clean = hunks.iter().all(|x| matches!(x, Resolved(..)));
 
     if clean {
         MergeResult::Clean(
@@ -130,6 +124,7 @@ pub fn merge_chars<'a>(a: &'a str, o: &'a str, b: &'a str) -> MergeResult<char> 
 
 #[cfg(test)]
 mod test {
+    use indoc::indoc;
 
     use super::output::Output::*;
     use super::output::*;

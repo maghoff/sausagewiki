@@ -81,12 +81,12 @@ impl QueryParameters {
     }
 }
 
-fn apply_query_config<'a>(
-    mut query: article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite>,
+fn apply_query_config(
+    mut query: article_revisions::BoxedQuery<diesel::sqlite::Sqlite>,
     article_id: Option<i32>,
     author: Option<String>,
     limit: i32,
-) -> article_revisions::BoxedQuery<'a, diesel::sqlite::Sqlite> {
+) -> article_revisions::BoxedQuery<diesel::sqlite::Sqlite> {
     use diesel::prelude::*;
 
     if let Some(article_id) = article_id {

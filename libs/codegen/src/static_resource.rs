@@ -10,12 +10,12 @@ fn user_crate_root() -> PathBuf {
     std::env::current_dir().expect("Unable to get current directory")
 }
 
-fn find_attr<'a>(attrs: &'a Vec<syn::Attribute>, name: &str) -> Option<&'a str> {
+fn find_attr<'a>(attrs: &'a [syn::Attribute], name: &str) -> Option<&'a str> {
     attrs
         .iter()
         .find(|&x| x.name() == name)
-        .and_then(|ref attr| match &attr.value {
-            &syn::MetaItem::NameValue(_, syn::Lit::Str(ref template, _)) => Some(template),
+        .and_then(|attr| match attr.value {
+            syn::MetaItem::NameValue(_, syn::Lit::Str(ref template, _)) => Some(template),
             _ => None,
         })
         .map(|x| x.as_ref())

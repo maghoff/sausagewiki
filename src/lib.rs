@@ -1,3 +1,5 @@
+#![allow(clippy::into_iter_on_ref)]
+#![allow(clippy::vec_init_then_push)]
 #![recursion_limit = "128"]
 // for diesel's infer_schema!
 
@@ -9,15 +11,12 @@
 #[cfg(test)]
 #[macro_use]
 extern crate matches;
-#[cfg(test)]
-#[macro_use]
-extern crate indoc;
-
 #[macro_use]
 extern crate bart_derive;
 #[macro_use]
 extern crate codegen;
 #[macro_use]
+#[allow(clippy::useless_attribute)]
 #[allow(deprecated)]
 extern crate diesel_infer_schema;
 #[macro_use]
