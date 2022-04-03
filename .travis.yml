@@ -19,17 +19,6 @@ script:
 - strip -s target/x86_64-unknown-linux-musl/release/sausagewiki
 - XZ_OPT=-9 tar Jcf sausagewiki.tar.xz -C target/x86_64-unknown-linux-musl/release/ sausagewiki
 
-deploy:
-  provider: releases
-  api_key:
-    secure: "KCq6gl1hAoIfiLhpmevPeTDXRHBOh1tl8Btl96EE89LiCTCGflpgUrPP4rqpT/pQHjnjiEgJhOgy5P8s3riCqqLgcOhfhDsMVKpeSxp05zeZnlpd3YVNQAmTDbQu9/vakV+U1RM/F5nSiDaI6KUuJAxdfttWi86/yW0mW/IlLm/YZB2Pr6sBem47sZ0aL3/cBJXjPrI3mpDPPOBrqVZ0AlZpXqdvd4rDjd2pvKdIf8t02eqG7X6R56diDlGMmga8TwiAFS8TNlxb+ny/E/KmyykPpfKuR18WWeCfkscXHrAqo40vs+AdGpzNzioWKdZowl6wLxS1RsUmMTuNajY9i5cOztM+19qWmu0z9qC1nJA30m13C4puVrPKbUUax3cxkK5qVI6zjffrF9/Hgg1n0cxeRzGwoy97pZjyUauDEX2iRLV2Xjb8M/PBv5hj5HpH+0S3/CDyKJx6Pzdi4hKk4d3jkHf8U8Y5/XlSSXMgBVQhuz1YNzA8RiXrv3ISdJzHKvbkf6nN/ZiLmJ9Pq+m7zR68D2nV3wLx72HSGd0GVAUeTzXDhCOYfc2t1gOhjQ9xJHVpcmsLjBU7lQiTflQ0iMDdUaIkb+TxniYjZwQcQxMPq6yvcMc42I0GA95zp1Mckz2gqMesBFt5YRqOcA6pu/u+Jtc8haVshAekDxaEfgw="
-  file: sausagewiki.tar.xz
-  skip_cleanup: true
-  on:
-    repo: maghoff/sausagewiki
-    branch: master
-    rust: stable
-
 branches:
   except:
   - "/^untagged-/"
