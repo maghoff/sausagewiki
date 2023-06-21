@@ -21,8 +21,8 @@ features = ["sqlite"]
 version = "1.4.0"
 
 [dependencies]
-bart = "0.1.4"
-bart_derive = "0.1.4"
+bart = "0.1.6"
+bart_derive = "0.1.6"
 chrono = "0.4"
 clap = "2.31"
 diff = "0.1"

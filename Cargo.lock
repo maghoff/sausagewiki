@@ -39,23 +39,23 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "bart"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0f9d52a5c46e2abe28ae1c2ecdaa320c01e424c29a56acb7a6222141c78bae7"
+checksum = "3678acb7a27ff77a32f794d2d47634d0eb3a4612cfeb62f35c9f2a74f9346c60"
 dependencies = [
  "nom",
 ]
 
 [[package]]
 name = "bart_derive"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39fdc9035ac29aeb14993e2cdae217de7ccc9f9960eae0c5a12d541ca11c6af1"
+checksum = "cb1b0d0b2b455346cae481cb4762e1a68965a05b07fc2a5c6857f0a57f590fdb"
 dependencies = [
  "itertools",
  "num",
  "quote 0.3.15",
- "syn 0.10.8",
+ "syn 0.11.11",
 ]
 
 [[package]]
