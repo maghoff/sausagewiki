@@ -4,6 +4,10 @@ rust:
 - beta
 - nightly
 
+arch:
+  - amd64
+  - arm64
+
 matrix:
   allow_failures:
   - rust: nightly
@@ -13,11 +17,12 @@ before_install:
   - sudo apt-get install -y musl-tools
 
 script:
-- rustup target add x86_64-unknown-linux-musl
-- cargo test --target=x86_64-unknown-linux-musl
-- cargo build --release --target=x86_64-unknown-linux-musl
-- strip -s target/x86_64-unknown-linux-musl/release/sausagewiki
-- XZ_OPT=-9 tar Jcf sausagewiki.tar.xz -C target/x86_64-unknown-linux-musl/release/ sausagewiki
+- TARGET=`[ $TRAVIS_CPU_ARCH == 'amd64' ] && echo x86_64 || echo aarch64`-unknown-linux-musl
+- rustup target add $TARGET
+- cargo test --target=$TARGET
+- cargo build --release --target=$TARGET
+- strip -s target/$TARGET/release/sausagewiki
+- XZ_OPT=-9 tar Jcf sausagewiki-$TRAVIS_CPU_ARCH.tar.xz -C target/$TARGET/release/ sausagewiki
 
 branches:
   except:
