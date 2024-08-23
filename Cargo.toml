@@ -13,7 +13,7 @@ walkdir = "1"
 [build-dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "1.4.8"
+version = "2.2.3"
 
 [build-dependencies.diesel_migrations]
 default-features = false
@@ -54,7 +54,7 @@ path = "libs/codegen"
 [dependencies.diesel]
 default-features = false
 features = ["sqlite", "chrono"]
-version = "1.4.8"
+version = "2.2.3"
 
 [dependencies.diesel_infer_schema]
 default-features = false
